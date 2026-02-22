@@ -1,2 +1,3 @@
 - Obey the i18n rules and principles AT ALL TIMES.
 - **MANDATORY**: Consult `/docs` architecture documentation (ARCHITECTURE PART 01-20.md) and use `devserver-architecture-expert` agent BEFORE making code changes or architectural decisions.
+- **i18n**: Only edit `en.ts`. Leave work orders in `src/i18n/WORK_ORDERS.md` for the batch translation agent.

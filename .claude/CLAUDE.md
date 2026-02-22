@@ -83,3 +83,9 @@ Frontend visualisiert, was die Pipeline strukturiert.
 6. **VUE TYPE CHECK**: When programming Vue pages, ALWAYS run `npm run type-check` and fix any type errors before considering the task complete
 7. **NO COLORED BACKGROUNDS**: All page backgrounds MUST be black (`#0a0a0a`). Blue gradients, colored gradients, or any non-black backgrounds are FORBIDDEN. This has been violated repeatedly — do not introduce them.
 8. **GIT MERGE STRATEGY**: When merging develop→main, ALWAYS use `git merge --ff-only develop` (fast-forward only). This prevents merge-commit noise that causes "develop is N commits behind main". If ff-only fails, rebase develop onto main first.
+9. **i18n WORKFLOW**: When adding or modifying user-facing strings:
+   - Edit ONLY `src/i18n/en.ts` (English). NEVER edit de/tr/ko/uk/fr.ts directly.
+   - Append a work order to `src/i18n/WORK_ORDERS.md` listing all new/changed keys with context.
+   - The `i18n-translator` agent handles all non-English translations in batch.
+   - Fallback to English works at runtime, so English-only keys are immediately functional.
+10. **CONCURRENT SESSION AWARENESS**: Before committing, check `git status` and `git log` for changes from other sessions running in parallel. NEVER stage or commit files you didn't modify. If you see unexpected changes (from another Claude session or the user), ASK before including them in your commit.
