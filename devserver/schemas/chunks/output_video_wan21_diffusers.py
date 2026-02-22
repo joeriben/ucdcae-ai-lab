@@ -21,7 +21,8 @@ CHUNK_META = {
     "name": "output_video_wan21_diffusers",
     "media_type": "video",
     "output_format": "mp4",
-    "estimated_duration_seconds": "120-300",
+    "estimated_duration_seconds": "60-300",
+    "quality_rating": 4,
     "requires_gpu": True,
     "gpu_vram_mb": 8000,
 }

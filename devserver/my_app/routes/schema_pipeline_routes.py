@@ -3039,6 +3039,36 @@ async def execute_stage4_generation_only(
                     'run_id': run_id
                 }
 
+        elif output_result.metadata.get('chunk_type') == 'python' and output_result.metadata.get('video_data'):
+            # Python chunk video output (e.g. Wan 2.1 via Diffusers)
+            import base64
+            video_data_b64 = output_result.metadata['video_data']
+            video_bytes = base64.b64decode(video_data_b64)
+            video_format = output_result.metadata.get('video_format', 'mp4')
+            logger.info(f"[RECORDER] Saving Python chunk video: {len(video_bytes)} bytes ({video_format})")
+            saved_filename = recorder.save_entity(
+                entity_type='output_video',
+                content=video_bytes,
+                metadata={
+                    'config': output_config,
+                    'backend': output_result.metadata.get('backend', 'diffusers'),
+                    'media_type': 'video',
+                    'seed': result_seed,
+                    'size_bytes': len(video_bytes),
+                    'format': video_format
+                }
+            )
+            logger.info(f"[RECORDER] Video saved: {saved_filename}")
+            media_entities = [e for e in recorder.metadata.get('entities', []) if e.get('type') == 'output_video']
+            media_index = len(media_entities) - 1 if media_entities else 0
+            media_output = {
+                'media_type': 'video',
+                'url': f'/api/media/video/{run_id}/{media_index}',
+                'run_id': run_id,
+                'index': media_index,
+                'seed': result_seed
+            }
+
         elif output_value == 'workflow_generated':
             # ComfyUI workflow
             filesystem_path = output_result.metadata.get('filesystem_path')
@@ -5346,6 +5376,7 @@ def get_chunk_metadata():
         chunks = {}
         chunks_dir = Path(__file__).parent.parent.parent / "schemas" / "chunks"
 
+        # JSON chunks
         for chunk_file in chunks_dir.glob("output_*.json"):
             try:
                 with open(chunk_file, 'r') as f:
@@ -5358,6 +5389,24 @@ def get_chunk_metadata():
                     }
             except Exception as e:
                 logger.error(f"Error loading chunk {chunk_file}: {e}")
+                continue
+
+        # Python chunks — extract CHUNK_META
+        for chunk_file in chunks_dir.glob("output_*.py"):
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(chunk_file.stem, chunk_file)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                chunk_meta = getattr(mod, 'CHUNK_META', None)
+                if chunk_meta:
+                    chunk_name = chunk_meta.get('name', chunk_file.stem)
+                    chunks[chunk_name] = {
+                        'name': chunk_name,
+                        'meta': chunk_meta
+                    }
+            except Exception as e:
+                logger.error(f"Error loading Python chunk {chunk_file}: {e}")
                 continue
 
         return jsonify(chunks)

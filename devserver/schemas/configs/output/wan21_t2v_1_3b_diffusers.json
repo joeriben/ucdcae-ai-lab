@@ -44,7 +44,8 @@
     ],
     "recommended_frames": 81,
     "supported_fps": [16, 24],
-    "notes": "Wan 2.1 1.3B lightweight model. ~8GB VRAM. Good for lower-end hardware."
+    "notes": "Wan 2.1 1.3B lightweight model. ~8GB VRAM. Good for lower-end hardware.",
+    "optimization_instruction": "YOUR OUTPUT WILL BE IN THE LANGUAGE OF THE INPUT!\n\n=== CORE TRANSFORMATION: TEXT TO VIDEO PROMPT ===\nTransform the user's idea into a concise, vivid VIDEO prompt.\nKEY: A video has MOTION, CAMERA MOVEMENT, and TEMPORAL FLOW.\n\nRULES:\n1. Describe a SHORT, COHERENT SCENE (5 seconds of footage).\n2. Include: subject, action/motion, environment, lighting, camera angle.\n3. Use cinematic language: 'camera slowly pans', 'tracking shot', 'close-up reveals'.\n4. Keep it CONCRETE — no abstract concepts, no text overlays, no UI elements.\n5. Maximum 2-3 sentences. Wan 2.1 works best with concise prompts.\n6. Do NOT add technical parameters (fps, resolution, codec).\n7. Do NOT mention 'video', 'clip', 'footage' — just describe the scene.\n8. Emphasize smooth, natural motion over complex multi-action sequences.\n\nEXAMPLE INPUT: 'Ein Hund rennt über eine Wiese'\nEXAMPLE OUTPUT: 'A golden retriever runs joyfully across a sunlit meadow, ears flapping in the wind. Camera follows at ground level, wildflowers swaying as the dog passes. Warm afternoon light, shallow depth of field.'"
   },
 
   "display": {

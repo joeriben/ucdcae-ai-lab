@@ -31,6 +31,7 @@
               class="config-bubble"
               :class="{
                 selected: selectedConfig === config.id,
+                'light-bg': config.lightBg,
                 hovered: hoveredConfigId === config.id
               }"
               :style="{ '--bubble-color': config.color }"
@@ -43,7 +44,8 @@
               @keydown.enter="selectModel(config.id)"
               @keydown.space.prevent="selectModel(config.id)"
             >
-              <div class="bubble-emoji-medium">{{ config.emoji }}</div>
+              <img v-if="config.logo" :src="config.logo" :alt="config.label" class="bubble-logo" />
+              <div v-else class="bubble-emoji-medium">{{ config.emoji }}</div>
 
               <!-- Hover info overlay -->
               <div v-if="hoveredConfigId === config.id" class="bubble-hover-info">
@@ -209,6 +211,8 @@ interface ModelConfig {
   duration: string
   resolution: string
   color: string
+  logo?: string
+  lightBg?: boolean
 }
 
 const videoModels: ModelConfig[] = [
@@ -221,7 +225,9 @@ const videoModels: ModelConfig[] = [
     speed: 2,
     duration: '240',
     resolution: '1280\u00D7720',
-    color: '#9B59B6'
+    color: '#9B59B6',
+    logo: '/logos/Qwen_logo.png',
+    lightBg: false
   },
   {
     id: 'wan21_t2v_1_3b_diffusers',
@@ -232,7 +238,9 @@ const videoModels: ModelConfig[] = [
     speed: 4,
     duration: '60',
     resolution: '848\u00D7480',
-    color: '#E67E22'
+    color: '#E67E22',
+    logo: '/logos/Qwen_logo.png',
+    lightBg: false
   }
 ]
 
@@ -644,7 +652,22 @@ watch(promptText, (newVal) => {
   line-height: 1;
 }
 
-/* Hide emoji when hovering */
+.bubble-logo {
+  width: clamp(72px, 11vw, 92px);
+  height: clamp(72px, 11vw, 92px);
+  object-fit: contain;
+}
+
+.config-bubble.light-bg {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.config-bubble.light-bg.selected {
+  background: var(--bubble-color);
+}
+
+/* Hide logo/emoji when hovering */
+.config-bubble.hovered .bubble-logo,
 .config-bubble.hovered .bubble-emoji-medium {
   opacity: 0;
   display: none;
