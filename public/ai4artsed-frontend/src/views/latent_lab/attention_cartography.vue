@@ -4,10 +4,6 @@
     <div class="page-header">
       <h2 class="page-title">
         {{ t('latentLab.attention.headerTitle') }}
-        <span v-if="isRecording" class="recording-indicator" :title="t('latentLab.shared.recordingTooltip')">
-          <span class="recording-dot"></span>
-          <span v-if="recordCount > 0" class="recording-count">{{ recordCount }}</span>
-        </span>
       </h2>
       <p class="page-subtitle">{{ t('latentLab.attention.headerSubtitle') }}</p>
       <details class="explanation-details" :open="explainOpen" @toggle="onExplainToggle">
@@ -292,7 +288,7 @@ const { t } = useI18n()
 const route = useRoute()
 const pageContextStore = usePageContextStore()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
-const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('attention_cartography')
+const { record: labRecord } = useLatentLabRecorder('attention_cartography')
 const { isOpen: explainOpen, onToggle: onExplainToggle } = useDetailsState('ll_attention_explain')
 const { isOpen: advancedOpen, onToggle: onAdvancedToggle } = useDetailsState('ll_attention_advanced')
 
@@ -1143,8 +1139,4 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.recording-indicator { display: inline-flex; align-items: center; gap: 0.35rem; margin-left: 0.5rem; vertical-align: middle; }
-.recording-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: recording-pulse 1.5s ease-in-out infinite; }
-@keyframes recording-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-.recording-count { font-size: 0.65rem; color: rgba(255, 255, 255, 0.4); font-weight: 400; }
 </style>

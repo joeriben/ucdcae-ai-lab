@@ -4,10 +4,6 @@
     <div class="page-header">
       <h2 class="page-title">
         {{ t('latentLab.crossmodal.headerTitle') }}
-        <span v-if="isRecording" class="recording-indicator" :title="t('latentLab.shared.recordingTooltip')">
-          <span class="recording-dot"></span>
-          <span v-if="recordCount > 0" class="recording-count">{{ recordCount }}</span>
-        </span>
       </h2>
       <p class="page-subtitle">{{ t('latentLab.crossmodal.headerSubtitle') }}</p>
     </div>
@@ -676,7 +672,7 @@ import { useDetailsState } from '@/composables/useDetailsState'
 
 const { t } = useI18n()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
-const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('crossmodal_lab')
+const { record: labRecord } = useLatentLabRecorder('crossmodal_lab')
 const { isOpen: synthExplainOpen, onToggle: onSynthExplainToggle } = useDetailsState('ll_crossmodal_explain')
 const { isOpen: dimExplorerOpen, onToggle: onDimExplorerToggle } = useDetailsState('ll_crossmodal_dims', true)
 const { isOpen: midiOpen, onToggle: onMidiToggle } = useDetailsState('ll_crossmodal_midi')
@@ -2429,8 +2425,4 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.recording-indicator { display: inline-flex; align-items: center; gap: 0.35rem; margin-left: 0.5rem; vertical-align: middle; }
-.recording-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: recording-pulse 1.5s ease-in-out infinite; }
-@keyframes recording-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-.recording-count { font-size: 0.65rem; color: rgba(255, 255, 255, 0.4); font-weight: 400; }
 </style>
