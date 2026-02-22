@@ -1,5 +1,37 @@
 # Development Log
 
+## Session 199 - i18n Split + Batch Translation Workflow
+**Date:** 2026-02-23
+**Focus:** Split 8275-line i18n.ts monolith into per-language files, establish batch translation workflow
+
+### Problem
+The monolithic `i18n.ts` (568KB, 8275 lines, 6 languages) consumed massive context every UI session. Writing translations for 5 non-English languages was manual and repetitive.
+
+### Solution
+1. **Split into `src/i18n/` directory**: `index.ts` barrel + `{en,de,tr,ko,uk,fr}.ts` per-language files (~1370 lines each)
+2. **Batch workflow**: Sessions edit only `en.ts`, leave structured work orders in `WORK_ORDERS.md`
+3. **`i18n-translator` agent**: Processes pending work orders, translates into 5 languages, type-checks, commits
+4. **`6_run_i18n_translator.sh`**: Start script for standalone batch runs
+
+### Implementation
+- **`src/i18n/index.ts`**: Barrel export — imports all 6 languages, exports `SUPPORTED_LANGUAGES`, `SupportedLanguage`, `LocalizedString`, `localized()`, `createI18n`
+- **`src/i18n/WORK_ORDERS.md`**: Structured template with `(NEW)`/`(MODIFIED)` tags and context fields
+- **`.claude/agents/i18n-translator.md`**: Agent with apostrophe escaping, template variable preservation, validation script
+- **CLAUDE.md rules**: Rule 9 (i18n workflow), Rule 10 (concurrent session awareness)
+- **Import compatibility**: All 13+ consuming files use `@/i18n` or `./i18n` — directory `i18n/index.ts` resolves automatically, zero changes needed
+
+### Impact
+| Metric | Before | After |
+|---|---|---|
+| Context per UI session | ~8275 lines (568KB) | ~1374 lines (~95KB) |
+| Translation effort per session | Manual for 5 languages | Zero — work order only |
+| Adding a new language | Edit 8K-line monolith | Create one file + 1 import |
+
+### Note
+Commit c88f496 (concurrent session) had already created the 6 language files but left the monolith intact and didn't create `index.ts`. This session completed the migration.
+
+---
+
 ## Session 194 - Forest MiniGame: Flowerpot Cursor with Seedling Growth
 **Date:** 2026-02-22
 **Focus:** Replace invisible cooldown indicator with custom flowerpot cursor
