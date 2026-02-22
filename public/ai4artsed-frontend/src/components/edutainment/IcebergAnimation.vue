@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ClimateBackground from './ClimateBackground.vue'
 import {
@@ -590,6 +590,13 @@ function meltIcebergPolygon(iceberg: Iceberg, temp: number, dt: number) {
     }
   })
 }
+
+// ==================== Start ship when inference begins ====================
+watch(() => props.progress, (newProgress) => {
+  if (newProgress && newProgress > 0) {
+    startRenderLoop()
+  }
+})
 
 // ==================== Lifecycle ====================
 
