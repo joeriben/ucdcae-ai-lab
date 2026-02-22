@@ -23,7 +23,7 @@
 
       <!-- Instructions overlay (fades after 5s) -->
       <Transition name="fade">
-        <div v-if="showInstructions && progress > 0" class="instructions-overlay">
+        <div v-if="showInstructions" class="instructions-overlay">
           <span class="instruction-text">{{ t('edutainment.pixel.clickToProcess') }}</span>
         </div>
       </Transition>
@@ -46,7 +46,7 @@
             class="pixel-token"
             :class="{
               hidden: processedPixels.has(index) || flyingPixels.has(index),
-              clickable: !processedPixels.has(index) && !flyingPixels.has(index) && !clickCooldown
+              clickable: !processedPixels.has(index) && !flyingPixels.has(index)
             }"
             :style="getInputPixelStyle(pixel, index)"
             :data-index="index"
@@ -82,7 +82,8 @@
             class="pixel-token"
             :class="{
               visible: processedPixels.has(index),
-              flying: flyingPixels.has(index)
+              flying: flyingPixels.has(index),
+              dissolving: dissolvingPixels.has(index)
             }"
             :style="getOutputPixelStyle(pixel, index)"
           ></div>
@@ -134,7 +135,8 @@ const isProcessing = computed(() => props.progress > 0 && props.progress < 100)
 // ==================== Interactive State ====================
 const processedPixels = ref<Set<number>>(new Set())
 const flyingPixels = ref<Set<number>>(new Set())
-const clickCooldown = ref(false)
+const gameState = ref<'playing' | 'completed' | 'transitioning'>('playing')
+const dissolvingPixels = ref<Set<number>>(new Set())
 const autoCompleted = ref(false)
 const showInstructions = ref(true)
 const inputGridRef = ref<HTMLElement | null>(null)
@@ -173,7 +175,12 @@ const outputPixels = computed(() => {
 // ==================== Click Handler ====================
 
 function handleGridClick(event: MouseEvent) {
-  if (clickCooldown.value || props.progress === 0) return
+  if (gameState.value === 'transitioning') return
+
+  if (gameState.value === 'completed') {
+    startTransition()
+    return
+  }
 
   const grid = inputGridRef.value
   if (!grid) return
@@ -191,7 +198,6 @@ function handleGridClick(event: MouseEvent) {
 
   // Start flying animation
   nearby.forEach(idx => flyingPixels.value.add(idx))
-  clickCooldown.value = true
 
   // After animation, mark as processed
   setTimeout(() => {
@@ -199,7 +205,24 @@ function handleGridClick(event: MouseEvent) {
       flyingPixels.value.delete(idx)
       processedPixels.value.add(idx)
     })
-    clickCooldown.value = false
+    if (processedPixels.value.size >= GRID_SIZE * GRID_SIZE) {
+      gameState.value = 'completed'
+    }
+  }, 600)
+}
+
+function startTransition() {
+  gameState.value = 'transitioning'
+  dissolvingPixels.value = new Set(processedPixels.value)
+
+  setTimeout(() => {
+    processedPixels.value.clear()
+    flyingPixels.value.clear()
+    dissolvingPixels.value.clear()
+    const otherKeys = imageKeys.filter(k => k !== currentImageKey.value)
+    const nextKey = otherKeys[Math.floor(Math.random() * otherKeys.length)]
+    if (nextKey) currentImageKey.value = nextKey
+    gameState.value = 'playing'
   }, 600)
 }
 
@@ -245,6 +268,9 @@ function autoCompleteRemaining() {
           flyingPixels.value.delete(idx)
           processedPixels.value.add(idx)
         })
+        if (processedPixels.value.size >= GRID_SIZE * GRID_SIZE) {
+          gameState.value = 'completed'
+        }
       }, 600)
     }, delay)
     delay += 150
@@ -270,9 +296,25 @@ function getInputPixelStyle(pixel: { colorIndex: number }, index: number) {
   }
 }
 
-function getOutputPixelStyle(pixel: { colorIndex: number }, index: number) {
+function getOutputPixelStyle(pixel: { colorIndex: number; row: number; col: number }, index: number) {
   const inputPixel = inputPixels.value[index]
   const isFlying = flyingPixels.value.has(index)
+  const isDissolving = dissolvingPixels.value.has(index)
+
+  if (isDissolving) {
+    // Stagger based on distance from center (spiral outward)
+    const centerRow = (GRID_SIZE - 1) / 2
+    const centerCol = (GRID_SIZE - 1) / 2
+    const dist = Math.sqrt(
+      (pixel.row - centerRow) ** 2 + (pixel.col - centerCol) ** 2
+    )
+    const color = pixel.colorIndex > 0 ? (tokenColors[pixel.colorIndex - 1] ?? '#888') : 'transparent'
+    return {
+      backgroundColor: color,
+      '--dissolve-delay': String(Math.round(dist)),
+      opacity: pixel.colorIndex === 0 ? 0 : 1
+    }
+  }
 
   if (isFlying && inputPixel) {
     const fromColor = tokenColors[inputPixel.colorIndex - 1] ?? '#888'
@@ -312,7 +354,9 @@ watch(() => props.progress, (newProgress, oldProgress) => {
   if (newProgress === 0 && oldProgress !== 0) {
     processedPixels.value.clear()
     flyingPixels.value.clear()
+    dissolvingPixels.value.clear()
     autoCompleted.value = false
+    gameState.value = 'playing'
     showInstructions.value = true
     setTimeout(() => { showInstructions.value = false }, 5000)
   }
@@ -499,6 +543,18 @@ watch(() => props.progress, (newProgress, oldProgress) => {
   animation-delay: var(--fly-delay, 0s);
   animation-fill-mode: forwards;
   z-index: 100;
+}
+
+.output-grid-container .pixel-token.dissolving {
+  animation: pixel-dissolve 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--dissolve-delay, 0) * 8ms);
+}
+
+@keyframes pixel-dissolve {
+  0% { transform: scale(1); opacity: 1; }
+  30% { transform: scale(1.3) rotate(90deg); filter: hue-rotate(120deg) brightness(1.5); }
+  60% { transform: scale(1.5) rotate(200deg); filter: hue-rotate(240deg) brightness(2); opacity: 0.8; }
+  100% { transform: scale(0) rotate(360deg); filter: hue-rotate(360deg); opacity: 0; }
 }
 
 @keyframes pixel-fly-from-left {
