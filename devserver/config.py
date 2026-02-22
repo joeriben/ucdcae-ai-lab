@@ -383,7 +383,7 @@ HEARTMULA_DEVICE = os.environ.get("HEARTMULA_DEVICE", "cuda")  # cuda, cpu
 # when both dev (17802) and prod (17801) backends run simultaneously.
 #
 GPU_SERVICE_URL = os.environ.get("GPU_SERVICE_URL", "http://localhost:17803")
-GPU_SERVICE_TIMEOUT = int(os.environ.get("GPU_SERVICE_TIMEOUT", "300"))  # 5 min for long generations
+GPU_SERVICE_TIMEOUT = int(os.environ.get("GPU_SERVICE_TIMEOUT", "1500"))  # 25 min for video generation (14B ~20 min)
 
 # Feature Flags
 ENABLE_VALIDATION_PIPELINE = True
