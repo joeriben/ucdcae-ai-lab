@@ -39,7 +39,7 @@
         <h3 class="section-title">{{ t('latentLab.textLab.repeng.title') }}</h3>
         <p class="section-subtitle">{{ t('latentLab.textLab.repeng.subtitle') }}</p>
 
-        <details class="explanation-details">
+        <details class="explanation-details" :open="repengExplainOpen" @toggle="onRepengExplainToggle">
           <summary>{{ t('latentLab.textLab.explanationToggle') }}</summary>
           <div class="explanation-body">
             <div class="explanation-section">
@@ -49,6 +49,23 @@
             <div class="explanation-section">
               <h4>{{ t('latentLab.textLab.repeng.explainHowTitle') }}</h4>
               <p>{{ t('latentLab.textLab.repeng.explainHowText') }}</p>
+            </div>
+            <div class="explanation-section explanation-references">
+              <h4>{{ t('latentLab.textLab.repeng.referencesTitle') }}</h4>
+              <ul class="reference-list">
+                <li>
+                  <span class="ref-authors">Zou et al. (2023)</span>
+                  <span class="ref-title">"Representation Engineering: A Top-Down Approach to AI Transparency"</span>
+                  <span class="ref-venue">arXiv</span>
+                  <a href="https://doi.org/10.48550/arXiv.2310.01405" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+                </li>
+                <li>
+                  <span class="ref-authors">Li et al. (2023)</span>
+                  <span class="ref-title">"Inference-Time Intervention: Eliciting Truthful Answers from a Language Model"</span>
+                  <span class="ref-venue">NeurIPS 2023</span>
+                  <a href="https://doi.org/10.48550/arXiv.2306.03341" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+                </li>
+              </ul>
             </div>
           </div>
         </details>
@@ -236,7 +253,7 @@
         <h3 class="section-title">{{ t('latentLab.textLab.compare.title') }}</h3>
         <p class="section-subtitle">{{ t('latentLab.textLab.compare.subtitle') }}</p>
 
-        <details class="explanation-details">
+        <details class="explanation-details" :open="compareExplainOpen" @toggle="onCompareExplainToggle">
           <summary>{{ t('latentLab.textLab.explanationToggle') }}</summary>
           <div class="explanation-body">
             <div class="explanation-section">
@@ -246,6 +263,23 @@
             <div class="explanation-section">
               <h4>{{ t('latentLab.textLab.compare.explainHowTitle') }}</h4>
               <p>{{ t('latentLab.textLab.compare.explainHowText') }}</p>
+            </div>
+            <div class="explanation-section explanation-references">
+              <h4>{{ t('latentLab.textLab.compare.referencesTitle') }}</h4>
+              <ul class="reference-list">
+                <li>
+                  <span class="ref-authors">Kornblith et al. (2019)</span>
+                  <span class="ref-title">"Similarity of Neural Network Representations Revisited"</span>
+                  <span class="ref-venue">ICML 2019</span>
+                  <a href="https://doi.org/10.48550/arXiv.1905.00414" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+                </li>
+                <li>
+                  <span class="ref-authors">Olsson et al. (2022)</span>
+                  <span class="ref-title">"In-context Learning and Induction Heads"</span>
+                  <span class="ref-venue">Anthropic</span>
+                  <a href="https://doi.org/10.48550/arXiv.2209.11895" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+                </li>
+              </ul>
             </div>
           </div>
         </details>
@@ -421,7 +455,7 @@
         <h3 class="section-title">{{ t('latentLab.textLab.bias.title') }}</h3>
         <p class="section-subtitle">{{ t('latentLab.textLab.bias.subtitle') }}</p>
 
-        <details class="explanation-details">
+        <details class="explanation-details" :open="biasExplainOpen" @toggle="onBiasExplainToggle">
           <summary>{{ t('latentLab.textLab.explanationToggle') }}</summary>
           <div class="explanation-body">
             <div class="explanation-section">
@@ -431,6 +465,22 @@
             <div class="explanation-section">
               <h4>{{ t('latentLab.textLab.bias.explainHowTitle') }}</h4>
               <p>{{ t('latentLab.textLab.bias.explainHowText') }}</p>
+            </div>
+            <div class="explanation-section explanation-references">
+              <h4>{{ t('latentLab.textLab.bias.referencesTitle') }}</h4>
+              <ul class="reference-list">
+                <li>
+                  <span class="ref-authors">Bricken et al. (2023)</span>
+                  <span class="ref-title">"Towards Monosemanticity: Decomposing Language Models With Dictionary Learning"</span>
+                  <span class="ref-venue">Anthropic</span>
+                </li>
+                <li>
+                  <span class="ref-authors">Zou et al. (2023)</span>
+                  <span class="ref-title">"Representation Engineering: A Top-Down Approach to AI Transparency"</span>
+                  <span class="ref-venue">arXiv</span>
+                  <a href="https://doi.org/10.48550/arXiv.2310.01405" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+                </li>
+              </ul>
             </div>
           </div>
         </details>
@@ -591,10 +641,14 @@ import { useI18n } from 'vue-i18n'
 import MediaInputBox from '@/components/MediaInputBox.vue'
 import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useLatentLabRecorder } from '@/composables/useLatentLabRecorder'
+import { useDetailsState } from '@/composables/useDetailsState'
 
 const { t } = useI18n()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
 const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('latent_text_lab')
+const { isOpen: repengExplainOpen, onToggle: onRepengExplainToggle } = useDetailsState('ll_text_repeng_explain')
+const { isOpen: compareExplainOpen, onToggle: onCompareExplainToggle } = useDetailsState('ll_text_compare_explain')
+const { isOpen: biasExplainOpen, onToggle: onBiasExplainToggle } = useDetailsState('ll_text_bias_explain')
 
 const apiBase = import.meta.env.DEV ? 'http://localhost:17802' : ''
 
@@ -1252,6 +1306,14 @@ onMounted(() => {
 .explanation-section { margin-bottom: 0; }
 .explanation-section h4 { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; margin: 0 0 0.25rem; }
 .explanation-section p { color: rgba(255, 255, 255, 0.6); font-size: 0.82rem; line-height: 1.6; margin: 0; }
+
+.reference-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.reference-list li { margin-bottom: 0.4rem; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.ref-authors { font-weight: 500; color: rgba(255,255,255,0.8); }
+.ref-title { font-style: italic; }
+.ref-venue { color: rgba(255,255,255,0.5); }
+.ref-doi { color: rgba(255,152,0,0.8); text-decoration: none; margin-left: 0.3rem; }
+.ref-doi:hover { text-decoration: underline; }
 
 /* Error banner */
 .error-banner { background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.3); color: #fca5a5; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; cursor: pointer; font-size: 0.85rem; }

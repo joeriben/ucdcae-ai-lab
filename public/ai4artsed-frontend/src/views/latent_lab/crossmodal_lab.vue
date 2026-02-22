@@ -31,7 +31,7 @@
       <h3>{{ t('latentLab.crossmodal.tabs.synth.title') }}</h3>
       <p class="tab-description">{{ t('latentLab.crossmodal.tabs.synth.description') }}</p>
 
-      <details class="explanation-details">
+      <details class="explanation-details" :open="synthExplainOpen" @toggle="onSynthExplainToggle">
         <summary>{{ t('latentLab.crossmodal.explanationToggle') }}</summary>
         <div class="explanation-body">
           <div class="explanation-section">
@@ -145,7 +145,7 @@
       </div>
 
       <!-- Dimension Explorer Section (open by default) -->
-      <details class="dim-explorer-section" open>
+      <details class="dim-explorer-section" :open="dimExplorerOpen" @toggle="onDimExplorerToggle">
         <summary>{{ t('latentLab.crossmodal.synth.dimensions.section') }}</summary>
         <div class="dim-explorer-content">
           <p class="dim-hint">{{ t('latentLab.crossmodal.synth.dimensions.hint') }}</p>
@@ -381,7 +381,7 @@
       </div>
 
       <!-- MIDI Section (collapsed by default) -->
-      <details class="midi-section">
+      <details class="midi-section" :open="midiOpen" @toggle="onMidiToggle">
         <summary>{{ t('latentLab.crossmodal.synth.midiSection') }}</summary>
         <div class="midi-content">
           <div v-if="!midi.isSupported.value" class="midi-unsupported">
@@ -451,7 +451,7 @@
       <h3>{{ t('latentLab.crossmodal.tabs.mmaudio.title') }}</h3>
       <p class="tab-description">{{ t('latentLab.crossmodal.tabs.mmaudio.description') }}</p>
 
-      <details class="explanation-details">
+      <details class="explanation-details" :open="mmaudioExplainOpen" @toggle="onMmaudioExplainToggle">
         <summary>{{ t('latentLab.crossmodal.explanationToggle') }}</summary>
         <div class="explanation-body">
           <div class="explanation-section">
@@ -539,7 +539,7 @@
       <h3>{{ t('latentLab.crossmodal.tabs.guidance.title') }}</h3>
       <p class="tab-description">{{ t('latentLab.crossmodal.tabs.guidance.description') }}</p>
 
-      <details class="explanation-details">
+      <details class="explanation-details" :open="guidanceExplainOpen" @toggle="onGuidanceExplainToggle">
         <summary>{{ t('latentLab.crossmodal.explanationToggle') }}</summary>
         <div class="explanation-body">
           <div class="explanation-section">
@@ -549,6 +549,17 @@
           <div class="explanation-section">
             <h4>{{ t('latentLab.crossmodal.guidance.explainHowTitle') }}</h4>
             <p>{{ t('latentLab.crossmodal.guidance.explainHowText') }}</p>
+          </div>
+          <div class="explanation-section explanation-references">
+            <h4>{{ t('latentLab.crossmodal.guidance.referencesTitle') }}</h4>
+            <ul class="reference-list">
+              <li>
+                <span class="ref-authors">Girdhar et al. (2023)</span>
+                <span class="ref-title">"ImageBind: One Embedding Space To Bind Them All"</span>
+                <span class="ref-venue">CVPR 2023</span>
+                <a href="https://doi.org/10.48550/arXiv.2305.05665" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+            </ul>
           </div>
         </div>
       </details>
@@ -661,10 +672,16 @@ import MediaInputBox from '@/components/MediaInputBox.vue'
 import MediaOutputBox from '@/components/MediaOutputBox.vue'
 import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useLatentLabRecorder } from '@/composables/useLatentLabRecorder'
+import { useDetailsState } from '@/composables/useDetailsState'
 
 const { t } = useI18n()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
 const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('crossmodal_lab')
+const { isOpen: synthExplainOpen, onToggle: onSynthExplainToggle } = useDetailsState('ll_crossmodal_explain')
+const { isOpen: dimExplorerOpen, onToggle: onDimExplorerToggle } = useDetailsState('ll_crossmodal_dims', true)
+const { isOpen: midiOpen, onToggle: onMidiToggle } = useDetailsState('ll_crossmodal_midi')
+const { isOpen: mmaudioExplainOpen, onToggle: onMmaudioExplainToggle } = useDetailsState('ll_crossmodal_mmaudio_explain')
+const { isOpen: guidanceExplainOpen, onToggle: onGuidanceExplainToggle } = useDetailsState('ll_crossmodal_guidance_explain')
 
 const API_BASE = import.meta.env.DEV ? 'http://localhost:17802' : ''
 
@@ -1534,6 +1551,14 @@ onUnmounted(() => {
   line-height: 1.6;
   margin: 0;
 }
+
+.reference-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.reference-list li { margin-bottom: 0.4rem; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.ref-authors { font-weight: 500; color: rgba(255,255,255,0.8); }
+.ref-title { font-style: italic; }
+.ref-venue { color: rgba(255,255,255,0.5); }
+.ref-doi { color: rgba(76,175,80,0.8); text-decoration: none; margin-left: 0.3rem; }
+.ref-doi:hover { text-decoration: underline; }
 
 /* Tab Navigation */
 .tab-nav {

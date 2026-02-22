@@ -10,7 +10,7 @@
         </span>
       </h2>
       <p class="page-subtitle">{{ t('latentLab.attention.headerSubtitle') }}</p>
-      <details class="explanation-details">
+      <details class="explanation-details" :open="explainOpen" @toggle="onExplainToggle">
         <summary>{{ t('latentLab.attention.explanationToggle') }}</summary>
         <div class="explanation-body">
           <div class="explanation-section">
@@ -28,6 +28,23 @@
           <div class="explanation-section explanation-tech">
             <h4>{{ t('latentLab.attention.techTitle') }}</h4>
             <p>{{ t('latentLab.attention.techText') }}</p>
+          </div>
+          <div class="explanation-section explanation-references">
+            <h4>{{ t('latentLab.attention.referencesTitle') }}</h4>
+            <ul class="reference-list">
+              <li>
+                <span class="ref-authors">Hertz et al. (2022)</span>
+                <span class="ref-title">"Prompt-to-Prompt Image Editing with Cross Attention Control"</span>
+                <span class="ref-venue">ICLR 2023</span>
+                <a href="https://doi.org/10.48550/arXiv.2208.01626" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+              <li>
+                <span class="ref-authors">Tang et al. (2022)</span>
+                <span class="ref-title">"What the DAAM: Interpreting Stable Diffusion Using Cross Attention"</span>
+                <span class="ref-venue">ACL 2023</span>
+                <a href="https://doi.org/10.48550/arXiv.2210.04885" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+            </ul>
           </div>
         </div>
       </details>
@@ -58,7 +75,7 @@
       </button>
 
       <!-- Advanced Settings (collapsible) -->
-      <details class="advanced-settings">
+      <details class="advanced-settings" :open="advancedOpen" @toggle="onAdvancedToggle">
         <summary>{{ t('latentLab.attention.advancedLabel') }}</summary>
         <div class="settings-grid">
           <label>
@@ -267,6 +284,7 @@ import axios from 'axios'
 import MediaInputBox from '@/components/MediaInputBox.vue'
 import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useLatentLabRecorder } from '@/composables/useLatentLabRecorder'
+import { useDetailsState } from '@/composables/useDetailsState'
 import { usePageContextStore } from '@/stores/pageContext'
 import type { PageContext, FocusHint } from '@/composables/usePageContext'
 
@@ -275,6 +293,8 @@ const route = useRoute()
 const pageContextStore = usePageContextStore()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
 const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('attention_cartography')
+const { isOpen: explainOpen, onToggle: onExplainToggle } = useDetailsState('ll_attention_explain')
+const { isOpen: advancedOpen, onToggle: onAdvancedToggle } = useDetailsState('ll_attention_advanced')
 
 // State
 const promptText = ref('')
@@ -722,6 +742,14 @@ onUnmounted(() => {
 .explanation-tech p {
   font-size: 0.78rem;
 }
+
+.reference-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.reference-list li { margin-bottom: 0.4rem; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.ref-authors { font-weight: 500; color: rgba(255,255,255,0.8); }
+.ref-title { font-style: italic; }
+.ref-venue { color: rgba(255,255,255,0.5); }
+.ref-doi { color: rgba(102,126,234,0.8); text-decoration: none; margin-left: 0.3rem; }
+.ref-doi:hover { text-decoration: underline; }
 
 /* Input Section */
 .input-section {

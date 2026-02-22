@@ -10,7 +10,7 @@
         </span>
       </h2>
       <p class="page-subtitle">{{ t('latentLab.algebra.headerSubtitle') }}</p>
-      <details class="explanation-details">
+      <details class="explanation-details" :open="explainOpen" @toggle="onExplainToggle">
         <summary>{{ t('latentLab.algebra.explanationToggle') }}</summary>
         <div class="explanation-body">
           <div class="explanation-section">
@@ -28,6 +28,23 @@
           <div class="explanation-section explanation-tech">
             <h4>{{ t('latentLab.algebra.techTitle') }}</h4>
             <p>{{ t('latentLab.algebra.techText') }}</p>
+          </div>
+          <div class="explanation-section explanation-references">
+            <h4>{{ t('latentLab.algebra.referencesTitle') }}</h4>
+            <ul class="reference-list">
+              <li>
+                <span class="ref-authors">Mikolov et al. (2013)</span>
+                <span class="ref-title">"Distributed Representations of Words and Phrases and their Compositionality"</span>
+                <span class="ref-venue">NeurIPS 2013</span>
+                <a href="https://doi.org/10.48550/arXiv.1310.4546" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+              <li>
+                <span class="ref-authors">Liu et al. (2022)</span>
+                <span class="ref-title">"Compositional Visual Generation with Composable Diffusion Models"</span>
+                <span class="ref-venue">ECCV 2022</span>
+                <a href="https://doi.org/10.1007/978-3-031-19803-8_12" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+            </ul>
           </div>
         </div>
       </details>
@@ -116,7 +133,7 @@
       </div>
 
       <!-- Advanced Settings -->
-      <details class="advanced-settings">
+      <details class="advanced-settings" :open="advancedOpen" @toggle="onAdvancedToggle">
         <summary>{{ t('latentLab.algebra.advancedLabel') }}</summary>
         <div class="settings-grid">
           <label>
@@ -213,6 +230,7 @@ import axios from 'axios'
 import MediaInputBox from '@/components/MediaInputBox.vue'
 import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useLatentLabRecorder } from '@/composables/useLatentLabRecorder'
+import { useDetailsState } from '@/composables/useDetailsState'
 import { usePageContextStore } from '@/stores/pageContext'
 import type { PageContext, FocusHint } from '@/composables/usePageContext'
 
@@ -220,6 +238,8 @@ const { t } = useI18n()
 const pageContextStore = usePageContextStore()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
 const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('concept_algebra')
+const { isOpen: explainOpen, onToggle: onExplainToggle } = useDetailsState('ll_algebra_explain')
+const { isOpen: advancedOpen, onToggle: onAdvancedToggle } = useDetailsState('ll_algebra_advanced')
 
 // Encoder options
 type EncoderId = 'all' | 'clip_l' | 'clip_g' | 't5'
@@ -429,6 +449,14 @@ onUnmounted(() => {
 .explanation-section p { color: rgba(255, 255, 255, 0.6); font-size: 0.82rem; line-height: 1.6; margin: 0; }
 .explanation-tech { background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 0.75rem; }
 .explanation-tech p { font-size: 0.78rem; }
+
+.reference-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.reference-list li { margin-bottom: 0.4rem; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.ref-authors { font-weight: 500; color: rgba(255,255,255,0.8); }
+.ref-title { font-style: italic; }
+.ref-venue { color: rgba(255,255,255,0.5); }
+.ref-doi { color: rgba(102,126,234,0.8); text-decoration: none; margin-left: 0.3rem; }
+.ref-doi:hover { text-decoration: underline; }
 
 /* === Input Section === */
 .input-section { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }

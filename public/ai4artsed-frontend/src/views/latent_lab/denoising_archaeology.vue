@@ -10,7 +10,7 @@
         </span>
       </h2>
       <p class="page-subtitle">{{ t('latentLab.archaeology.headerSubtitle') }}</p>
-      <details class="explanation-details">
+      <details class="explanation-details" :open="explainOpen" @toggle="onExplainToggle">
         <summary>{{ t('latentLab.archaeology.explanationToggle') }}</summary>
         <div class="explanation-body">
           <div class="explanation-section">
@@ -28,6 +28,23 @@
           <div class="explanation-section explanation-tech">
             <h4>{{ t('latentLab.archaeology.techTitle') }}</h4>
             <p>{{ t('latentLab.archaeology.techText') }}</p>
+          </div>
+          <div class="explanation-section explanation-references">
+            <h4>{{ t('latentLab.archaeology.referencesTitle') }}</h4>
+            <ul class="reference-list">
+              <li>
+                <span class="ref-authors">Kwon et al. (2023)</span>
+                <span class="ref-title">"Diffusion Models Already Have a Semantic Latent Space"</span>
+                <span class="ref-venue">ICLR 2023</span>
+                <a href="https://doi.org/10.48550/arXiv.2210.10960" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+              <li>
+                <span class="ref-authors">Ho et al. (2020)</span>
+                <span class="ref-title">"Denoising Diffusion Probabilistic Models"</span>
+                <span class="ref-venue">NeurIPS 2020</span>
+                <a href="https://doi.org/10.48550/arXiv.2006.11239" target="_blank" rel="noopener" class="ref-doi">DOI</a>
+              </li>
+            </ul>
           </div>
         </div>
       </details>
@@ -58,7 +75,7 @@
       </button>
 
       <!-- Advanced Settings -->
-      <details class="advanced-settings">
+      <details class="advanced-settings" :open="advancedOpen" @toggle="onAdvancedToggle">
         <summary>{{ t('latentLab.archaeology.advancedLabel') }}</summary>
         <div class="settings-grid">
           <label>
@@ -204,6 +221,7 @@ import axios from 'axios'
 import MediaInputBox from '@/components/MediaInputBox.vue'
 import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useLatentLabRecorder } from '@/composables/useLatentLabRecorder'
+import { useDetailsState } from '@/composables/useDetailsState'
 import { usePageContextStore } from '@/stores/pageContext'
 import type { PageContext, FocusHint } from '@/composables/usePageContext'
 
@@ -211,6 +229,8 @@ const { t } = useI18n()
 const pageContextStore = usePageContextStore()
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
 const { record: labRecord, isRecording, recordCount } = useLatentLabRecorder('denoising_archaeology')
+const { isOpen: explainOpen, onToggle: onExplainToggle } = useDetailsState('ll_archaeology_explain')
+const { isOpen: advancedOpen, onToggle: onAdvancedToggle } = useDetailsState('ll_archaeology_advanced')
 
 interface StepImage {
   step: number
@@ -504,6 +524,14 @@ onUnmounted(() => {
 .explanation-tech p {
   font-size: 0.78rem;
 }
+
+.reference-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.reference-list li { margin-bottom: 0.4rem; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.ref-authors { font-weight: 500; color: rgba(255,255,255,0.8); }
+.ref-title { font-style: italic; }
+.ref-venue { color: rgba(255,255,255,0.5); }
+.ref-doi { color: rgba(102,126,234,0.8); text-decoration: none; margin-left: 0.3rem; }
+.ref-doi:hover { text-decoration: underline; }
 
 /* Input Section */
 .input-section {

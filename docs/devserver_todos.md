@@ -2017,8 +2017,8 @@ Fixed in crossmodal_lab.vue (synth, MMAudio, guidance). Other labs already used 
 ### 2. ✅ Sticky sub-tabs: crossmodal lab sub-tab should persist
 Solved by reorganization (`63dcc50`): `image_lab.vue` and `crossmodal_lab.vue` both use `localStorage` for tab persistence.
 
-### 3. Streamline "Erweiterte Einstellungen" collapse state across labs
-If one lab has a `<details>` for advanced settings, the open/closed state should be consistent and ideally persist across sessions (localStorage).
+### 3. ✅ Streamline "Erweiterte Einstellungen" collapse state across labs
+Done: `useDetailsState` composable syncs `<details>` open/closed state with localStorage. Applied to all 6 lab views (explanation + advanced settings + crossmodal dim-explorer/MIDI). Keys: `ll_{lab}_{section}` pattern.
 
 ### 4. Parameter hints for all latent lab elements
 ~~Every slider, parameter, and input in the latent lab should have a tooltip or expandable explanation. Currently inconsistent — some have `slider-hint`, some don't. Audit and fill gaps.~~
@@ -2029,8 +2029,8 @@ Done in `22bf825`: ~30 new i18n hint keys (6 languages), hint spans added to all
 **4b. ✅ Add `explanationToggle` section to crossmodal_lab.vue**
 Done: Added collapsible explanation block with 4 Q&A sections (overview + one per sub-tab: Synth, MMAudio, ImageBind Guidance). i18n keys in all 6 languages, CSS matches green accent of crossmodal lab. Type check passes.
 
-### 5. Scientific references with DOI in all labs
-All latent lab tabs reference published research (MMAudio = CVPR 2025, ImageBind = CVPR 2023, Stable Audio = ICML 2024). Add DOI links and brief citations accessible via info buttons or tab descriptions.
+### 5. ✅ Scientific references with DOI in all labs
+Done: DOI references added inside explanation blocks for all labs. Citations per lab: Attention (Hertz 2022, Tang 2022), Probing (Belinkov 2022, Zou 2023, Bau 2020), Algebra (Mikolov 2013, Liu 2022), Archaeology (Kwon 2023, Ho 2020), Text Lab RepEng (Zou 2023, Li 2023), Compare (Kornblith 2019, Olsson 2022), Bias (Bricken 2023, Zou 2023), ImageBind (Girdhar 2023). MMAudio already had inline citation. i18n: `referencesTitle` key in all 6 languages.
 
 ---
 
@@ -2081,6 +2081,34 @@ Diffusers GPU service (port 17803) is now the primary backend for SD3.5 Large, b
 3. `gpu_service/routes/diffusers_routes.py` — Pass `loras` from request JSON
 4. `devserver/my_app/services/diffusers_client.py` — Pass `loras` in HTTP payloads
 5. `devserver/schemas/engine/backend_router.py` — Extract `parameters['loras']` in `_process_diffusers_chunk` + fix auto-detection routing
+
+---
+
+## 📋 TODO: PyTorch Stable Migration — Nightly → Stable Release
+
+**Status:** 📋 **TODO** — Ready when convenient
+**Datum:** 2026-02-22
+**Priority:** LOW (Cosmetic — nightly works fine, but stable is cleaner)
+
+### Problem
+System runs on PyTorch nightly `2.11.0.dev20260203+cu130` (pinned to exact day — even 1 day difference can cause CUDA crashes on Blackwell). Originally necessary because stable PyTorch didn't support Blackwell (sm_120). Since PyTorch 2.7 (April 2025), Blackwell is officially supported in stable releases.
+
+### Current State
+- **Nightly**: `torch 2.11.0.dev20260203+cu130` (CUDA 13.0)
+- **Latest Stable**: `torch 2.10.0` (Jan 2026), `2.11.0` geplant für Feb 16, 2026
+- **GPU**: NVIDIA RTX PRO 6000 Blackwell (sm_120, 96GB)
+- **torchao Warning**: `Skipping import of cpp extensions` wegen Nightly-Inkompatibilität (harmlos)
+
+### Migration Steps
+1. Prüfen ob `torch 2.11.0` stable released ist (Feb 16 geplant)
+2. Stable mit `cu128` oder `cu129` in separatem venv testen
+3. SD3.5, Wan 2.1, HeartMuLa, Stable Audio, Cross-Aesthetic jeweils testen
+4. Wenn alles funktioniert: venv migrieren, torchao upgraden
+5. Nightly-Pinning-Warnung aus MEMORY.md entfernen
+
+### Risiko
+- CUDA 13.0 → 12.8/12.9 Downgrade: theoretisch kein Problem, aber Blackwell-spezifische Kernels könnten sich unterscheiden
+- **Eigene Test-Session dafür planen**, nicht nebenbei machen
 
 ---
 
