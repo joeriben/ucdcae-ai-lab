@@ -1,5 +1,26 @@
 # Development Log
 
+## Session 194 - Forest MiniGame: Flowerpot Cursor with Seedling Growth
+**Date:** 2026-02-22
+**Focus:** Replace invisible cooldown indicator with custom flowerpot cursor
+
+### Problem
+The hourglass cooldown indicator (`⏳ 1.0s`) was inside the `showInstructions` block which disappears after 5 seconds. After that, the 1-second planting cooldown was invisible — clicks silently swallowed with no feedback.
+
+### Solution
+Custom SVG flowerpot cursor replaces the native pointer. During the 1s cooldown after planting, a seedling grows inside the pot (scale 0→1). When fully grown, click to plant. The cooldown is now always visible as a charming micro-animation.
+
+### Implementation
+**Modified:** `ForestMiniGame.vue`
+
+- **Mouse tracking**: `mouseX`/`mouseY` refs, `showPotCursor` toggle on mouseenter/mouseleave
+- **Seedling growth**: `seedlingGrowth = 1 - plantCooldown` — maps cooldown 1→0 to growth 0→1
+- **SVG cursor**: Terracotta pot (trapezoid body + rim + soil) with seedling (stem + 2 leaves + bud) scaled from base point
+- **CSS**: `cursor: none` on game area, `.pot-cursor` with `pointer-events: none`, `transform: translate(-50%, -100%)` anchoring bottom-center at mouse
+- **Cleanup**: Removed `.plant-instruction.cooldown` and `:empty` styles, simplified instruction to show only before first tree planted
+
+---
+
 ## Session 193 - Wavetable Synthesis as Third Playback Mode
 **Date:** 2026-02-22
 **Focus:** Add wavetable oscillator to Crossmodal Lab Synth tab

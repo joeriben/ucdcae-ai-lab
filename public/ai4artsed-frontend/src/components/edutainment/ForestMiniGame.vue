@@ -1,5 +1,11 @@
 <template>
-  <div class="forest-game" @click="handleClick">
+  <div
+    class="forest-game"
+    @click="handleClick"
+    @mouseenter="handleMouseEnter"
+    @mousemove="handleMouseMove"
+    @mouseleave="handleMouseLeave"
+  >
     <!-- Sky -->
     <div class="sky" :style="skyStyle">
       <!-- Clouds -->
@@ -64,15 +70,10 @@
       </div>
     </div>
 
-    <!-- Plant instruction / Cooldown indicator (visible first 5 seconds) -->
+    <!-- Plant instruction (visible until first tree planted) -->
     <Transition name="fade">
-      <div v-if="showInstructions" class="plant-instruction" :class="{ cooldown: plantCooldown > 0 }">
-        <template v-if="treesPlanted === 0">
-          {{ t('edutainment.forest.clickToPlant') }}
-        </template>
-        <template v-else-if="plantCooldown > 0">
-          ⏳ {{ plantCooldown.toFixed(1) }}s
-        </template>
+      <div v-if="showInstructions && treesPlanted === 0" class="plant-instruction">
+        {{ t('edutainment.forest.clickToPlant') }}
       </div>
     </Transition>
 
@@ -96,6 +97,25 @@
         <span class="summary-trees">{{ t('edutainment.forest.treesPlanted', { count: treesPlanted }) }}</span>
       </div>
     </Transition>
+
+    <!-- Custom flowerpot cursor -->
+    <div v-if="showPotCursor" class="pot-cursor" :style="potCursorStyle">
+      <svg width="32" height="48" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+        <!-- Seedling (grows from soil during cooldown) -->
+        <g :transform="`translate(16, 24) scale(${seedlingGrowth}) translate(-16, -24)`">
+          <line x1="16" y1="24" x2="16" y2="6" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" />
+          <ellipse cx="11" cy="14" rx="4" ry="2" fill="#4caf50" transform="rotate(-35, 11, 14)" />
+          <ellipse cx="21" cy="10" rx="4" ry="2" fill="#66bb6a" transform="rotate(35, 21, 10)" />
+          <ellipse cx="16" cy="5" rx="3" ry="4" fill="#43a047" />
+        </g>
+        <!-- Pot body (trapezoid) -->
+        <path d="M7,26 L9,44 L23,44 L25,26 Z" fill="#c1440e" />
+        <!-- Pot rim -->
+        <rect x="5" y="23" width="22" height="4" rx="1" fill="#d4652a" />
+        <!-- Soil -->
+        <path d="M8,26 L9,32 L23,32 L24,26 Z" fill="#3e2723" />
+      </svg>
+    </div>
   </div>
 </template>
 
@@ -157,6 +177,35 @@ const plantCooldown = ref(0)
 const treesPlanted = ref(0)
 const gameOver = ref(false)
 let nextId = 0
+
+// ==================== Custom Cursor ====================
+const mouseX = ref(0)
+const mouseY = ref(0)
+const showPotCursor = ref(false)
+
+function handleMouseMove(event: MouseEvent) {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  mouseX.value = event.clientX - rect.left
+  mouseY.value = event.clientY - rect.top
+}
+
+function handleMouseLeave() {
+  showPotCursor.value = false
+}
+
+function handleMouseEnter() {
+  showPotCursor.value = true
+}
+
+const seedlingGrowth = computed(() => {
+  if (plantCooldown.value <= 0) return 1
+  return 1 - plantCooldown.value
+})
+
+const potCursorStyle = computed(() => ({
+  left: `${mouseX.value}px`,
+  top: `${mouseY.value}px`
+}))
 
 // Bird animation (follows internalProgress from composable)
 // Updated in game loop instead of separate RAF
@@ -396,7 +445,7 @@ watch(() => props.progress, (newProgress) => {
   height: 320px;
   border-radius: 12px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: none;
   user-select: none;
 }
 
@@ -645,12 +694,12 @@ watch(() => props.progress, (newProgress) => {
   text-align: center;
 }
 
-.plant-instruction:empty {
-  display: none;
-}
-
-.plant-instruction.cooldown {
-  background: rgba(158, 158, 158, 0.8);
+.pot-cursor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 200;
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
 }
 
 .game-over {
