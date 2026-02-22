@@ -257,7 +257,7 @@ class DiffusersImageGenerator:
                 vram_before = torch.cuda.memory_allocated(0) if torch.cuda.is_available() else 0
 
                 kwargs = {
-                    "dtype": self._get_torch_dtype(),
+                    "torch_dtype": self._get_torch_dtype(),
                     "use_safetensors": True,
                     "low_cpu_mem_usage": True,
                 }
@@ -267,8 +267,8 @@ class DiffusersImageGenerator:
                 # WanPipeline requires float32 VAE loaded separately
                 if pipeline_class == "WanPipeline":
                     from diffusers import AutoencoderKLWan
-                    kwargs["dtype"] = torch.bfloat16
-                    vae_kwargs = {"dtype": torch.float32}
+                    kwargs["torch_dtype"] = torch.bfloat16
+                    vae_kwargs = {"torch_dtype": torch.float32}
                     if self.cache_dir:
                         vae_kwargs["cache_dir"] = str(self.cache_dir)
                     vae = AutoencoderKLWan.from_pretrained(
@@ -609,7 +609,7 @@ class DiffusersImageGenerator:
                             "callback_on_step_end_tensor_inputs": ["latents"],
                         }
                         result = pipe(**gen_kwargs)
-                        if not hasattr(result, 'frames') or not result.frames:
+                        if not hasattr(result, 'frames') or result.frames is None or len(result.frames) == 0:
                             raise ValueError("Pipeline returned no video frames")
                         return result.frames[0]
                     finally:

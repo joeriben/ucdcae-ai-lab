@@ -246,22 +246,27 @@ def generate_video():
         return jsonify({"success": False, "error": "prompt required"}), 400
 
     backend = _get_backend()
-    video_bytes = _run_async(backend.generate_video(
-        prompt=data['prompt'],
-        model_id=data.get('model_id', 'Wan-AI/Wan2.1-T2V-14B-Diffusers'),
-        negative_prompt=data.get('negative_prompt', ''),
-        width=int(data.get('width', 1280)),
-        height=int(data.get('height', 720)),
-        num_frames=int(data.get('num_frames', 81)),
-        steps=int(data.get('steps', 30)),
-        cfg_scale=float(data.get('cfg_scale', 5.0)),
-        fps=int(data.get('fps', 16)),
-        seed=int(data.get('seed', -1)),
-        pipeline_class=data.get('pipeline_class', 'WanPipeline'),
-    ))
+    try:
+        video_bytes = _run_async(backend.generate_video(
+            prompt=data['prompt'],
+            model_id=data.get('model_id', 'Wan-AI/Wan2.1-T2V-14B-Diffusers'),
+            negative_prompt=data.get('negative_prompt', ''),
+            width=int(data.get('width', 1280)),
+            height=int(data.get('height', 720)),
+            num_frames=int(data.get('num_frames', 81)),
+            steps=int(data.get('steps', 30)),
+            cfg_scale=float(data.get('cfg_scale', 5.0)),
+            fps=int(data.get('fps', 16)),
+            seed=int(data.get('seed', -1)),
+            pipeline_class=data.get('pipeline_class', 'WanPipeline'),
+        ))
+    except Exception as e:
+        import traceback
+        logger.error(f"Video generation error: {e}\n{traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
 
     if video_bytes is None:
-        return jsonify({"success": False, "error": "Video generation failed"}), 500
+        return jsonify({"success": False, "error": "Video generation returned None (check GPU service logs)"}), 500
 
     return jsonify({
         "success": True,
