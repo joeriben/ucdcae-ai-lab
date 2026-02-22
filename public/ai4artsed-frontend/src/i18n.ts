@@ -573,6 +573,12 @@ const messages = {
       contextLabel: 'Sage was Du an dem Bild verändern möchtest',
       contextPlaceholder: 'z.B. Verwandle es in ein Ölgemälde... Mache es bunter... Füge einen Sonnenuntergang hinzu...'
     },
+    videoGeneration: {
+      promptLabel: 'Deine Video-Idee',
+      promptPlaceholder: 'z.B. Ein Heißluftballon schwebt über einer Berglandschaft bei Sonnenuntergang...',
+      modelLabel: 'Wähle ein Video-Modell:',
+      generating: 'Video wird generiert...'
+    },
     textTransform: {
       inputLabel: 'Deine Idee = WAS?',
       inputTooltip: 'Hier trägst Du ein, worum es gehen soll.',
@@ -1932,6 +1938,12 @@ const messages = {
       imageLabel: 'Your Image',
       contextLabel: 'Describe what you want to change in the image',
       contextPlaceholder: 'e.g. Transform it into an oil painting... Make it more colorful... Add a sunset...'
+    },
+    videoGeneration: {
+      promptLabel: 'Your Video Idea',
+      promptPlaceholder: 'e.g. A hot air balloon floating over a mountain landscape at sunset...',
+      modelLabel: 'Choose a video model:',
+      generating: 'Generating video...'
     },
     textTransform: {
       inputLabel: 'Your Idea = WHAT?',
@@ -3293,6 +3305,12 @@ const messages = {
       contextLabel: 'Görselde ne değiştirmek istediğinizi açıklayın',
       contextPlaceholder: 'örn. Yağlı boya tabloya dönüştür... Daha renkli yap... Gün batımı ekle...'
     },
+    videoGeneration: {
+      promptLabel: 'Video Fikriniz',
+      promptPlaceholder: 'örn. Gün batımında dağ manzarası üzerinde süzülen bir sıcak hava balonu...',
+      modelLabel: 'Bir video modeli seçin:',
+      generating: 'Video oluşturuluyor...'
+    },
     textTransform: {
       inputLabel: 'Fikriniz = NE?',
       inputTooltip: 'Kreasyonunuzun ne hakkında olacağını girin.',
@@ -4652,6 +4670,12 @@ const messages = {
       imageLabel: '이미지',
       contextLabel: '이미지에서 변경하고 싶은 것을 설명하세요',
       contextPlaceholder: '예: 유화로 변환... 더 다채롭게... 석양 추가...'
+    },
+    videoGeneration: {
+      promptLabel: '비디오 아이디어',
+      promptPlaceholder: '예: 석양 무렵 산 풍경 위를 떠다니는 열기구...',
+      modelLabel: '비디오 모델을 선택하세요:',
+      generating: '비디오 생성 중...'
     },
     textTransform: {
       inputLabel: '아이디어 = 무엇?',
@@ -6013,6 +6037,12 @@ const messages = {
       contextLabel: 'Опиши, що ти хочеш змінити в зображенні',
       contextPlaceholder: 'напр. Перетвори в олійний живопис... Зроби яскравішим... Додай захід сонця...'
     },
+    videoGeneration: {
+      promptLabel: 'Твоя ідея для відео',
+      promptPlaceholder: 'напр. Повітряна куля пливе над гірським пейзажем на заході сонця...',
+      modelLabel: 'Обери відео-модель:',
+      generating: 'Відео генерується...'
+    },
     textTransform: {
       inputLabel: 'Твоя ідея = ЩО?',
       inputTooltip: 'Введи, про що має бути твій витвір.',
@@ -7371,6 +7401,12 @@ const messages = {
       imageLabel: 'Votre image',
       contextLabel: 'Décrivez ce que vous voulez changer dans l\'image',
       contextPlaceholder: 'p. ex. Transformer en peinture à l\'huile... Rendre plus coloré... Ajouter un coucher de soleil...'
+    },
+    videoGeneration: {
+      promptLabel: 'Votre id\u00E9e vid\u00E9o',
+      promptPlaceholder: 'p. ex. Une montgolfi\u00E8re survolant un paysage montagneux au coucher du soleil...',
+      modelLabel: 'Choisissez un mod\u00E8le vid\u00E9o :',
+      generating: 'G\u00E9n\u00E9ration de la vid\u00E9o en cours...'
     },
     textTransform: {
       inputLabel: 'Votre idée = QUOI ?',
