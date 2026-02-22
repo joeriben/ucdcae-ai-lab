@@ -1,5 +1,40 @@
 # Development Log
 
+## Session 193 - Wavetable Synthesis as Third Playback Mode
+**Date:** 2026-02-22
+**Focus:** Add wavetable oscillator to Crossmodal Lab Synth tab
+
+### Problem
+The Latent Audio Synth generates audio via Stable Audio and plays it as a looping sample (`AudioBufferSourceNode.loop`). The WAV contains complex audio with many oscillations — crossfade at loop boundaries is always audible, and it doesn't behave like an oscillator.
+
+### Solution: Wavetable Oscillator
+Extract single-cycle frames from the WAV and use them as a wavetable oscillator (Serum/Vital paradigm). A phase-accumulator AudioWorklet reads through each frame at the desired frequency, and a scan position morphs between frames for timbral control.
+
+Three mutually exclusive modes: **Loop | Ping-Pong | Wavetable**
+
+### Implementation
+
+**New files:**
+- `src/audio/wavetable-processor.ts` — AudioWorkletProcessor with phase-accumulator synthesis, bilinear interpolation (between samples within a frame + between adjacent frames), 2048-sample frame size (~21.5 Hz fundamental at 44.1 kHz)
+- `src/composables/useWavetableOsc.ts` — Composable managing AudioContext + worklet lifecycle, frame extraction (stereo→mono, pitch-synchronous via pitchy McLeod + Lanczos sinc resampling + Hann windowing, fallback to overlapping windowed extraction), frequency/scan/note control
+
+**Modified files:**
+- `useAudioLooper.ts` — Added `getOriginalBuffer()` getter (1 line)
+- `crossmodal_lab.vue` — Segmented control replacing ping-pong checkbox, wavetable scan slider, conditional visibility (transpose mode/crossfade/save-loop hidden in wavetable mode), MIDI CC5→scan mapping, note handler branches on mode, frame re-extraction on regeneration
+- `i18n.ts` — 7 keys (DE+EN): modeLoop, modePingPong, modeWavetable, wavetableScan, wavetableScanHint, wavetableFrames, midiScan
+
+### Key Design Decisions
+- **Phase accumulator in AudioWorklet**: Runs in audio thread — no main-thread jitter. Phase wraps to prevent float precision loss at high frequencies.
+- **Bilinear interpolation**: Smooth both within-frame (sample interpolation) and between-frame (scan morphing) — no audible stepping.
+- **Pitch-synchronous extraction** (user enhancement): Uses pitchy MPM for pitch detection, extracts exact periods at zero-crossings, Lanczos-resamples to FRAME_SIZE. Falls back to overlapping windowed extraction for noisy/unpitched audio.
+- **Mode switching stops both engines**: Clean handoff — no orphaned AudioNodes.
+- **Wavetable mode reuses looper for decode**: `looper.play()` still decodes base64 WAV, then `getOriginalBuffer()` provides the AudioBuffer for frame extraction. Looper is stopped after frames load.
+
+### Commits
+- `cbb9f96` feat(crossmodal-lab): Wavetable synthesis as third playback mode
+
+---
+
 ## Session 192 - Latent Lab Research Data Export (LatentLabRecorder)
 **Date:** 2026-02-22
 **Focus:** Research data recording for all Latent Lab experiments

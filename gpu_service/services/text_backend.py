@@ -225,6 +225,8 @@ class TextBackend:
                 vram_before = torch.cuda.memory_allocated(0) if torch.cuda.is_available() else 0
 
                 tokenizer = AutoTokenizer.from_pretrained(model_id)
+                if tokenizer.pad_token is None:
+                    tokenizer.pad_token = tokenizer.eos_token
 
                 # Build load kwargs based on quantization
                 load_kwargs = {

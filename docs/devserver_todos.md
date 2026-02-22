@@ -4,6 +4,43 @@
 
 ---
 
+## 📋 TODO: LLM Inference Migration — Ollama → GPU Service
+
+**Status:** 📋 **TODO** — Plan approved, ready for implementation
+**Datum:** 2026-02-22
+**Priority:** HIGH (Architectural consolidation — single VRAM manager)
+**Plan:** `/home/joerissen/.claude/plans/zazzy-exploring-penguin.md`
+
+### Ziel
+
+Alle LLM-Inferenz (Safety, DSGVO, VLM, Translation, Interception, Chat) von Ollama in den GPU Service migrieren. Ein Prozess, ein VRAM-Manager (VRAMCoordinator), ein Modellformat (safetensors). Ollama bleibt als Fallback für ressourcenschwache Deployments.
+
+### Neue Dateien (4)
+
+- `gpu_service/services/llm_inference_backend.py` — Neues Backend (Modell-Loading, Chat/Generate, VRAMCoordinator)
+- `gpu_service/routes/llm_inference_routes.py` — 5 Endpoints (/api/llm/chat, /generate, /available, /models, /unload)
+- `devserver/my_app/services/llm_client.py` — HTTP-Client mit Ollama-Fallback (wie DiffusersClient)
+- `devserver/my_app/services/llm_backend.py` — Singleton-Factory
+
+### 6 Migrationsphasen
+
+1. **GPU Service Infrastruktur** — Backend + Routes + Config
+2. **DevServer Client** — LLMClient + Factory + Config
+3. **Safety migrieren** — stage_orchestrator.py (DSGVO, Age-Filter), ollama_service.check_safety()
+4. **Translation migrieren** — ollama_service.translate_text()
+5. **Vision-Modelle** — vlm_safety.py, image_analysis.py (qwen3-vl, llama3.2-vision)
+6. **Interception + Chat** — prompt_interception_engine._call_ollama(), chat_routes
+
+### Modell-Mapping (Ollama → HuggingFace)
+
+- `llama-guard3:1b` → `meta-llama/Llama-Guard-3-1B`
+- `qwen3:1.7b` → `Qwen/Qwen3-1.7B`
+- `qwen3:4b` → `Qwen/Qwen3-4B-Instruct`
+- `qwen3-vl:2b` → `Qwen/Qwen2.5-VL-3B-Instruct`
+- `llama3.2-vision:latest` → `meta-llama/Llama-3.2-11B-Vision-Instruct`
+
+---
+
 ## 📋 TODO: SpaCy Startup-Check + requirements.txt bereinigen
 
 **Status:** 📋 **TODO**
@@ -17,6 +54,51 @@ SpaCy ist in `requirements.txt`, aber `pip install -r requirements.txt` installi
 1. **Startup-Check** im Backend: Beim Start prüfen ob SpaCy + die 2 erforderlichen Modelle installiert sind. Fehlt was → klare Fehlermeldung (nicht nur Warning, sondern Abbruch oder rote Warnung)
 2. **requirements.txt bereinigen**: Kommentare zeigen noch die alten 12 Modelle — aktualisieren auf die 2 tatsächlich verwendeten (`de_core_news_lg`, `xx_ent_wiki_sm`)
 3. **Installationsskript oder Post-Install-Hook** für die SpaCy-Modelle (sie werden per `python -m spacy download` installiert, nicht per pip)
+
+---
+
+## 📋 TODO: T5 Audio-Semantic Interpretability Research (SAE)
+
+**Status:** 📋 **TODO** — Plan approved, ready for implementation
+**Datum:** 2026-02-22
+**Priority:** MEDIUM (Forschungsprojekt, nicht blocking)
+**Plan:** `docs/plans/t5_interpretability_research.md`
+
+### Forschungsfrage
+
+Wie organisiert T5-Base semantisches Wissen über Klang in seinem Embedding-Raum (768d)?
+
+### Ansatz
+
+Sparse Autoencoder auf T5-Aktivierungen trainieren (101K Prompts), 768 entangled Dimensionen in ~12K monosemantische Features zerlegen, diese durch Stable Audio sonifizieren.
+
+### Neuartigkeit
+
+- SAE-Features durch Audio-Diffusionsmodell hörbar machen = unerforscht (SAEdit macht es für Bilder)
+- T5-Conditioning-Space als Syntheseraum = neues Paradigma (IRCAM RAVE/AFTER nutzen VAE-Latenzräume)
+
+### Prompt-Korpus
+
+- **Bulk** (~95K): AudioCaps + MusicCaps + WavCaps
+- **Probing Pillar 1** (3750): 15 Musiktraditionen × 250 Prompts (symmetrisch, keine Hierarchie): Ukrainisch, Yoruba, Gamelan, Arabisch, Jüdisch, Fränkisch, Afroamerikanisch, Romani, Japanisch, Koreanisch, Hindustani, Tuwinisch, Aboriginal Australian, Flamenco, Elektronisch
+- **Probing Pillar 2** (2000): Materiell-physikalisch (Anregungsart, Material, Raum, Zeit, Spektrum, Dynamik)
+- **Controls** (500): Baselines, Absurdes, Kompositorisch, Minimalpaare
+
+### 7 Phasen
+
+1. Corpus Assembly (`build_corpus.py`)
+2. Batch Encoding (`encode_corpus.py`) — ~2 Min, <1 GB VRAM
+3. Dimension Atlas (`dimension_atlas.py`) — Alammar-Stil, Sekunden
+4. TopK SAE Training (`train_sae.py`) — ~30 Sek, <200 MB VRAM
+5. Feature Interpretation (`analyze_features.py`)
+6. Sonification (`sonify_features.py`) — ~2 Stunden (Stable Audio Inferenz)
+7. Cultural Analysis (`cultural_analysis.py`)
+
+### Constraints
+
+- Keine neuen Dependencies (alles im bestehenden venv)
+- Standalone in `research/t5_interpretability/`, nicht in DevServer/GPU Service integriert
+- Compute: <3 Stunden total, <3 GB VRAM peak (RTX 6000 Blackwell 96GB)
 
 ---
 
@@ -1949,6 +2031,56 @@ Done: Added collapsible explanation block with 4 Q&A sections (overview + one pe
 
 ### 5. Scientific references with DOI in all labs
 All latent lab tabs reference published research (MMAudio = CVPR 2025, ImageBind = CVPR 2023, Stable Audio = ICML 2024). Add DOI links and brief citations accessible via info buttons or tab descriptions.
+
+---
+
+## 📋 TODO: Video Generation via Wan 2.1 Diffusers (VRAM-Tiered)
+
+**Status:** 📋 **IMPLEMENTIERT, PoC PENDING** — Code fertig, Modell-Download läuft
+**Datum:** 2026-02-15
+**Priority:** HIGH (neue Medienfähigkeit)
+**Plan:** `docs/plans/video_generation_wan21_diffusers.md`
+
+### Was ist fertig
+
+Code komplett implementiert in beiden Schichten (GPU Service + DevServer):
+- GPU Service: `generate_video()` + `/api/diffusers/generate/video` Route
+- DevServer: `DiffusersClient.generate_video()` + Python Output Chunk + 2 Output Configs
+- VRAM-Tier-Routing: `output_config_defaults.json` mit Dict-Support (96GB→14B, 32GB→1.3B, 8GB→null)
+- Backend Router: Video-Daten-Handling in `_execute_python_chunk()`
+
+### Was noch fehlt
+
+1. **PoC-Test**: `venv/bin/python test_wan21_video.py` — wartet auf Modell-Download
+2. **Modell-Download**: Wan 2.1 T2V-1.3B läuft (T5-XXL Text Encoder ist ~25GB, teilweise aus 14B-Cache kopiert)
+3. **14B-Modell**: Download unterbrochen (30GB Disk zu wenig für 85GB Modell), später auf anderem System fortsetzen
+4. **Integration Test**: GPU Service → DevServer → Video Pipeline end-to-end
+5. **Frontend**: Vue-Komponente für Video-Anzeige (noch nicht implementiert)
+
+### Nächste Schritte nach Reboot
+
+1. Prüfen ob 1.3B-Download fertig: `ls ~/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-1.3B-Diffusers/snapshots/`
+2. PoC starten: `venv/bin/python test_wan21_video.py`
+3. Bei Erfolg: GPU Service + DevServer starten, Integration testen
+
+---
+
+## 📋 TODO: LoRA Support for Diffusers GPU Service
+
+**Status:** 📋 **TODO** — Plan approved, ready for implementation
+**Datum:** 2026-02-17
+**Priority:** HIGH (Blocks usage of user-trained LoRAs with Diffusers backend)
+**Plan:** `docs/plans/lora-diffusers-support.md`
+
+### Problem
+Diffusers GPU service (port 17803) is now the primary backend for SD3.5 Large, but it has NO LoRA support. The entire LoRA data flow exists (interception configs → orchestrator → backend_router), but `_process_diffusers_chunk` silently ignores `parameters['loras']`. LoRA requests get forced to ComfyUI workflow path.
+
+### Scope (5 files)
+1. `gpu_service/config.py` — Add `LORA_DIR`
+2. `gpu_service/services/diffusers_backend.py` — Add `_apply_loras()` / `_remove_loras()` + `loras` param to all generation methods
+3. `gpu_service/routes/diffusers_routes.py` — Pass `loras` from request JSON
+4. `devserver/my_app/services/diffusers_client.py` — Pass `loras` in HTTP payloads
+5. `devserver/schemas/engine/backend_router.py` — Extract `parameters['loras']` in `_process_diffusers_chunk` + fix auto-detection routing
 
 ---
 
