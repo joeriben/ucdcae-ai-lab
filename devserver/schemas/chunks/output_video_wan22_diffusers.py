@@ -1,9 +1,8 @@
 """
-Output Chunk: Wan 2.1 Video Generation (Diffusers)
+Output Chunk: Wan 2.2 Video Generation (Diffusers)
 
-Generates video from text using Wan 2.1 T2V models via the GPU service.
-One chunk for both model sizes (14B and 1.3B) — the output config determines
-which model_id is used.
+Generates video from text using Wan 2.2 TI2V-5B via the GPU service.
+Uses official HuggingFace Diffusers pipeline (WanPipeline).
 
 Input (from Stage 2/3 or direct):
     - prompt (TEXT_1): Text description of the video to generate
@@ -18,23 +17,23 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 CHUNK_META = {
-    "name": "output_video_wan21_diffusers",
+    "name": "output_video_wan22_diffusers",
     "media_type": "video",
     "output_format": "mp4",
-    "estimated_duration_seconds": "60-300",
+    "estimated_duration_seconds": "60-120",
     "quality_rating": 4,
     "requires_gpu": True,
-    "gpu_vram_mb": 8000,
+    "gpu_vram_mb": 20000,
 }
 
 DEFAULTS = {
     "negative_prompt": "blurry, distorted, low quality, static, watermark",
     "width": 1280,
-    "height": 720,
-    "num_frames": 81,
-    "steps": 30,
+    "height": 704,
+    "num_frames": 121,
+    "steps": 50,
     "cfg_scale": 5.0,
-    "fps": 16,
+    "fps": 24,
     "seed": None,
 }
 
@@ -42,7 +41,7 @@ DEFAULTS = {
 async def execute(
     prompt: str = None,
     TEXT_1: str = None,
-    model_id: str = "Wan-AI/Wan2.1-T2V-14B-Diffusers",
+    model_id: str = "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
     negative_prompt: str = None,
     width: int = None,
     height: int = None,
@@ -54,10 +53,10 @@ async def execute(
     **kwargs
 ) -> bytes:
     """
-    Execute Wan 2.1 video generation.
+    Execute Wan 2.2 video generation.
 
-    The output config provides model_id (14B or 1.3B) and resolution defaults.
-    This chunk handles both model sizes identically.
+    The output config provides resolution defaults and model_id.
+    GPU service handles WanPipeline loading with VAE float32 separation.
 
     Returns:
         MP4 video bytes
@@ -87,8 +86,8 @@ async def execute(
     if seed is None or seed == "random":
         seed = random.randint(0, 2**32 - 1)
 
-    logger.info(f"[CHUNK:wan21-video] Executing: model={model_id}, {width}x{height}, {num_frames} frames")
-    logger.info(f"[CHUNK:wan21-video] Prompt: {prompt[:100]}...")
+    logger.info(f"[CHUNK:wan22-video] Executing: model={model_id}, {width}x{height}, {num_frames} frames, {steps} steps")
+    logger.info(f"[CHUNK:wan22-video] Prompt: {prompt[:100]}...")
 
     backend = get_diffusers_backend()
 
@@ -111,5 +110,5 @@ async def execute(
     if video_bytes is None:
         raise Exception("Video generation failed")
 
-    logger.info(f"[CHUNK:wan21-video] Generated {len(video_bytes)} bytes (seed={seed})")
+    logger.info(f"[CHUNK:wan22-video] Generated {len(video_bytes)} bytes (seed={seed})")
     return video_bytes

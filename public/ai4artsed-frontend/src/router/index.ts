@@ -84,12 +84,6 @@ const router = createRouter({
       meta: { requiresAdvanced: true },
     },
     {
-      path: '/video-generation',
-      name: 'video-generation',
-      // Text-to-video generation (Wan 2.1)
-      component: () => import('../views/video_generation.vue'),
-    },
-    {
       path: '/music-generation',
       name: 'music-generation',
       // Unified music generation with Simple/Advanced mode toggle

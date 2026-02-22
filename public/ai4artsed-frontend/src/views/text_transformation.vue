@@ -699,8 +699,7 @@ const configsByCategory: Record<string, Config[]> = {
   video: [
     { id: 'ltx_video', label: 'LTX\nVideo', emoji: '⚡', color: '#9C27B0', description: 'Schnelle lokale Videogenerierung', logo: '/logos/ltx_logo.png', lightBg: false },
     { id: 'wan22_video', label: 'Wan 2.2', emoji: '🎬', color: '#E91E63', description: 'Hochwertige 720p Videogenerierung mit Wan 2.2 (5B)', logo: '/logos/Qwen_logo.png', lightBg: false },
-    { id: 'wan21_t2v_14b_diffusers', label: 'Wan 2.1\n14B', emoji: '🎬', color: '#9B59B6', description: 'Hochwertige 720p Videogenerierung mit Wan 2.1 (14B)', logo: '/logos/Qwen_logo.png', lightBg: false },
-    { id: 'wan21_t2v_1_3b_diffusers', label: 'Wan 2.1\n1.3B', emoji: '⚡', color: '#E67E22', description: 'Schnelle 480p Videogenerierung mit Wan 2.1 (1.3B)', logo: '/logos/Qwen_logo.png', lightBg: false }
+    { id: 'wan22_t2v_diffusers', label: 'Wan 2.2\nDiffusers', emoji: '🎬', color: '#9B59B6', description: 'Hochwertige 720p Videogenerierung mit Wan 2.2 (5B) via Diffusers', logo: '/logos/Qwen_logo.png', lightBg: false }
   ],
   sound: [
     { id: 'acenet_t2instrumental', label: 'ACE\nInstrumental', emoji: '🎵', color: '#FF5722', description: 'KI-Musikgenerierung für Instrumentalstücke', logo: '/logos/ace_logo.png', lightBg: false },
@@ -731,8 +730,7 @@ const configIdToChunkName: Record<string, string> = {
   'tonejs_code': 'tonejs',
   'ltx_video': 'ltx',
   'wan22_video': 'wan22',
-  'wan21_t2v_14b_diffusers': 'wan21_diffusers',
-  'wan21_t2v_1_3b_diffusers': 'wan21_diffusers',
+  'wan22_t2v_diffusers': 'wan22_diffusers',
   'acenet_t2instrumental': 'acenet',
   'stableaudio_open': 'stableaudio'
 }
@@ -841,8 +839,7 @@ const modelFullNames: Record<string, string> = {
   tonejs_code: 'Tone.js Music Generation',
   ltx_video: 'LTX Video',
   wan22_video: 'Wan 2.2 Text-to-Video',
-  wan21_t2v_14b_diffusers: 'Wan 2.1 14B (720p)',
-  wan21_t2v_1_3b_diffusers: 'Wan 2.1 1.3B (480p)',
+  wan22_t2v_diffusers: 'Wan 2.2 TI2V-5B (720p)',
   acenet_t2instrumental: 'ACE Step Instrumental',
   stableaudio_open: 'Stable Audio Open'
 }

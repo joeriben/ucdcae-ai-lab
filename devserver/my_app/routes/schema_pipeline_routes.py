@@ -144,7 +144,7 @@ def _resolve_vram_tier_dict(tier_dict: dict) -> str:
     if the exact tier has no entry.
 
     Args:
-        tier_dict: e.g. {"vram_96": "wan21_t2v_14b_diffusers", "vram_32": "wan21_t2v_1_3b_diffusers"}
+        tier_dict: e.g. {"vram_96": "config_large", "vram_24": "config_small"}
 
     Returns:
         Config name string or None

@@ -22,16 +22,9 @@
   },
 
   "video": {
-    "eco": {
-      "vram_96": "wan21_t2v_14b_diffusers",
-      "vram_48": "wan21_t2v_14b_diffusers",
-      "vram_32": "wan21_t2v_1_3b_diffusers",
-      "vram_24": "wan21_t2v_1_3b_diffusers",
-      "vram_16": "wan21_t2v_1_3b_diffusers",
-      "vram_8": null
-    },
+    "eco": "wan22_t2v_diffusers",
     "fast": null,
-    "_note": "eco=VRAM-tiered Wan 2.1 T2V (14B for 96/48GB, 1.3B for 32/24/16GB, disabled for 8GB)"
+    "_note": "Wan 2.2 TI2V-5B via Diffusers GPU service. ~1-2 min per video, ~20GB VRAM."
   },
 
   "text": {
