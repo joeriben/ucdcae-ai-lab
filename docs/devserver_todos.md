@@ -57,48 +57,99 @@ SpaCy ist in `requirements.txt`, aber `pip install -r requirements.txt` installi
 
 ---
 
-## 📋 TODO: T5 Audio-Semantic Interpretability Research (SAE)
+## 🧪 TODO: T5 Audio-Semantic Interpretability Research — Erstdurchlauf testen
 
-**Status:** 📋 **TODO** — Plan approved, ready for implementation
-**Datum:** 2026-02-22
+**Status:** 🧪 **CODE COMPLETE** — Erstdurchlauf steht aus
+**Datum:** 2026-02-23 (Implementation), Plan: 2026-02-22
 **Priority:** MEDIUM (Forschungsprojekt, nicht blocking)
 **Plan:** `docs/plans/t5_interpretability_research.md`
+**Code:** `research/t5_interpretability/` (10 Dateien, Session 203)
 
 ### Forschungsfrage
 
 Wie organisiert T5-Base semantisches Wissen über Klang in seinem Embedding-Raum (768d)?
+SAE-Features durch Stable Audio hörbar machen = unerforschtes Territorium (SAEdit macht es für Bilder, niemand für Audio).
 
-### Ansatz
+### Testanleitung — Erstdurchlauf
 
-Sparse Autoencoder auf T5-Aktivierungen trainieren (101K Prompts), 768 entangled Dimensionen in ~12K monosemantische Features zerlegen, diese durch Stable Audio sonifizieren.
+**Voraussetzungen:**
+- Internetverbindung (Phase 1: ~3 HuggingFace-Downloads, T5-Base Modell)
+- GPU frei (Phase 2+4: <1 GB VRAM reicht)
+- Für Phase 6: GPU Service muss laufen (`6_start_gpu_service.sh`) mit Stable Audio
 
-### Neuartigkeit
+**Phase 1–5 (offline, ~10 Min total):**
 
-- SAE-Features durch Audio-Diffusionsmodell hörbar machen = unerforscht (SAEdit macht es für Bilder)
-- T5-Conditioning-Space als Syntheseraum = neues Paradigma (IRCAM RAVE/AFTER nutzen VAE-Latenzräume)
+```bash
+cd ~/ai/ai4artsed_development
 
-### Prompt-Korpus
+# Phase 1a: Bulk-Korpus herunterladen (~5 Min, ~95K Captions)
+venv/bin/python research/t5_interpretability/build_corpus.py
+# → Prüfen: data/corpus.json existiert, ~90K+ Einträge
 
-- **Bulk** (~95K): AudioCaps + MusicCaps + WavCaps
-- **Probing Pillar 1** (3750): 15 Musiktraditionen × 250 Prompts (symmetrisch, keine Hierarchie): Ukrainisch, Yoruba, Gamelan, Arabisch, Jüdisch, Fränkisch, Afroamerikanisch, Romani, Japanisch, Koreanisch, Hindustani, Tuwinisch, Aboriginal Australian, Flamenco, Elektronisch
-- **Probing Pillar 2** (2000): Materiell-physikalisch (Anregungsart, Material, Raum, Zeit, Spektrum, Dynamik)
-- **Controls** (500): Baselines, Absurdes, Kompositorisch, Minimalpaare
+# Phase 1b: Probing-Korpus generieren (~1 Sek)
+venv/bin/python research/t5_interpretability/build_probing_corpus.py
+# → Prüfen: corpus.json jetzt ~100K+ Einträge, letzte Zeile zeigt Verteilung
 
-### 7 Phasen
+# Phase 2: T5-Encoding (~2 Min, <1 GB VRAM)
+venv/bin/python research/t5_interpretability/encode_corpus.py
+# → Prüfen: data/activations_pooled.pt (~150 MB), shape [~100K, 768], keine NaN/Inf
 
-1. Corpus Assembly (`build_corpus.py`)
-2. Batch Encoding (`encode_corpus.py`) — ~2 Min, <1 GB VRAM
-3. Dimension Atlas (`dimension_atlas.py`) — Alammar-Stil, Sekunden
-4. TopK SAE Training (`train_sae.py`) — ~30 Sek, <200 MB VRAM
-5. Feature Interpretation (`analyze_features.py`)
-6. Sonification (`sonify_features.py`) — ~2 Stunden (Stable Audio Inferenz)
-7. Cultural Analysis (`cultural_analysis.py`)
+# Phase 3: Dimension Atlas (Sekunden, kein GPU)
+venv/bin/python research/t5_interpretability/dimension_atlas.py
+# → Prüfen: data/dimension_atlas.json — Cluster mit interpretierbaren Top-Prompts
 
-### Constraints
+# Phase 4: SAE Training (~30 Sek, <200 MB VRAM)
+venv/bin/python research/t5_interpretability/train_sae.py
+# → Prüfen: Final-Zeile: MSE < 0.05, L0 ≈ 64, Dead features < 5%
 
-- Keine neuen Dependencies (alles im bestehenden venv)
-- Standalone in `research/t5_interpretability/`, nicht in DevServer/GPU Service integriert
-- Compute: <3 Stunden total, <3 GB VRAM peak (RTX 6000 Blackwell 96GB)
+# Phase 5: Feature-Analyse (~1 Min)
+venv/bin/python research/t5_interpretability/analyze_features.py
+# → Prüfen: data/feature_atlas_report.md — Top-Features semantisch kohärent?
+```
+
+**Phase 6 (GPU Service nötig, ~2h):**
+
+```bash
+# GPU Service starten (eigenes Terminal!)
+./6_start_gpu_service.sh
+
+# Sonification: 50 Features × 5 Stärken = 250 WAVs
+venv/bin/python research/t5_interpretability/sonify_features.py
+# → Prüfen: data/sonification/ — WAVs anhören, Veränderung über Stärke-Stufen?
+# → Tipp: Erst mit --top 5 testen (falls Flag gewünscht → config.py: SONIFICATION_TOP_FEATURES=5)
+```
+
+**Phase 7 (kein GPU, ~1 Min):**
+
+```bash
+venv/bin/python research/t5_interpretability/cultural_analysis.py
+# → Prüfen: data/cultural_analysis_report.md
+#   - p-Wert < 0.01? (Traditions-Unterschiede signifikant)
+#   - Default-Encoding-Bias: Welche Tradition ist "music" am nächsten?
+#   - Bias-Dimensionalität: Wenige oder viele Features für Kulturunterscheidung?
+```
+
+### Akzeptanzkriterien
+
+| Phase | Prüfung | Erwartung |
+|-------|---------|-----------|
+| 1 | `corpus.json` Einträge | ~95K–101K, keine Duplikate |
+| 2 | `activations_pooled.pt` Shape | [~100K, 768], kein NaN/Inf |
+| 3 | `dimension_atlas.json` Cluster | Top-Prompts interpretierbar (manuell) |
+| 4 | SAE-Metriken | MSE < 0.05, dead < 5%, L0 ≈ 64 |
+| 5 | `feature_atlas_report.md` | Top-Features semantisch kohärent |
+| 6 | Sonification WAVs | Hörbare Veränderung über Stärke-Stufen |
+| 7 | `cultural_analysis_report.md` | p < 0.01, Default-Bias messbar |
+
+### Schnelltest (Phase 1–5 ohne Download)
+
+Falls kein Internet: Phase 1a überspringen, manuell ein kleines `corpus.json` mit 100 Test-Prompts anlegen, dann Phase 1b–5 laufen lassen. SAE-Metriken werden bei 100 Einträgen nicht aussagekräftig sein, aber der Code-Pfad wird validiert.
+
+### Geänderte Dateien (Session 203)
+
+- **10 neue Dateien**: `research/t5_interpretability/{config,probing_specs,build_corpus,build_probing_corpus,encode_corpus,dimension_atlas,train_sae,analyze_features,sonify_features,cultural_analysis}.py`
+- **1 geänderte Route**: `gpu_service/routes/stable_audio_routes.py` — neuer Endpoint `POST /api/stable_audio/generate_from_embeddings`
+- **`.gitignore`**: `research/t5_interpretability/data/` ausgenommen
 
 ---
 

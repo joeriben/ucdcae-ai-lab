@@ -1,5 +1,55 @@
 # Development Log
 
+## Session 203 - T5 Interpretability Research: Full 7-Phase Pipeline Implementation
+**Date:** 2026-02-23
+**Focus:** Implement SAE-based T5 audio-semantic interpretability research pipeline
+
+### Context
+
+Approved research plan (Session 192): Train a Sparse Autoencoder on T5-Base activations from ~101K audio prompts, decompose 768d into 12,288 monosemantic features, then sonify them through Stable Audio. No existing work sonifies SAE features through an audio diffusion model — SAEdit does it for images, this is the audio equivalent.
+
+### Implementation (10 files, 4,078 lines)
+
+**`research/t5_interpretability/`** — standalone scripts, each phase runnable independently:
+
+| File | Phase | Purpose |
+|------|-------|---------|
+| `config.py` | — | Shared paths, hyperparams (SAE 768→12288, k=64), dataset IDs |
+| `probing_specs.py` | — | 15 TraditionSpec dataclasses (full vocab), Pillar 2 material-physical vocab, controls |
+| `build_corpus.py` | 1a | Download AudioCaps/MusicCaps/WavCaps (~95K), deduplicate |
+| `build_probing_corpus.py` | 1b | Template-based generation: 15×250 traditions + 2000 physical + 500 controls |
+| `encode_corpus.py` | 2 | Standalone T5-Base, batch 64, mean-pool → [N, 768] fp16 |
+| `dimension_atlas.py` | 3 | Per-dim stats, 768×768 correlation clustering (Ward), probing analysis |
+| `train_sae.py` | 4 | TopK SAE: pre-bias, encoder, unit-norm decoder, MSE loss, decoder renorm |
+| `analyze_features.py` | 5 | Top-20 prompts, Pearson r per category, cultural bias, co-activation clustering |
+| `sonify_features.py` | 6 | Feature direction injection into T5 embedding, GPU service HTTP generation |
+| `cultural_analysis.py` | 7 | 15×15 cosine distance matrix, default-encoding bias, permutation test (p-value) |
+
+**GPU Service modification:**
+- `gpu_service/routes/stable_audio_routes.py`: Added `POST /api/stable_audio/generate_from_embeddings` — accepts base64-encoded numpy arrays, calls existing `backend.generate_from_embeddings()`. ~40 lines.
+
+### Probing Corpus Design (pedagogical core)
+
+**Symmetrical by design** — no tradition framed as default:
+- 15 traditions × 5 templates × 50 prompts = 3,750 (Pillar 1)
+- Each tradition: ~20 instruments, ~10 vocal styles, ~10 spatial/ensemble contexts, 50 blind descriptors
+- Blind descriptors: acoustic descriptions WITHOUT naming the tradition (tests whether T5 maps similar sounds to same features regardless of cultural label)
+- Pillar 2: 6 excitation types, 10 materials, 8 environments, 6 time patterns, 4 spectral axes, dynamics
+
+### Key Design Decisions
+
+1. **T5-Base standalone** (not via Stable Audio pipeline) — `text_projection = nn.Identity()` at `stable_audio_backend.py:423`, so hidden states are identical. Avoids loading the full diffusion model for encoding.
+2. **TopK SAE** (not L1-penalized) — sparsity by construction (k=64), no hyperparameter tuning for L1 coefficient.
+3. **Mean-pooling** over non-padding tokens — sentence-level representation, not per-token.
+4. **Feature direction injection** — add SAE decoder column (768d unit vector) uniformly across all sequence positions of neutral embedding. Strength parameter controls intensity.
+5. **Permutation test** for cultural significance — 1000 random label shuffles, compare observed mean pairwise distance.
+
+### Status
+
+Code complete, all files syntax-checked. Erstdurchlauf steht aus (Testanleitung in `docs/devserver_todos.md`).
+
+---
+
 ## Session 202 - LLM Inference Migration: Ollama → GPU Service
 **Date:** 2026-02-23
 **Focus:** Route all LLM inference through GPU Service's VRAMCoordinator with Ollama fallback
