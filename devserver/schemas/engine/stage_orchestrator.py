@@ -191,7 +191,6 @@ def llm_verify_person_name(text: str, ner_entities: list) -> Optional[bool]:
         False if LLM rejects (false positive).
         None if LLM unavailable or returns empty (fail-closed).
     """
-    import requests
     import config
 
     # Extract just the name parts from "Name: ..." format
@@ -217,27 +216,30 @@ def llm_verify_person_name(text: str, ner_entities: list) -> Optional[bool]:
     messages = [{"role": "user", "content": prompt}]
 
     try:
+        from my_app.services.llm_backend import get_llm_backend
+
         start = _time.time()
-        response = requests.post(
-            f"{config.OLLAMA_API_BASE_URL}/api/chat",
-            json={
-                "model": ollama_model,
-                "messages": messages,
-                "stream": False,
-                "keep_alive": "10m",
-                "options": {"temperature": 0.0, "num_predict": 500}
-            },
-            timeout=60
+        llm_result = get_llm_backend().chat(
+            model=ollama_model,
+            messages=messages,
+            temperature=0.0,
+            max_new_tokens=500,
         )
-        response.raise_for_status()
-        msg = response.json().get("message", {})
-        result = msg.get("content", "").strip()
         duration_ms = (_time.time() - start) * 1000
+
+        if llm_result is None:
+            logger.error(
+                f"[DSGVO-LLM-VERIFY] entities={names_str} → LLM ({ollama_model}) returned None "
+                f"({duration_ms:.0f}ms) — fail-closed"
+            )
+            return None
+
+        result = llm_result.get("content", "").strip()
 
         # Thinking model fallback: Thinking models put reasoning in 'thinking', answer in 'content'.
         # Under VRAM pressure, 'content' may be empty — extract SAFE/UNSAFE from 'thinking'.
         if not result:
-            thinking = msg.get("thinking", "").strip()
+            thinking = (llm_result.get("thinking") or "").strip()
             if thinking:
                 logger.info(f"[DSGVO-LLM-VERIFY] content empty, checking thinking field ({len(thinking)} chars)")
                 thinking_upper = thinking.upper()
@@ -283,7 +285,6 @@ def llm_dsgvo_fallback_check(text: str) -> Optional[bool]:
         False if no personal names found (safe).
         None if LLM unavailable (fail-closed).
     """
-    import requests
     import config
 
     model = config.DSGVO_VERIFY_MODEL
@@ -303,26 +304,26 @@ def llm_dsgvo_fallback_check(text: str) -> Optional[bool]:
     messages = [{"role": "user", "content": prompt}]
 
     try:
+        from my_app.services.llm_backend import get_llm_backend
+
         start = _time.time()
-        response = requests.post(
-            f"{config.OLLAMA_API_BASE_URL}/api/chat",
-            json={
-                "model": ollama_model,
-                "messages": messages,
-                "stream": False,
-                "keep_alive": "10m",
-                "options": {"temperature": 0.0, "num_predict": 500}
-            },
-            timeout=60
+        llm_result = get_llm_backend().chat(
+            model=ollama_model,
+            messages=messages,
+            temperature=0.0,
+            max_new_tokens=500,
         )
-        response.raise_for_status()
-        msg = response.json().get("message", {})
-        result = msg.get("content", "").strip()
         duration_ms = (_time.time() - start) * 1000
+
+        if llm_result is None:
+            logger.error(f"[DSGVO-LLM-FALLBACK] LLM ({ollama_model}) returned None ({duration_ms:.0f}ms) — fail-closed")
+            return None
+
+        result = llm_result.get("content", "").strip()
 
         # Thinking model fallback
         if not result:
-            thinking = msg.get("thinking", "").strip()
+            thinking = (llm_result.get("thinking") or "").strip()
             if thinking:
                 logger.info(f"[DSGVO-LLM-FALLBACK] content empty, checking thinking field ({len(thinking)} chars)")
                 thinking_upper = thinking.upper()
@@ -378,7 +379,6 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
         False if LLM says benign context (allow).
         None if LLM unavailable (fail-closed).
     """
-    import requests
     import config
 
     # Cache lookup — prevents inconsistent re-checks within TTL
@@ -412,26 +412,29 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
     messages = [{"role": "user", "content": prompt}]
 
     try:
+        from my_app.services.llm_backend import get_llm_backend
+
         start = _time.time()
-        response = requests.post(
-            f"{config.OLLAMA_API_BASE_URL}/api/chat",
-            json={
-                "model": ollama_model,
-                "messages": messages,
-                "stream": False,
-                "keep_alive": "10m",
-                "options": {"temperature": 0.0, "num_predict": 500}
-            },
-            timeout=60
+        llm_result = get_llm_backend().chat(
+            model=ollama_model,
+            messages=messages,
+            temperature=0.0,
+            max_new_tokens=500,
         )
-        response.raise_for_status()
-        msg = response.json().get("message", {})
-        result = msg.get("content", "").strip()
         duration_ms = (_time.time() - start) * 1000
+
+        if llm_result is None:
+            logger.error(
+                f"[AGE-LLM-VERIFY] terms={terms_str} → LLM ({ollama_model}) returned None "
+                f"({duration_ms:.0f}ms) — fail-closed"
+            )
+            return None
+
+        result = llm_result.get("content", "").strip()
 
         # Thinking model fallback
         if not result:
-            thinking = msg.get("thinking", "").strip()
+            thinking = (llm_result.get("thinking") or "").strip()
             if thinking:
                 logger.info(f"[AGE-LLM-VERIFY] content empty, checking thinking field ({len(thinking)} chars)")
                 thinking_upper = thinking.upper()

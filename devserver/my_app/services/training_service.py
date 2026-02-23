@@ -215,6 +215,36 @@ class TrainingService:
         except Exception as e:
             results["errors"].append(f"Ollama unload failed: {e}")
 
+        # Step 4b: Unload GPU Service LLM models
+        try:
+            from config import GPU_SERVICE_URL
+            llm_models_response = requests.get(
+                f"{GPU_SERVICE_URL}/api/llm/models",
+                timeout=10
+            )
+            if llm_models_response.ok:
+                llm_unloaded = []
+                for model_info in llm_models_response.json().get("models", []):
+                    mid = model_info.get("model_id", "")
+                    if mid:
+                        try:
+                            requests.post(
+                                f"{GPU_SERVICE_URL}/api/llm/unload",
+                                json={"model_id": mid},
+                                timeout=30
+                            )
+                            llm_unloaded.append(mid)
+                        except Exception:
+                            pass
+                if llm_unloaded:
+                    results["actions"].append(f"GPU Service LLM unloaded: {', '.join(llm_unloaded)}")
+                else:
+                    results["actions"].append("GPU Service LLM: no models loaded")
+        except requests.exceptions.ConnectionError:
+            results["actions"].append("GPU Service not running (OK)")
+        except Exception as e:
+            results["errors"].append(f"GPU Service LLM unload failed: {e}")
+
         # Step 5: Wait for VRAM to actually free
         time.sleep(3)
 

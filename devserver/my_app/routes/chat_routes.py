@@ -306,38 +306,26 @@ def _call_mistral_chat(messages: list, model: str, temperature: float, max_token
 
 
 def _call_ollama_chat(messages: list, model: str, temperature: float, max_tokens: int):
-    """Call Ollama (local) API for chat helper"""
+    """Call LLM via GPU Service (primary) with Ollama fallback for chat helper"""
     try:
-        # Get Ollama URL from user_settings.json or use default
-        ollama_url = get_user_setting("OLLAMA_API_BASE_URL", default="http://localhost:11434")
-        api_url = f"{ollama_url}/api/chat"
+        from my_app.services.llm_backend import get_llm_backend
+        result = get_llm_backend().chat(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_new_tokens=max_tokens,
+        )
 
-        payload = {
-            "model": model,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": temperature,
-                "num_predict": max_tokens
-            }
-        }
+        if result is None:
+            raise Exception(f"LLM returned None for model {model}")
 
-        response = requests.post(api_url, json=payload, timeout=120)
-
-        if response.status_code == 200:
-            result = response.json()
-            message = result.get("message", {})
-            content = message.get("content", "").strip()
-            thinking = message.get("thinking", "").strip()
-            logger.info(f"[CHAT] Ollama: content={len(content)} chars, thinking={len(thinking)} chars")
-            return {"content": content, "thinking": thinking or None}
-        else:
-            error_msg = f"API Error: {response.status_code}\n{response.text}"
-            logger.error(f"[CHAT] Ollama Error: {error_msg}")
-            raise Exception(error_msg)
+        content = result.get("content", "").strip()
+        thinking = (result.get("thinking") or "").strip()
+        logger.info(f"[CHAT] LLM: content={len(content)} chars, thinking={len(thinking)} chars")
+        return {"content": content, "thinking": thinking or None}
 
     except Exception as e:
-        logger.error(f"[CHAT] Ollama call failed: {e}", exc_info=True)
+        logger.error(f"[CHAT] LLM call failed: {e}", exc_info=True)
         raise
 
 

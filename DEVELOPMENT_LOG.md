@@ -1,5 +1,58 @@
 # Development Log
 
+## Session 202 - LLM Inference Migration: Ollama → GPU Service
+**Date:** 2026-02-23
+**Focus:** Route all LLM inference through GPU Service's VRAMCoordinator with Ollama fallback
+
+### Problem
+3 separate inference backends (Ollama/GGUF, GPU Service/safetensors, SwarmUI/ComfyUI) competed for the same GPU with no VRAM coordination. Ollama and GPU Service ran blind — loading a safety model via Ollama could evict a Diffusers pipeline from VRAM without the VRAMCoordinator knowing.
+
+### Solution — 6 Phases
+
+**Phase 1: GPU Service Infrastructure (3 new files)**
+- `llm_inference_backend.py`: Multi-model VRAMBackend (mirrors TextBackend pattern). Auto-detects vision vs text models, extracts `<think>` blocks centrally, resolves Ollama model names via `LLM_MODEL_MAP`. NO `output_hidden_states`/`output_attentions` (pure inference, saves VRAM).
+- `llm_inference_routes.py`: 5 REST endpoints (`/api/llm/chat`, `/generate`, `/available`, `/models`, `/unload`)
+- Config: `LLM_INFERENCE_ENABLED`, `LLM_MODEL_MAP` (6 models), `LLM_QUANT_MULTIPLIERS`
+
+**Phase 2: DevServer Client (2 new files)**
+- `llm_client.py`: HTTP wrapper following DiffusersClient pattern. GPU Service primary, Ollama fallback on `ConnectionError`/`Timeout`. LLM errors (OOM, bad model) propagated, no fallback.
+- `llm_backend.py`: Singleton factory (`get_llm_backend()`)
+
+**Phase 3: Migrate Safety (stage_orchestrator.py)**
+- 3 functions → `get_llm_backend().chat()`: `llm_verify_person_name`, `llm_dsgvo_fallback_check`, `llm_verify_age_filter_context`
+- Fail-closed semantics preserved (None → block)
+- Thinking-field fallback preserved
+
+**Phase 4: Migrate Vision Models**
+- `vlm_safety.py` → `get_llm_backend().chat()` with `images` param. Fail-open preserved.
+- `image_analysis.py` → `get_llm_backend().chat()` with `images` param. Fixed hardcoded `localhost:11434` URL bug.
+
+**Phase 5: Migrate Interception + Chat**
+- `prompt_interception_engine.py::_call_ollama()` → `get_llm_backend().generate()`. Removed manual `keep_alive: 0` unload logic (VRAMCoordinator handles lifecycle).
+- `chat_routes.py::_call_ollama_chat()` → `get_llm_backend().chat()`
+- `schema_pipeline_routes.py`: 2× `ollama_service.translate_text()` → `get_llm_backend().generate()`
+
+**Phase 6: Training Service Cleanup**
+- `clear_vram_thoroughly()`: Added Step 4b — unload GPU Service LLM models alongside existing Ollama unload
+
+### Architecture After
+
+```
+DevServer ──→ LLMClient ──→ GPU Service :17803  (safetensors, VRAMCoordinator)
+                         ╰→ Ollama :11434       (GGUF, fallback on ConnectionError)
+```
+
+### NOT in scope (future)
+- `settings_routes.py` `/api/tags` discovery — read-only, stays Ollama
+- `model_selector.py` `/api/tags` discovery — read-only, stays Ollama
+- `ollama_service.py` streaming (`translate_text_stream`) — legacy workflow
+- Model list merging (GPU Service + Ollama available models)
+
+### Files Changed
+- 4 new files, 9 modified files (189 insertions, 167 deletions)
+
+---
+
 ## Session 201 - Hebrew (he) + Arabic (ar) RTL Language Support
 **Date:** 2026-02-23
 **Focus:** Add RTL infrastructure for Hebrew and Arabic, CSS logical properties, LTR-pinned components

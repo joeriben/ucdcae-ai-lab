@@ -29,6 +29,48 @@
 
 ---
 
+## 🧠 LLM Inference Migration: Ollama → GPU Service (2026-02-23)
+
+**Kontext:** 3 Inference-Backends (Ollama/GGUF, GPU Service/safetensors, SwarmUI/ComfyUI) konkurrierten blind um den gleichen GPU-VRAM. Ollama und GPU Service wussten nichts voneinander — ein Safety-Modell via Ollama konnte eine Diffusers-Pipeline aus dem VRAM verdrängen, ohne dass der VRAMCoordinator es mitbekam.
+
+### Decision 1: LLMInferenceBackend als separater VRAMBackend (nicht TextBackend erweitern)
+
+**Problem:** TextBackend lädt Modelle mit `output_hidden_states=True, output_attentions=True` für Latent-Text-Lab-Introspektion. Das kostet signifikant mehr VRAM als reines Inferencing.
+
+**Decision:** Separater `LLMInferenceBackend` — gleiche VRAMBackend-Architektur, aber ohne Introspektions-Flags.
+
+**Begründung:**
+- TextBackend = pädagogische Introspektion (Attention Maps, Embedding-Interpolation, Bias-Probing)
+- LLMInferenceBackend = Produktions-Inference (Safety, DSGVO, Translation, Interception)
+- Verschiedene Concerns: Introspection braucht hidden_states (VRAM-teuer), Inference nicht
+- Beide registrieren sich beim VRAMCoordinator → gegenseitige Eviction funktioniert
+
+### Decision 2: Ollama-Fallback per-Call, nicht per-Session
+
+**Problem:** GPU Service kann neustarten (VRAM-Cleanup, Updates). Alle LLM-Aufrufe würden in dieser Zeit fehlschlagen.
+
+**Decision:** `LLMClient` versucht GPU Service pro Aufruf, fällt auf `ConnectionError`/`Timeout` per-Call auf Ollama zurück.
+
+**Begründung:**
+- Zero-Downtime: GPU Service Neustart → Ollama übernimmt nahtlos
+- Keine Konfigurationsänderung nötig (kein "switch to Ollama mode")
+- LLM-Fehler (OOM, falsches Modell) werden NICHT auf Ollama umgeleitet — nur Connectivity-Fehler
+
+### Decision 3: Model-Name-Mapping statt Doppelte Konfiguration
+
+**Problem:** DevServer config.py referenziert Ollama-Modellnamen (`qwen3:1.7b`), GPU Service braucht HuggingFace-IDs (`Qwen/Qwen3-1.7B`).
+
+**Decision:** `LLM_MODEL_MAP` in `gpu_service/config.py` — bekannte Ollama-Namen werden automatisch auf HF-IDs gemappt. Unbekannte Namen werden as-is versucht (könnten bereits HF-IDs sein).
+
+**Begründung:**
+- DevServer-Config bleibt unverändert (Ollama-Namensstil beibehalten)
+- Kein Admin muss HF-IDs kennen
+- Neue Modelle: einfach Eintrag in Map hinzufügen
+
+**Affected Files:** 4 neue + 9 modifizierte Dateien (siehe Session 202 Devlog)
+
+---
+
 ## 🔬 Session Export: Device-ID statt User-ID als Filter (2026-02-21)
 
 **Kontext:** Der "User"-Filter im Session Data Export (Forschungsdaten-Tab) war funktionslos — `user_id` ist fast immer "anonymous". Die Plattform hat aber ein Device-ID-System (Favorites/Browser-ID), das Sessions eindeutig einem Gerät zuordnet. `device_id` wird bereits in jeder `metadata.json` gespeichert (`pipeline_recorder.py`).

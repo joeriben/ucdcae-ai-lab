@@ -1,15 +1,16 @@
 """
-VLM Safety Check — Image safety via local VLM (Ollama).
+VLM Safety Check — Image safety via local VLM.
 
 Extracted from schema_pipeline_routes.py to be reusable for both
 post-generation checks and input image upload checks.
+
+Uses LLMClient (GPU Service primary, Ollama fallback).
 """
 
 import base64
 import logging
 from pathlib import Path
 
-import requests
 import config
 
 logger = logging.getLogger(__name__)
@@ -53,38 +54,29 @@ def vlm_safety_check(image_path: str | Path, safety_level: str) -> tuple[bool, s
         image_bytes = image_path.read_bytes()
         image_b64 = base64.b64encode(image_bytes).decode('utf-8')
 
-        ollama_url = f"{config.OLLAMA_API_BASE_URL}/api/chat"
-        payload = {
-            'model': config.VLM_SAFETY_MODEL,
-            'messages': [{
-                'role': 'user',
-                'content': prompt_text,
-                'images': [image_b64]
-            }],
-            'stream': False,
-            'options': {
-                'temperature': 0.0,
-                'num_predict': 2000
-            },
-            'keep_alive': '10m'
-        }
-
         logger.info(f"[VLM-SAFETY] Checking image ({len(image_bytes)} bytes) with {config.VLM_SAFETY_MODEL} for safety_level={safety_level}")
 
-        response = requests.post(ollama_url, json=payload, timeout=60)
-        response.raise_for_status()
+        from my_app.services.llm_backend import get_llm_backend
+        result = get_llm_backend().chat(
+            model=config.VLM_SAFETY_MODEL,
+            messages=[{'role': 'user', 'content': prompt_text}],
+            images=[image_b64],
+            temperature=0.0,
+            max_new_tokens=2000,
+        )
 
-        response_json = response.json()
-        message = response_json.get('message', {})
+        if result is None:
+            logger.warning("[VLM-SAFETY] LLM returned None (fail-open)")
+            return (True, '', '')
 
         # qwen3 uses thinking mode: answer may be in 'content' or 'thinking'
-        content = message.get('content', '').lower().strip()
-        thinking = message.get('thinking', '').lower().strip()
+        content = result.get('content', '').lower().strip()
+        thinking = (result.get('thinking') or '').lower().strip()
         combined = content or thinking
         logger.info(f"[VLM-SAFETY] Model response: content={content!r}, thinking={thinking!r}")
 
         # Use thinking as image description (it contains the VLM's analysis)
-        description = message.get('thinking', '').strip()
+        description = (result.get('thinking') or '').strip()
 
         if 'unsafe' in combined:
             return (False, f"VLM safety check ({config.VLM_SAFETY_MODEL}): image flagged as unsafe for {safety_level}", description)

@@ -1,6 +1,8 @@
 """
 Universal Image Analysis Helper
 Reusable function for analyzing images with vision models
+
+Uses LLMClient (GPU Service primary, Ollama fallback).
 """
 
 import base64
@@ -18,7 +20,7 @@ def analyze_image(
     model: Optional[str] = None
 ) -> str:
     """
-    Analyze image using Ollama vision model
+    Analyze image using vision model via LLMClient.
 
     Args:
         image_path: Path to image file OR base64-encoded image string
@@ -31,22 +33,20 @@ def analyze_image(
             - 'ethisch': Ethical analysis
             - 'kritisch': Decolonial & critical media studies
         model: Vision model to use. If None, uses IMAGE_ANALYSIS_MODEL from config.
-               Session 152: Accepts 'local/model:tag' format, strips 'local/' prefix.
+               Accepts 'local/model:tag' format, strips 'local/' prefix.
 
     Returns:
         Analysis text from vision model
 
     Raises:
         FileNotFoundError: If image_path is file path and doesn't exist
-        Exception: If Ollama request fails
+        Exception: If inference fails
     """
-    # Import here to avoid circular dependencies
     from config import (
         IMAGE_ANALYSIS_MODEL,
         DEFAULT_LANGUAGE,
         IMAGE_ANALYSIS_PROMPTS
     )
-    import requests
 
     # Session 152: Use provided model or fallback to config default
     # Strip 'local/' prefix if present (Canvas uses 'local/model:tag' format)
@@ -77,41 +77,26 @@ def analyze_image(
             prompt = "Analyze this image thoroughly."
             logger.warning(f"Analysis prompt not found for {analysis_type}/{DEFAULT_LANGUAGE}, using fallback")
 
-    # Step 3: Call Ollama via /api/chat (required for vision models like qwen3-vl)
-    # Session 152: Use chat endpoint for better vision model compatibility
-    payload = {
-        "model": vision_model,
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt,
-                "images": [image_data]
-            }
-        ],
-        "stream": False,
-        "options": {
-            "temperature": 0.7,
-            "num_predict": 2000
-        },
-        "keep_alive": "0s"  # Unload model after use (save VRAM)
-    }
-
+    # Step 3: Call via LLMClient (GPU Service primary, Ollama fallback)
     logger.info(f"[IMAGE-ANALYSIS] Analyzing image with {vision_model}")
 
     try:
-        response = requests.post(
-            "http://localhost:11434/api/chat",
-            json=payload,
-            timeout=120
+        from my_app.services.llm_backend import get_llm_backend
+        result = get_llm_backend().chat(
+            model=vision_model,
+            messages=[{'role': 'user', 'content': prompt}],
+            images=[image_data],
+            temperature=0.7,
+            max_new_tokens=2000,
         )
-        response.raise_for_status()
-        result = response.json()
 
-        # Chat endpoint returns message.content instead of response
-        analysis_text = result.get("message", {}).get("content", "").strip()
+        if result is None:
+            raise Exception("LLM returned None")
+
+        analysis_text = result.get("content", "").strip()
 
         if not analysis_text:
-            raise Exception("Empty response from Ollama")
+            raise Exception("Empty response from LLM")
 
         logger.info(f"[IMAGE-ANALYSIS] Analysis complete ({len(analysis_text)} chars)")
         return analysis_text

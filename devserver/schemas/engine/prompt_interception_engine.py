@@ -251,49 +251,34 @@ class PromptInterceptionEngine:
                 raise e
     
     async def _call_ollama(self, prompt: str, model: str, debug: bool, unload_model: bool) -> Tuple[str, str]:
-        """Ollama API Call mit Fallback"""
+        """LLM inference via GPU Service (primary) with Ollama fallback."""
         try:
-            logger.info(f"[BACKEND] 🏠 Ollama Request: {model}")
-            
-            # WICHTIG: Kein System-Prompt für Ollama
-            # Der Prompt enthält bereits alle Instructions (Task/Context/Input)
-            from config import OLLAMA_API_BASE_URL
+            logger.info(f"[BACKEND] LLM Request: {model}")
 
-            payload = {
-                "model": model,
-                "prompt": prompt,
-                "stream": False
-            }
+            from my_app.services.llm_backend import get_llm_backend
+            result = get_llm_backend().generate(model=model, prompt=prompt)
 
-            response = requests.post(f"{OLLAMA_API_BASE_URL}/api/generate", json=payload)
-            
-            if response.status_code == 200:
-                output = response.json().get("response", "")
+            if result:
+                output = result.get("response", "")
                 if output:
-                    logger.info(f"[BACKEND] ✅ Ollama Success: {model} ({len(output)} chars)")
-                    if unload_model:
-                        try:
-                            unload_payload = {"model": model, "prompt": "", "keep_alive": 0, "stream": False}
-                            requests.post(f"{OLLAMA_API_BASE_URL}/api/generate", json=unload_payload, timeout=30)
-                        except:
-                            pass
+                    logger.info(f"[BACKEND] LLM Success: {model} ({len(output)} chars)")
 
                     if debug:
-                        self._log_debug("Ollama", model, prompt, output)
+                        self._log_debug("LLM", model, prompt, output)
 
                     return output, model
-            
-            raise Exception(f"Ollama Error: {response.status_code}")
-            
+
+            raise Exception(f"LLM returned empty response for {model}")
+
         except Exception as e:
             if debug:
-                logger.error(f"Ollama Modell {model} fehlgeschlagen: {e}")
-            
+                logger.error(f"LLM Modell {model} fehlgeschlagen: {e}")
+
             # Fallback versuchen
             fallback_model = self._find_ollama_fallback(model, debug)
             if fallback_model and fallback_model != model:
                 if debug:
-                    logger.info(f"Ollama Fallback: {fallback_model}")
+                    logger.info(f"LLM Fallback: {fallback_model}")
                 return await self._call_ollama(prompt, fallback_model, debug, unload_model)
             else:
                 raise e

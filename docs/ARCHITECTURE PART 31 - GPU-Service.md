@@ -26,7 +26,8 @@ gpu_service/
 │   ├── imagebind_routes.py
 │   ├── stable_audio_routes.py
 │   ├── cross_aesthetic_routes.py
-│   └── text_routes.py
+│   ├── text_routes.py
+│   └── llm_inference_routes.py    # Production LLM inference (Session 202)
 ├── services/
 │   ├── diffusers_backend.py       # SD3.5, Flux2 image generation
 │   ├── heartmula_backend.py       # Music generation (HeartMuLa 3B)
@@ -35,6 +36,7 @@ gpu_service/
 │   ├── stable_audio_backend.py    # Stable Audio Open
 │   ├── cross_aesthetic_backend.py # Cross-aesthetic generation
 │   ├── text_backend.py            # LLM introspection (Latent Text Lab)
+│   ├── llm_inference_backend.py   # Production LLM inference (Session 202)
 │   ├── vram_coordinator.py        # Cross-backend VRAM management
 │   └── attention_processors_sd3.py
 ├── weights/            # MMAudio model weights (NOT in git)
@@ -118,6 +120,7 @@ All settings use environment variables with sensible defaults. The `_AI_TOOLS_BA
 | `IMAGEBIND_ENABLED` | `true` | Enable ImageBind |
 | `CROSS_AESTHETIC_ENABLED` | `true` | Enable cross-aesthetic |
 | `TEXT_ENABLED` | `true` | Enable Latent Text Lab |
+| `LLM_INFERENCE_ENABLED` | `true` | Enable production LLM inference |
 
 ### Sibling repo dependencies (editable installs)
 
@@ -170,9 +173,25 @@ When a backend needs VRAM, the coordinator evicts the lowest-priority loaded bac
 └──────────────────┘                     └──────────────────┘
 ```
 
-DevServer calls the GPU service via HTTP clients (`DiffusersClient`, `HeartMuLaClient`, `TextClient`, etc.) that have identical async method signatures to the original in-process backends — zero changes to callers.
+DevServer calls the GPU service via HTTP clients (`DiffusersClient`, `HeartMuLaClient`, `TextClient`, `LLMClient`, etc.) that have identical async method signatures to the original in-process backends — zero changes to callers.
 
-**Fallback:** If the GPU service is down, `is_available()` returns False and the DevServer falls back to ComfyUI/SwarmUI where possible (see Part 08: Backend Routing).
+**Fallback:** If the GPU service is down, `is_available()` returns False and the DevServer falls back to ComfyUI/SwarmUI for media, or Ollama for LLM inference (see Part 08: Backend Routing).
+
+### LLM Inference Backend (Session 202)
+
+The `LLMInferenceBackend` routes all production LLM inference (safety, DSGVO, VLM, translation, interception, chat) through the VRAMCoordinator. It replaces direct Ollama calls in 7 DevServer files.
+
+```
+DevServer ──→ LLMClient ──→ GPU Service :17803  (safetensors, VRAMCoordinator)
+                         ╰→ Ollama :11434       (GGUF, fallback on ConnectionError)
+```
+
+**Key differences from TextBackend:**
+- No `output_hidden_states`/`output_attentions` (pure inference, not introspection)
+- Auto-detects vision vs text models (`AutoModelForVision2Seq` vs `AutoModelForCausalLM`)
+- Extracts `<think>...</think>` blocks centrally into separate `thinking` field
+- Accepts Ollama-style model names, resolves via `LLM_MODEL_MAP`
+- `LLMClient` falls back to Ollama per-call on `ConnectionError` — zero downtime if GPU service restarts
 
 ---
 
@@ -184,13 +203,17 @@ DevServer calls the GPU service via HTTP clients (`DiffusersClient`, `HeartMuLaC
 | `gpu_service/server.py` | Waitress entry point |
 | `gpu_service/app.py` | Flask app + route registration |
 | `gpu_service/services/vram_coordinator.py` | Cross-backend VRAM management |
+| `gpu_service/services/llm_inference_backend.py` | Production LLM inference backend |
+| `gpu_service/routes/llm_inference_routes.py` | LLM inference REST endpoints |
 | `2_start_gpu_service.sh` | Startup script (sets CWD) |
-| `devserver/config.py` | `GPU_SERVICE_URL`, `GPU_SERVICE_TIMEOUT` |
+| `devserver/config.py` | `GPU_SERVICE_URL`, `GPU_SERVICE_TIMEOUT`, `LLM_SERVICE_PROVIDER` |
 | `devserver/my_app/services/diffusers_client.py` | HTTP client (drop-in for DiffusersImageGenerator) |
 | `devserver/my_app/services/heartmula_client.py` | HTTP client (drop-in for HeartMuLaBackend) |
 | `devserver/my_app/services/text_client.py` | HTTP client (Latent Text Lab) |
+| `devserver/my_app/services/llm_client.py` | HTTP client (LLM inference + Ollama fallback) |
+| `devserver/my_app/services/llm_backend.py` | LLM client singleton factory |
 
 ---
 
-**Document Status:** Active (2026-02-21)
+**Document Status:** Active (2026-02-23)
 **Maintainer:** AI4ArtsEd Development Team

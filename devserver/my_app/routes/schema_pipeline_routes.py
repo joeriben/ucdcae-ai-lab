@@ -862,15 +862,19 @@ def execute_stage2():
             if context_language != 'en':
                 logger.info(f"[STAGE2-ENDPOINT] Translating context from {context_language} to English")
 
-                from my_app.services.ollama_service import ollama_service
+                from my_app.services.llm_backend import get_llm_backend
+                from config import STAGE3_MODEL
                 translation_prompt = f"Translate this educational text from {context_language} to English. Preserve pedagogical intent and technical terminology:\n\n{context_prompt}"
 
                 try:
-                    context_prompt_en = ollama_service.translate_text(translation_prompt)
-                    if not context_prompt_en:
+                    model = STAGE3_MODEL.replace("local/", "") if STAGE3_MODEL.startswith("local/") else STAGE3_MODEL
+                    result = get_llm_backend().generate(model=model, prompt=translation_prompt)
+                    translated = result.get("response", "").strip() if result else ""
+                    if not translated:
                         logger.error("[STAGE2-ENDPOINT] Context translation failed, using original")
                         context_prompt_en = context_prompt
                     else:
+                        context_prompt_en = translated
                         logger.info(f"[STAGE2-ENDPOINT] Context translated successfully")
                 except Exception as e:
                     logger.error(f"[STAGE2-ENDPOINT] Context translation error: {e}")
@@ -4035,17 +4039,20 @@ def interception_pipeline():
             if context_language != 'en':
                 logger.info(f"[PHASE2] Translating context from {context_language} to English...")
 
-                # Use Ollama service for translation
-                from my_app.services.ollama_service import ollama_service
+                from my_app.services.llm_backend import get_llm_backend
+                from config import STAGE3_MODEL
 
                 translation_prompt = f"Translate this educational text from {context_language} to English. Preserve pedagogical intent and technical terminology:\n\n{context_prompt}"
 
                 try:
-                    context_prompt_en = ollama_service.translate_text(translation_prompt)
-                    if not context_prompt_en:
+                    model = STAGE3_MODEL.replace("local/", "") if STAGE3_MODEL.startswith("local/") else STAGE3_MODEL
+                    result = get_llm_backend().generate(model=model, prompt=translation_prompt)
+                    translated = result.get("response", "").strip() if result else ""
+                    if not translated:
                         logger.error("[PHASE2] Context translation failed, using original")
                         context_prompt_en = context_prompt
                     else:
+                        context_prompt_en = translated
                         logger.info(f"[PHASE2] Context translated successfully")
                         # Save English version
                         recorder.save_entity('context_prompt_en', context_prompt_en)
