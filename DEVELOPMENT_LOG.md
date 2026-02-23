@@ -41,6 +41,11 @@
 - `npm run type-check` — zero errors
 - All Python files parse clean (AST verified)
 - Grep confirms zero remaining request-parameter `execution_mode` references in active code
+- Backend smoke tests (all pass):
+  1. `GET /api/schema/info` — 116 schemas loaded
+  2. `GET /api/models/availability` — GPU service reachable
+  3. `POST /api/schema/pipeline/safety` — `safe: true` (Stage 1 safety without execution_mode)
+  4. `POST /api/schema/pipeline/stage2` — full Stage 1→2 pipeline (overdrive, 17s) — interception + optimization complete, zero parameter errors
 
 ---
 
