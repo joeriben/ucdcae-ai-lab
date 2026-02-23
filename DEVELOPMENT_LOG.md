@@ -1,5 +1,39 @@
 # Development Log
 
+## Session 204 - TODO List Cleanup (~2100 → ~220 Lines)
+**Date:** 2026-02-23
+**Focus:** Purge obsolete items from devserver_todos.md, update statuses from DevLog
+
+### Problem
+`docs/devserver_todos.md` had grown to ~2100 lines over 200+ sessions. Most content was completed work from Sessions 14-135 (Nov-Dec 2025), already documented in DEVELOPMENT_LOG.md. Several items from Sessions 36-98 were obsolete due to architectural changes but never removed.
+
+### Changes
+
+**Removed (completed, documented in DevLog):**
+- 15+ completed features: Execution History Tracker, Unified Media Storage, LivePipelineRecorder, v2.0.0-alpha.1 release, Pipeline Rename, GPT-OSS Stage 1/3, keep_alive, Model Availability Check, Prompt Optimization Fix, Crossmodal Lab install, etc.
+- Redundant Quick Reference / Architecture Status section (duplicates CLAUDE.md)
+
+**Removed (obsolete — architecture changed since):**
+- Stage 1-3 Translation Refactoring (Session 59) — pipeline architecture fundamentally different now
+- Youth Mode & Pipeline Visualization (Session 52) — UI rebuilt from scratch
+- Phase 2 Frontend redesign (Session 36) — rebuilt multiple times since
+- Automate configsByCategory (Session 91) — frontend rebuilt
+- Vector Fusion UI (Session 40) — deactivated per user decision
+- Canvas Eval Nodes Phase 3b / Loop Controller Phase 4 (Session 134) — contradictory status (title says DONE, body says BLOCKED)
+- partial_elimination 2 Open Issues (Session 98) — 3 months without mention
+
+**Status updates:**
+- LLM Inference Migration → ✅ DONE (Session 202)
+- T5 Interpretability Research → ✅ CODE COMPLETE (Session 203)
+- Stage 3 Negative Prompts Bug → confirmed still open (verified in code: `safety_result['negative_prompt']` never passed to Stage 4)
+
+**New structure:** Recently completed → Critical → High → Medium → Low/Deferred → Minigames → Archive
+
+### Files Changed
+- `docs/devserver_todos.md` — rewritten (~2100 → ~220 lines)
+
+---
+
 ## Session 203 - T5 Interpretability Research: Full 7-Phase Pipeline Implementation
 **Date:** 2026-02-23
 **Focus:** Implement SAE-based T5 audio-semantic interpretability research pipeline
