@@ -706,7 +706,6 @@ def parse_preoutput_json(output: str) -> Dict[str, Any]:
 
 async def execute_stage1_translation(
     text: str,
-    execution_mode: str,
     pipeline_executor
 ) -> str:
     """
@@ -715,7 +714,6 @@ async def execute_stage1_translation(
 
     Args:
         text: Input text to translate
-        execution_mode: 'eco' or 'fast'
         pipeline_executor: PipelineExecutor instance
 
     Returns:
@@ -724,7 +722,6 @@ async def execute_stage1_translation(
     result = await pipeline_executor.execute_pipeline(
         'pre_interception/correction_translation_de_en',
         text,
-        execution_mode=execution_mode
     )
 
     if result.success:
@@ -736,7 +733,6 @@ async def execute_stage1_translation(
 async def execute_stage1_safety(
     text: str,
     safety_level: str,
-    execution_mode: str,
     pipeline_executor
 ) -> Tuple[bool, List[str]]:
     """
@@ -746,7 +742,6 @@ async def execute_stage1_safety(
     Args:
         text: Text to check for safety
         safety_level: Not used in Stage 1 (always uses 'stage1' filters)
-        execution_mode: 'eco' or 'fast'
         pipeline_executor: PipelineExecutor instance
 
     Returns:
@@ -771,7 +766,6 @@ async def execute_stage1_safety(
     result = await pipeline_executor.execute_pipeline(
         'pre_interception/safety_llamaguard',
         text,
-        execution_mode=execution_mode
     )
     llm_check_time = time.time() - llm_start_time
 
@@ -792,7 +786,6 @@ async def execute_stage1_safety(
 async def execute_stage1_safety_unified(
     text: str,
     safety_level: str,
-    execution_mode: str,
     pipeline_executor
 ) -> Tuple[bool, str, Optional[str], List[str]]:
     """
@@ -812,7 +805,6 @@ async def execute_stage1_safety_unified(
     Args:
         text: Input text to safety-check (in original language)
         safety_level: 'kids', 'youth', 'adult', or 'research'
-        execution_mode: 'eco' or 'fast'
         pipeline_executor: PipelineExecutor instance
 
     Returns:
@@ -994,7 +986,6 @@ async def execute_stage3_safety(
     prompt: str,
     safety_level: str,
     media_type: str,
-    execution_mode: str,
     pipeline_executor
 ) -> Dict[str, Any]:
     """
@@ -1020,7 +1011,6 @@ async def execute_stage3_safety(
         prompt: Prompt to check before media generation
         safety_level: 'kids', 'youth', 'adult', or 'research'
         media_type: Type of media being generated (for logging)
-        execution_mode: 'eco' or 'fast'
         pipeline_executor: PipelineExecutor instance
 
     Returns:
@@ -1056,7 +1046,6 @@ async def execute_stage3_safety(
         translate_result = await pipeline_executor.execute_pipeline(
             'pre_output/translation_en',  # Translation config (just translate chunk)
             prompt,
-            execution_mode=execution_mode
         )
         translate_time = time.time() - translate_start
 
@@ -1094,7 +1083,6 @@ async def execute_stage3_safety(
     result = await pipeline_executor.execute_pipeline(
         safety_check_config,
         translated_prompt,
-        execution_mode=execution_mode
     )
     llm_check_time = time.time() - llm_start_time
 
@@ -1163,7 +1151,6 @@ async def execute_stage3_safety_code(
     code: str,
     safety_level: str,
     media_type: str,
-    execution_mode: str,
     pipeline_executor
 ) -> dict:
     """
@@ -1176,7 +1163,6 @@ async def execute_stage3_safety_code(
         code: Generated code (JavaScript, Ruby, etc.)
         safety_level: Safety level ('kids', 'youth', 'research')
         media_type: Media type ('code')
-        execution_mode: Execution mode ('eco', 'fast')
         pipeline_executor: Pipeline executor for LLM calls
 
     Returns:
@@ -1272,7 +1258,6 @@ Respond with JSON only:
         llm_result = await pipeline_executor.execute_chunk_async(
             chunk_name='manipulate',
             inputs={'INPUT_TEXT': verification_prompt},
-            execution_mode=execution_mode
         )
 
         # Parse JSON response

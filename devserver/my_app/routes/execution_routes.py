@@ -156,7 +156,6 @@ def list_executions():
                 'execution_id': record.execution_id,
                 'config_name': record.config_name,
                 'timestamp': record.timestamp.isoformat(),
-                'execution_mode': record.execution_mode,
                 'safety_level': record.safety_level,
                 'user_id': record.user_id,
                 'session_id': record.session_id,

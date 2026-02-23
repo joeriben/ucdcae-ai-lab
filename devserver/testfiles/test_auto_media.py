@@ -22,13 +22,11 @@ def test_auto_media():
     payload = {
         "schema": "dada",
         "input_text": "A red bicycle",
-        "execution_mode": "eco"  # Use local models
     }
 
     print(f"\nRequest to: {ENDPOINT}")
     print(f"Schema: {payload['schema']}")
     print(f"Input: {payload['input_text']}")
-    print(f"Mode: {payload['execution_mode']}")
     print("\nSending request...")
 
     start_time = time.time()

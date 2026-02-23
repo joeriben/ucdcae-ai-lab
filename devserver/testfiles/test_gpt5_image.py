@@ -105,7 +105,6 @@ async def test_gpt5_via_executor():
             config_name='gpt5_image',
             input_text=test_input,
             user_input=test_input,
-            execution_mode='fast'
         )
 
         if result.success:

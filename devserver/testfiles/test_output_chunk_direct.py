@@ -190,8 +190,7 @@ async def test_direct_output_chunk_submission():
     print("   POST /api/workflow/execute")
     print("   {")
     print('     "config_name": "sd35_large",')
-    print('     "input_text": "A beautiful mountain landscape",')
-    print('     "execution_mode": "eco"')
+    print('     "input_text": "A beautiful mountain landscape"')
     print("   }")
 
     return True

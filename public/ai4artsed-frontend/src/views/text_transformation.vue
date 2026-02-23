@@ -981,7 +981,6 @@ const streamingParams = computed(() => {
     schema: pipelineStore.selectedConfig?.id || 'user_defined',
     input_text: inputText.value,
     context_prompt: contextPrompt.value || '',
-    execution_mode: 'eco',
     enable_streaming: true,  // KEY: Request SSE streaming
     device_id: deviceId  // Session 129: Folder structure
   }

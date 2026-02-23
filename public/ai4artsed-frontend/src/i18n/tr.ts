@@ -16,11 +16,6 @@ export const tr = {
     bauhaus: 'Bauhaus (Geometrik)',
     stillepost: 'Stille Post (Yinelemeli)'
   },
-  executionModes: {
-    eco: 'Eko (Hızlı)',
-    fast: 'Hızlı (Dengeli)',
-    best: 'En İyi (Kalite)'
-  },
   safetyLevels: {
     kids: 'Çocuklar',
     youth: 'Gençler',

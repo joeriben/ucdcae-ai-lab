@@ -26,7 +26,6 @@ async def test_stage1_german_translation():
     result = await executor.execute_pipeline(
         'dada',
         german_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -52,7 +51,6 @@ async def test_stage1_english_no_translation():
     result = await executor.execute_pipeline(
         'dada',
         english_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -78,7 +76,6 @@ async def test_stage1_safe_content():
     result = await executor.execute_pipeline(
         'dada',
         safe_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -105,7 +102,6 @@ async def test_stage1_unsafe_content():
     result = await executor.execute_pipeline(
         'dada',
         unsafe_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -131,7 +127,6 @@ async def test_translation_only():
     result = await executor.execute_pipeline(
         'pre_interception/correction_translation_de_en',
         german_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -157,7 +152,6 @@ async def test_safety_only():
     result = await executor.execute_pipeline(
         'pre_interception/safety_llamaguard',
         test_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")

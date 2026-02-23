@@ -379,7 +379,6 @@ def get_restore_data(run_id: str):
         restore_data = {
             'run_id': run_id,
             'schema': metadata.get('config_name', 'unknown'),
-            'execution_mode': metadata.get('execution_mode', 'unknown'),
             'timestamp': metadata.get('timestamp', ''),
             'current_state': metadata.get('current_state', {}),
             'expected_outputs': metadata.get('expected_outputs', []),

@@ -24,7 +24,6 @@ def test_basic_recording():
     recorder = LivePipelineRecorder(
         run_id=run_id,
         config_name="dada",
-        execution_mode="eco",
         safety_level="kids",
         user_id="test_user"
     )
@@ -100,7 +99,6 @@ def test_singleton_management():
     recorder1 = get_recorder(
         run_id=run_id,
         config_name="stillepost",
-        execution_mode="fast",
         safety_level="teens"
     )
     print(f"\n✓ Created recorder via get_recorder: {run_id}")
@@ -129,7 +127,6 @@ def test_entity_path_lookup():
     recorder = LivePipelineRecorder(
         run_id=run_id,
         config_name="dada",
-        execution_mode="eco",
         safety_level="kids"
     )
 

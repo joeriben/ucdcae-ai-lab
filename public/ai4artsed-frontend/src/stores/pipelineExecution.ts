@@ -32,14 +32,6 @@ export const usePipelineExecutionStore = defineStore('pipelineExecution', () => 
   /** Original meta-prompt for comparison (detect modifications) */
   const originalMetaPrompt = ref('')
 
-  /**
-   * Execution mode
-   * DEPRECATED (Session 65): This parameter no longer affects backend behavior.
-   * Model selection is now centralized in devserver/config.py.
-   * TODO: Remove in future cleanup.
-   */
-  const executionMode = ref<'eco' | 'fast' | 'best'>('eco')
-
   /** Loading state */
   const isLoading = ref(false)
 
@@ -183,15 +175,6 @@ export const usePipelineExecutionStore = defineStore('pipelineExecution', () => 
   }
 
   /**
-   * Set execution mode
-   * DEPRECATED (Session 65): This parameter no longer affects backend.
-   * TODO: Remove in future cleanup.
-   */
-  function setExecutionMode(mode: 'eco' | 'fast' | 'best') {
-    executionMode.value = mode
-  }
-
-  /**
    * Update transformed prompt (result of Stage 1+2)
    *
    * @param text - Transformed prompt text
@@ -218,7 +201,6 @@ export const usePipelineExecutionStore = defineStore('pipelineExecution', () => 
     metaPrompt.value = ''
     originalMetaPrompt.value = ''
     transformedPrompt.value = ''
-    executionMode.value = 'eco'
     error.value = null
     console.log('[PipelineExecution] State cleared')
   }
@@ -234,7 +216,6 @@ export const usePipelineExecutionStore = defineStore('pipelineExecution', () => 
     metaPrompt: computed(() => metaPrompt.value),
     originalMetaPrompt: computed(() => originalMetaPrompt.value),
     transformedPrompt: computed(() => transformedPrompt.value),
-    executionMode: computed(() => executionMode.value),
     isLoading: computed(() => isLoading.value),
     error: computed(() => error.value),
 
@@ -250,7 +231,6 @@ export const usePipelineExecutionStore = defineStore('pipelineExecution', () => 
     resetMetaPrompt,
     updateTransformedPrompt,
     clearTransformedPrompt,
-    setExecutionMode,
     clearAll
   }
 })

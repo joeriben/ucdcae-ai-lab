@@ -27,7 +27,6 @@ async def test_kids_filter_unsafe():
     result = await executor.execute_pipeline(
         'dada',  # Has media_preferences with safety_level='kids'
         unsafe_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -62,7 +61,6 @@ async def test_kids_filter_safe():
     result = await executor.execute_pipeline(
         'dada',
         safe_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -103,7 +101,6 @@ async def test_kids_vs_youth_difference():
     result_kids = await executor.execute_pipeline(
         'dada',
         ambiguous_input,
-        execution_mode='eco'
     )
 
     kids_blocked = result_kids.metadata.get('stage_3_blocked', False) if result_kids.metadata else False
@@ -135,7 +132,6 @@ async def test_violence_terms():
     result = await executor.execute_pipeline(
         'dada',
         violence_input,
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")

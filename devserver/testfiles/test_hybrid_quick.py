@@ -22,7 +22,7 @@ async def test_safe_input():
     print()
 
     start = time.time()
-    result = await executor.execute_pipeline('dada', 'cats and dogs', execution_mode='eco', safety_level='research')
+    result = await executor.execute_pipeline('dada', 'cats and dogs', safety_level='research')
     elapsed = time.time() - start
 
     print(f"Result: {'SUCCESS' if result.success else 'FAILED'}")

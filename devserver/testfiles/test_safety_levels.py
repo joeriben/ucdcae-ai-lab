@@ -22,17 +22,17 @@ async def main():
 
     # Test 1: Kids (should block)
     print("1. safety_level='kids' (should BLOCK 'dark', 'scary', 'demon')")
-    result_kids = await executor.execute_pipeline('dada', test_input, execution_mode='eco', safety_level='kids')
+    result_kids = await executor.execute_pipeline('dada', test_input, safety_level='kids')
     print(f"   Blocked: {result_kids.metadata.get('stage_3_blocked', False) if result_kids.metadata else False}")
 
     # Test 2: Youth (should allow 'dark' but block 'scary'? - actually 'scary' not in youth)
     print("\n2. safety_level='youth' (less strict, but still has some terms)")
-    result_youth = await executor.execute_pipeline('dada', test_input, execution_mode='eco', safety_level='youth')
+    result_youth = await executor.execute_pipeline('dada', test_input, safety_level='youth')
     print(f"   Blocked: {result_youth.metadata.get('stage_3_blocked', False) if result_youth.metadata else False}")
 
     # Test 3: Research (should NOT run Stage 3 at all)
     print("\n3. safety_level='research' (Stage 3 should be skipped)")
-    result_off = await executor.execute_pipeline('dada', test_input, execution_mode='eco', safety_level='research')
+    result_off = await executor.execute_pipeline('dada', test_input, safety_level='research')
     print(f"   Has Stage 3 metadata: {'stage_3_blocked' in (result_off.metadata or {})}")
     print(f"   Output exists: {bool(result_off.final_output)}")
 

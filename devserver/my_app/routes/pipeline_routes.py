@@ -44,7 +44,6 @@ def get_pipeline_status(run_id: str):
             "run_id": "528e5af9-59b3-4551-b101-27e13dd6e43e",
             "timestamp": "2025-11-04T20:12:37.568803",
             "config_name": "stillepost",
-            "execution_mode": "eco",
             "safety_level": "kids",
             "user_id": "anonymous",
             "expected_outputs": ["input", "translation", "safety", "interception", ...],

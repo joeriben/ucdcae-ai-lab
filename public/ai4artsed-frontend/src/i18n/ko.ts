@@ -16,11 +16,6 @@ export const ko = {
     bauhaus: 'Bauhaus (기하학적)',
     stillepost: 'Stille Post (반복적)'
   },
-  executionModes: {
-    eco: 'Eco (빠름)',
-    fast: 'Fast (균형)',
-    best: 'Best (품질)'
-  },
   safetyLevels: {
     kids: '어린이',
     youth: '청소년',

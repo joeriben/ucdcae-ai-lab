@@ -77,7 +77,6 @@ export interface ModelsUsed {
 export interface RestoreData {
   run_id: string
   schema: string
-  execution_mode: string
   timestamp: string
   current_state: Record<string, unknown>
   expected_outputs: string[]

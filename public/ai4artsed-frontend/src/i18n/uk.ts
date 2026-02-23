@@ -16,11 +16,6 @@ export const uk = {
     bauhaus: 'Баухаус (Геометричний)',
     stillepost: 'Зіпсований телефон (Ітеративний)'
   },
-  executionModes: {
-    eco: 'Еко (Швидко)',
-    fast: 'Швидкий (Збалансований)',
-    best: 'Найкращий (Якість)'
-  },
   safetyLevels: {
     kids: 'Діти',
     youth: 'Підлітки',

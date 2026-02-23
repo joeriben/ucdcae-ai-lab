@@ -23,7 +23,6 @@ def test_prompt(prompt, safety_level='kids'):
             json={
                 "schema": "dada",
                 "input_text": prompt,
-                "execution_mode": "eco",
                 "safety_level": safety_level
             },
             timeout=120  # 2 minute timeout per prompt

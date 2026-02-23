@@ -41,7 +41,7 @@ async def main():
         print(f"  Description: {description}")
         print(f"  Expected: {'PASS' if should_pass else 'BLOCK'}")
 
-        result = await executor.execute_pipeline('dada', prompt, execution_mode='eco', safety_level='kids')
+        result = await executor.execute_pipeline('dada', prompt, safety_level='kids')
 
         blocked = result.metadata.get('stage_3_blocked', False) if result.metadata else False
         actual_pass = not blocked

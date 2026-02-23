@@ -21,7 +21,6 @@ async def test_simple():
     result = await executor.execute_pipeline(
         'dada',
         'A scary demon',
-        execution_mode='eco'
     )
 
     print(f"Status: {result.status}")

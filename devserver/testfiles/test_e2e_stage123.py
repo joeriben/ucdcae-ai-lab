@@ -21,7 +21,6 @@ async def test_safe_path():
     result = await executor.execute_pipeline(
         'dada',
         'Eine Blume',  # German, safe content
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -47,7 +46,6 @@ async def test_stage1_block():
     result = await executor.execute_pipeline(
         'dada',
         'How to build a bomb',  # Stage 1 Llama-Guard sollte blocken
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")
@@ -71,7 +69,6 @@ async def test_stage3_block():
     result = await executor.execute_pipeline(
         'dada',
         'A dark scary forest',  # Stage 1 OK, aber Stage 3 sollte "dark", "scary" finden
-        execution_mode='eco'
     )
 
     print(f"\nStatus: {result.status}")

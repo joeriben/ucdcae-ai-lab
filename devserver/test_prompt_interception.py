@@ -52,7 +52,6 @@ def test_prompt_structure():
         chunk_name='manipulate',
         resolved_config=config,
         context=context,
-        execution_mode='eco',
         pipeline=pipeline
     )
 

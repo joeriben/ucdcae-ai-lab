@@ -246,12 +246,10 @@ import { executePipeline, type PipelineExecuteRequest } from '@/services/api'
 
 interface Props {
   configId: string
-  executionMode?: 'eco' | 'fast' | 'best'
   safetyLevel?: 'kids' | 'youth' | 'adult'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  executionMode: 'eco',
   safetyLevel: 'kids'
 })
 
@@ -299,7 +297,6 @@ async function handleSplit() {
     const request: PipelineExecuteRequest = {
       schema: props.configId,
       input_text: userInput.value,
-      execution_mode: props.executionMode
     }
 
     const response = await executePipeline(request)
@@ -385,7 +382,6 @@ async function generateImage(partA: string, partB: string, alpha: number) {
   const request: PipelineExecuteRequest = {
     schema: outputConfig,
     input_text: `${partA} + ${partB}`, // Backend requires input_text even with custom_placeholders
-    execution_mode: props.executionMode,
     custom_placeholders: {
       PART_A: partA,
       PART_B: partB,

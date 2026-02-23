@@ -158,7 +158,6 @@ def test_chunk_builder_parameter_replacement():
             chunk_name='output_image',
             resolved_config=resolved_config,
             context=chunk_context,
-            execution_mode='eco'
         )
 
         # Validate output_chunk parameter is set

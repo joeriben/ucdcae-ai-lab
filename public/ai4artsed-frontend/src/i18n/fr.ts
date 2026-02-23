@@ -16,11 +16,6 @@ export const fr = {
     bauhaus: 'Bauhaus (Géométrique)',
     stillepost: 'Téléphone arabe (Itératif)'
   },
-  executionModes: {
-    eco: 'Éco (Rapide)',
-    fast: 'Fast (Équilibré)',
-    best: 'Best (Qualité)'
-  },
   safetyLevels: {
     kids: 'Enfants',
     youth: 'Jeunes',

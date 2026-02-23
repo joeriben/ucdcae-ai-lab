@@ -1117,7 +1117,6 @@ def get_sessions():
                     'config_name': metadata.get('config_name'),
                     'stage2_pipeline': stage2_pipeline,
                     'output_mode': output_mode,
-                    'execution_mode': metadata.get('execution_mode'),
                     'safety_level': metadata.get('safety_level'),
                     'device_id': metadata.get('device_id'),
                     'stage': metadata.get('current_state', {}).get('stage'),

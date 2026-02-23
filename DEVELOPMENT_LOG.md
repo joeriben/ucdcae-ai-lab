@@ -1,5 +1,49 @@
 # Development Log
 
+## Session 205 - Remove Deprecated execution_mode (eco/fast) Parameter
+**Date:** 2026-02-23
+**Focus:** Remove the deprecated execution_mode parameter that threaded through ~80 call sites across ~50 files but did nothing
+
+### Background
+`execution_mode` ("eco"/"fast") was deprecated in Session 55. Model selection moved to centralized `config.py` STAGE*_MODEL variables. The parameter persisted as dead code — always defaulted to "eco", and the only consumer (`lookup_output_config`) just did `defaults[media_type].get("eco")`. The "fast" mode was never sent by any client.
+
+### Changes (50 files, -314/+65 lines)
+
+**Backend — Core pipeline:**
+- `output_config_defaults.json` — flattened from `{"image": {"eco": "sd35_large", "fast": "gpt5_image"}}` to `{"image": "sd35_large"}`
+- `schema_pipeline_routes.py` — removed from ~40 sites (function signatures, data.get(), call sites, log messages)
+- `stage_orchestrator.py` — removed from all 6 stage execution functions
+- `pipeline_executor.py` — removed from execute_pipeline, stream_pipeline, all internal methods
+- `output_config_selector.py` — removed from class, simplified to flat lookup
+- `pipeline_recorder.py` — removed from constructor, get_recorder, load_recorder
+- `execution_history/models.py` — removed field from ExecutionRecord
+- `execution_history/tracker.py` — removed from constructor and finalize methods
+- 5 route files (media, favorites, settings, pipeline, execution) — removed from response dicts
+
+**Frontend:**
+- `api.ts` — removed from PipelineExecuteRequest and TransformRequest interfaces
+- `pipelineExecution.ts` — removed executionMode ref, setExecutionMode action
+- `PipelineExecutionView.vue` — removed eco/fast/best selector UI
+- `Phase2VectorFusionInterface.vue` — removed executionMode prop
+- `text_transformation.vue`, `SessionExportView.vue`, `favorites.ts` — removed references
+- All 7 i18n files (en, de, tr, ko, uk, fr, es) — removed `executionModes` keys
+
+**Tests:** 19 test files cleaned (mechanical removal of `execution_mode='eco'` from payloads)
+
+**Deleted:** `docs/archive/REFACTORING_PLAN_EXECUTION_MODE_REMOVAL.md` (now executed)
+
+### Not Changed (intentionally)
+- `backend_router.py` — chunk-level `execution_mode` ("legacy_workflow"/"standard") is a different concept, actively used for ComfyUI routing
+- `model_selector.py` — used for model discovery, unrelated
+- Chunk JSON files — `"execution_mode": "legacy_workflow"` fields are chunk routing, not request params
+
+### Verification
+- `npm run type-check` — zero errors
+- All Python files parse clean (AST verified)
+- Grep confirms zero remaining request-parameter `execution_mode` references in active code
+
+---
+
 ## Session 204 - TODO List Cleanup (~2100 → ~220 Lines)
 **Date:** 2026-02-23
 **Focus:** Purge obsolete items from devserver_todos.md, update statuses from DevLog

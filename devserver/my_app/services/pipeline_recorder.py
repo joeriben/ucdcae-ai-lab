@@ -44,7 +44,6 @@ class LivePipelineRecorder:
         self,
         run_id: str,
         config_name: str,
-        execution_mode: str,
         safety_level: str,
         user_id: str = 'anonymous',
         device_id: Optional[str] = None,
@@ -56,7 +55,6 @@ class LivePipelineRecorder:
         Args:
             run_id: Unique identifier for this pipeline run
             config_name: Schema/config name (e.g., "dada", "stillepost")
-            execution_mode: Execution mode (e.g., "eco", "fast")
             safety_level: Safety level (e.g., "kids", "teens")
             user_id: User identifier
             device_id: Device/browser identifier for folder structure (auto-generated if None)
@@ -66,7 +64,6 @@ class LivePipelineRecorder:
 
         self.run_id = run_id
         self.config_name = config_name
-        self.execution_mode = execution_mode
         self.safety_level = safety_level
         self.user_id = user_id
         # Session 129: Generate unique device_id if not provided
@@ -111,7 +108,6 @@ class LivePipelineRecorder:
             "run_id": run_id,
             "timestamp": datetime.now().isoformat(),
             "config_name": config_name,
-            "execution_mode": execution_mode,
             "safety_level": safety_level,
             "user_id": user_id,
             "device_id": device_id,
@@ -934,7 +930,6 @@ _active_recorders: Dict[str, LivePipelineRecorder] = {}
 def get_recorder(
     run_id: str,
     config_name: Optional[str] = None,
-    execution_mode: Optional[str] = None,
     safety_level: Optional[str] = None,
     user_id: str = 'anonymous',
     device_id: Optional[str] = None,
@@ -946,7 +941,6 @@ def get_recorder(
     Args:
         run_id: Unique run identifier
         config_name: Schema/config name (required for new recorders)
-        execution_mode: Execution mode (required for new recorders)
         safety_level: Safety level (required for new recorders)
         user_id: User identifier
         device_id: Device/browser identifier for folder structure (auto-generated if None)
@@ -958,13 +952,12 @@ def get_recorder(
     if run_id in _active_recorders:
         return _active_recorders[run_id]
 
-    if config_name is None or execution_mode is None or safety_level is None:
-        raise ValueError("config_name, execution_mode, and safety_level required for new recorder")
+    if config_name is None or safety_level is None:
+        raise ValueError("config_name and safety_level required for new recorder")
 
     recorder = LivePipelineRecorder(
         run_id=run_id,
         config_name=config_name,
-        execution_mode=execution_mode,
         safety_level=safety_level,
         user_id=user_id,
         device_id=device_id,  # Will auto-generate if None
@@ -1039,9 +1032,6 @@ def load_recorder(run_id: str, base_path: Optional[Path] = None) -> Optional[Liv
         # Old format might not have safety_level
         safety_level = metadata.get("safety_level", "kids")
 
-        # Old format should have execution_mode, but provide fallback
-        execution_mode = metadata.get("execution_mode", "eco")
-
         # Get the actual run folder from the metadata path
         actual_run_folder = metadata_path.parent
 
@@ -1049,7 +1039,6 @@ def load_recorder(run_id: str, base_path: Optional[Path] = None) -> Optional[Liv
         recorder = object.__new__(LivePipelineRecorder)
         recorder.run_id = metadata["run_id"]
         recorder.config_name = config_name
-        recorder.execution_mode = execution_mode
         recorder.safety_level = safety_level
         recorder.user_id = metadata.get("user_id", "anonymous")
         recorder.device_id = metadata.get("device_id", "anonymous")

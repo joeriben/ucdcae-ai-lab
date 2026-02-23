@@ -1,10 +1,10 @@
 """
-Output-Config Selector: Select default Output-Config based on media type and execution mode
+Output-Config Selector: Select default Output-Config based on media type
 
 Architecture Principle: Separation of Concerns
 - Pre-pipeline configs (dada.json) suggest media type via media_preferences.default_output
 - Pre-pipeline configs DO NOT choose specific models
-- This module provides centralized default mapping: media_type + execution_mode → output_config
+- This module provides centralized default mapping: media_type → output_config
 """
 
 import json
@@ -31,7 +31,6 @@ class MediaOutput:
 class ExecutionContext:
     """Track expected and actual media throughout execution"""
     config_name: str
-    execution_mode: str  # "eco" or "fast"
     expected_media_type: str  # From pre-pipeline config.media_preferences.default_output
     generated_media: list  # List[MediaOutput]
     text_outputs: list  # List[str] - track text at each pipeline step
@@ -56,11 +55,11 @@ class ExecutionContext:
 
 
 class OutputConfigSelector:
-    """Select default Output-Config based on media type and execution mode"""
+    """Select default Output-Config based on media type"""
 
     def __init__(self, schemas_path: Path):
         self.schemas_path = schemas_path
-        self.defaults: Dict[str, Dict[str, Optional[str]]] = {}
+        self.defaults: Dict[str, Any] = {}
         self._load_defaults()
 
     def _load_defaults(self):
@@ -83,26 +82,23 @@ class OutputConfigSelector:
             }
 
             logger.info(f"Loaded output_config_defaults: {len(self.defaults)} media types")
-            for media_type, modes in self.defaults.items():
-                eco = modes.get('eco')
-                fast = modes.get('fast')
-                logger.debug(f"  {media_type}: eco={eco}, fast={fast}")
+            for media_type, value in self.defaults.items():
+                logger.debug(f"  {media_type}: {value}")
 
         except Exception as e:
             logger.error(f"Error loading output_config_defaults.json: {e}")
             self.defaults = {}
 
-    def select_output_config(self, media_type: str, execution_mode: str = 'eco') -> Optional[str]:
+    def select_output_config(self, media_type: str) -> Optional[str]:
         """
-        Select default Output-Config for given media type and execution mode
+        Select default Output-Config for given media type.
 
         Supports two value formats:
-        - String: direct config name (backwards compatible)
+        - String: direct config name
         - Dict: VRAM-tier mapping (e.g. {"vram_96": "...", "vram_32": "..."})
 
         Args:
             media_type: "image", "audio", "music", "video", "text"
-            execution_mode: "eco" (local) or "fast" (cloud)
 
         Returns:
             Output-Config name (e.g., "sd35_large") or None if not available
@@ -111,17 +107,16 @@ class OutputConfigSelector:
             logger.warning(f"Unknown media type: {media_type}")
             return None
 
-        modes = self.defaults[media_type]
-        output_config = modes.get(execution_mode)
+        output_config = self.defaults[media_type]
 
         # Dict = VRAM-tier mapping
         if isinstance(output_config, dict):
             output_config = self._resolve_vram_tier_dict(output_config)
 
         if output_config:
-            logger.info(f"[OUTPUT-CONFIG-SELECTOR] {media_type} + {execution_mode} → {output_config}")
+            logger.info(f"[OUTPUT-CONFIG-SELECTOR] {media_type} → {output_config}")
         else:
-            logger.warning(f"[OUTPUT-CONFIG-SELECTOR] No default for {media_type} + {execution_mode}")
+            logger.warning(f"[OUTPUT-CONFIG-SELECTOR] No default for {media_type}")
 
         return output_config
 
@@ -161,31 +156,15 @@ class OutputConfigSelector:
         """Get list of supported media types"""
         return list(self.defaults.keys())
 
-    def is_media_type_supported(self, media_type: str, execution_mode: str = 'eco') -> bool:
-        """Check if media type is supported for given execution mode"""
+    def is_media_type_supported(self, media_type: str) -> bool:
+        """Check if media type is supported"""
         if media_type not in self.defaults:
             return False
 
-        output_config = self.defaults[media_type].get(execution_mode)
+        output_config = self.defaults[media_type]
         if isinstance(output_config, dict):
             output_config = self._resolve_vram_tier_dict(output_config)
         return output_config is not None
-
-    def get_supported_modes_for_media(self, media_type: str) -> list:
-        """Get list of supported execution modes for given media type"""
-        if media_type not in self.defaults:
-            return []
-
-        result = []
-        modes = self.defaults[media_type]
-        for mode, config in modes.items():
-            if mode.startswith('_'):
-                continue
-            if isinstance(config, dict):
-                config = self._resolve_vram_tier_dict(config)
-            if config is not None:
-                result.append(mode)
-        return result
 
 
 # Singleton instance

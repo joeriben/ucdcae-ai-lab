@@ -1,35 +1,15 @@
 {
-  "_description": "Central mapping of media types to default Output-Configs per execution mode",
+  "_description": "Central mapping of media types to default Output-Configs",
   "_note": "DevServer uses this to determine which Output-Config to use for auto-media generation",
   "_architecture": "Separation of concerns: text manipulation configs suggest media type, this file chooses which model/config",
 
-  "image": {
-    "eco": "sd35_large",
-    "fast": "gpt5_image",
-    "_note": "eco=local ComfyUI, fast=cloud OpenRouter GPT-5 Image"
-  },
+  "image": "sd35_large",
 
-  "audio": {
-    "eco": "stableaudio_open",
-    "fast": null,
-    "_note": "eco=local Stable Audio Open via Diffusers (GPU service)"
-  },
+  "audio": "stableaudio_open",
 
-  "music": {
-    "eco": "acestep_instrumental",
-    "fast": null,
-    "_note": "AceStep instrumental generation (simplified single-prompt workflow)"
-  },
+  "music": "acestep_instrumental",
 
-  "video": {
-    "eco": "wan22_t2v_diffusers",
-    "fast": null,
-    "_note": "Wan 2.2 TI2V-5B via Diffusers GPU service. ~1-2 min per video, ~20GB VRAM."
-  },
+  "video": "wan22_t2v_diffusers",
 
-  "text": {
-    "eco": null,
-    "fast": null,
-    "_note": "text output means no media generation - return text only"
-  }
+  "text": null
 }

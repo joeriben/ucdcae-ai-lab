@@ -50,7 +50,6 @@ def stream_pipeline_progress(run_id: str):
             recorder = get_recorder(
                 run_id=run_id,
                 config_name='unknown',  # Will be loaded from existing run
-                execution_mode='eco',
                 safety_level='kids',
                 user_id='anonymous',
                 base_path=JSON_STORAGE_DIR

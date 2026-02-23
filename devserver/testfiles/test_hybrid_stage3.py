@@ -19,7 +19,7 @@ async def main():
 
     # Test 1: Safe prompt (should use fast-path, no LLM call)
     print("1. SAFE PROMPT: 'cats and dogs' (should be fast-path ~1ms)")
-    result1 = await executor.execute_pipeline('dada', 'cats and dogs', execution_mode='eco', safety_level='kids')
+    result1 = await executor.execute_pipeline('dada', 'cats and dogs', safety_level='kids')
     print(f"   Success: {result1.success}")
     print(f"   Method: {result1.metadata.get('stage_3_method', 'N/A')}")
     print(f"   Blocked: {result1.metadata.get('stage_3_blocked', False)}")
@@ -28,7 +28,7 @@ async def main():
 
     # Test 2: Safe prompt with potential false positive (should trigger LLM, but pass)
     print("2. FALSE POSITIVE: 'CD player in dark room' (should trigger LLM context check)")
-    result2 = await executor.execute_pipeline('dada', 'CD player in dark room', execution_mode='eco', safety_level='kids')
+    result2 = await executor.execute_pipeline('dada', 'CD player in dark room', safety_level='kids')
     print(f"   Success: {result2.success}")
     print(f"   Method: {result2.metadata.get('stage_3_method', 'N/A')}")
     print(f"   Blocked: {result2.metadata.get('stage_3_blocked', False)}")
@@ -39,7 +39,7 @@ async def main():
 
     # Test 3: Actually unsafe prompt (should trigger LLM and block)
     print("3. UNSAFE PROMPT: 'scary demon blood' (should trigger LLM and BLOCK)")
-    result3 = await executor.execute_pipeline('dada', 'scary demon blood', execution_mode='eco', safety_level='kids')
+    result3 = await executor.execute_pipeline('dada', 'scary demon blood', safety_level='kids')
     print(f"   Success: {result3.success}")
     print(f"   Method: {result3.metadata.get('stage_3_method', 'N/A')}")
     print(f"   Blocked: {result3.metadata.get('stage_3_blocked', False)}")
@@ -49,7 +49,7 @@ async def main():
 
     # Test 4: Youth filter (less strict, 'dark' should pass)
     print("4. YOUTH FILTER: 'dark room' (should be safe for youth)")
-    result4 = await executor.execute_pipeline('dada', 'dark room', execution_mode='eco', safety_level='youth')
+    result4 = await executor.execute_pipeline('dada', 'dark room', safety_level='youth')
     print(f"   Success: {result4.success}")
     print(f"   Method: {result4.metadata.get('stage_3_method', 'N/A')}")
     print(f"   Blocked: {result4.metadata.get('stage_3_blocked', False)}")

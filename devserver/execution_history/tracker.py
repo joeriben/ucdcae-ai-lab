@@ -50,7 +50,6 @@ class ExecutionTracker:
     def __init__(
         self,
         config_name: str,
-        execution_mode: str,
         safety_level: str,
         user_id: str = 'anonymous',
         session_id: str = 'default'
@@ -60,14 +59,12 @@ class ExecutionTracker:
 
         Args:
             config_name: Schema/config being executed (dada, stillepost, etc.)
-            execution_mode: eco | fast
             safety_level: kids | teens | adults
             user_id: User identifier
             session_id: Session identifier
         """
         self.execution_id = self._generate_execution_id()
         self.config_name = config_name
-        self.execution_mode = execution_mode
         self.safety_level = safety_level
         self.user_id = user_id
         self.session_id = session_id
@@ -124,7 +121,6 @@ class ExecutionTracker:
                 content=None,
                 metadata={
                     'config_name': self.config_name,
-                    'execution_mode': self.execution_mode,
                     'safety_level': self.safety_level,
                     'user_id': self.user_id,
                     'session_id': self.session_id,
@@ -566,7 +562,7 @@ class ExecutionTracker:
                 timestamp=datetime.fromtimestamp(self.start_time),
                 user_id=self.user_id,
                 session_id=self.session_id,
-                execution_mode=self.execution_mode,
+
                 safety_level=self.safety_level,
                 used_seed=None,  # TODO: Extract from media outputs if needed
                 total_execution_time=time.time() - self.start_time,
@@ -599,7 +595,6 @@ class ExecutionTracker:
             timestamp=datetime.fromtimestamp(self.start_time),
             user_id=self.user_id,
             session_id=self.session_id,
-            execution_mode=self.execution_mode,
             safety_level=self.safety_level,
             used_seed=None,
             total_execution_time=time.time() - self.start_time,

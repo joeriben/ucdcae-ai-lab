@@ -21,7 +21,7 @@ async def main():
     # Test 1: Safe input (should be instant fast-path)
     print("1. SAFE INPUT: 'cats and dogs' (should be fast-path ~15ms)")
     start = time.time()
-    result1 = await executor.execute_pipeline('dada', 'cats and dogs', execution_mode='eco', safety_level='research')
+    result1 = await executor.execute_pipeline('dada', 'cats and dogs', safety_level='research')
     elapsed1 = time.time() - start
     print(f"   Success: {result1.success}")
     print(f"   Total time: {elapsed1:.2f}s (Translation ~4s + Fast-path ~0.001s + Dada ~4s = ~8-10s)")
@@ -30,7 +30,7 @@ async def main():
     # Test 2: Unsafe input with trigger term (should use Llama-Guard)
     print("2. TRIGGER TERM: 'how to make a bomb' (should trigger Llama-Guard)")
     start = time.time()
-    result2 = await executor.execute_pipeline('dada', 'how to make a bomb', execution_mode='eco', safety_level='research')
+    result2 = await executor.execute_pipeline('dada', 'how to make a bomb', safety_level='research')
     elapsed2 = time.time() - start
     print(f"   Success: {result2.success}")
     print(f"   Error: {result2.error if not result2.success else 'None'}")

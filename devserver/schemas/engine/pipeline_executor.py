@@ -103,7 +103,6 @@ class PipelineExecutor:
         config_name: str,
         input_text: str,
         user_input: Optional[str] = None,
-        execution_mode: str = 'eco',  # DEPRECATED (Session 65): Ignored. Model selection via config.py. TODO: Remove parameter.
         safety_level: str = 'kids',
         tracker=None,
         config_override=None,  # Phase 2: Optional pre-modified config
@@ -117,10 +116,6 @@ class PipelineExecutor:
     ) -> PipelineResult:
         """Execute complete pipeline with 4-Stage Pre-Interception System
 
-        DEPRECATED: execution_mode parameter is no longer used.
-        Model selection now configured per-stage in config.py (STAGE1_MODEL, STAGE2_MODEL, etc.)
-        Parameter kept for backward compatibility only.
-
         Args:
             config_override: Optional pre-modified Config object (Phase 2 user edits)
                            If provided, uses this instead of loading from config_name
@@ -132,7 +127,7 @@ class PipelineExecutor:
             self.backend_router.initialize()
             self._initialized = True
 
-        logger.info(f"[PIPELINE] Executing config '{config_name}' (execution_mode={execution_mode} - DEPRECATED)")
+        logger.info(f"[PIPELINE] Executing config '{config_name}'")
 
         # Get config (use override if provided, otherwise load)
         if config_override:
@@ -196,19 +191,18 @@ class PipelineExecutor:
         # Plan pipeline steps
         steps = self._plan_pipeline_steps(resolved_config)
 
-        # Execute pipeline with execution_mode and tracker
-        result = await self._execute_pipeline_steps(config_name, steps, context, execution_mode, tracker)
+        result = await self._execute_pipeline_steps(config_name, steps, context, tracker=tracker)
 
         logger.info(f"Pipeline for config '{config_name}' completed: {result.status}")
         return result
     
-    async def stream_pipeline(self, config_name: str, input_text: str, user_input: Optional[str] = None, execution_mode: str = 'eco') -> AsyncGenerator[Tuple[str, Any], None]:
+    async def stream_pipeline(self, config_name: str, input_text: str, user_input: Optional[str] = None) -> AsyncGenerator[Tuple[str, Any], None]:
         """Execute pipeline with streaming updates"""
         if not self._initialized:
             yield ("error", "Pipeline-Executor not initialized")
             return
-        
-        logger.info(f"[EXECUTION-MODE] Streaming pipeline for config '{config_name}' with execution_mode='{execution_mode}'")
+
+        logger.info(f"[PIPELINE] Streaming pipeline for config '{config_name}'")
         
         resolved_config = self.config_loader.get_config(config_name)
         if not resolved_config:
@@ -230,11 +224,10 @@ class PipelineExecutor:
             "pipeline_name": resolved_config.pipeline_name,
             "total_steps": len(steps),
             "input_text": input_text,
-            "execution_mode": execution_mode
         })
-        
+
         # Execute pipeline steps with streaming
-        async for event_type, event_data in self._stream_pipeline_steps(config_name, steps, context, execution_mode):
+        async for event_type, event_data in self._stream_pipeline_steps(config_name, steps, context):
             yield (event_type, event_data)
     
     def _plan_pipeline_steps(self, resolved_config: ResolvedConfig) -> List[PipelineStep]:
@@ -251,12 +244,12 @@ class PipelineExecutor:
         logger.debug(f"Pipeline planned: {len(steps)} steps for config '{resolved_config.name}' (Pipeline: {resolved_config.pipeline_name})")
         return steps
     
-    async def _execute_pipeline_steps(self, config_name: str, steps: List[PipelineStep], context: PipelineContext, execution_mode: str = 'eco', tracker=None) -> PipelineResult:
+    async def _execute_pipeline_steps(self, config_name: str, steps: List[PipelineStep], context: PipelineContext, tracker=None) -> PipelineResult:
         """Execute pipeline steps sequentially (or recursively if pipeline supports it)"""
 
         # Check if this is a recursive pipeline
         if self._current_config and self._current_config.pipeline_name == 'text_transformation_recursive':
-            return await self._execute_recursive_pipeline_steps(config_name, steps, context, execution_mode, tracker)
+            return await self._execute_recursive_pipeline_steps(config_name, steps, context, tracker)
 
         # Normal sequential execution
         start_time = time.time()
@@ -265,7 +258,7 @@ class PipelineExecutor:
         for step in steps:
             try:
                 step.status = PipelineStatus.RUNNING
-                output = await self._execute_single_step(step, context, execution_mode, tracker=tracker)
+                output = await self._execute_single_step(step, context, tracker=tracker)
 
                 step.status = PipelineStatus.COMPLETED
                 step.output_data = output
@@ -333,7 +326,7 @@ class PipelineExecutor:
             metadata=result_metadata
         )
 
-    async def _execute_recursive_pipeline_steps(self, config_name: str, steps: List[PipelineStep], context: PipelineContext, execution_mode: str = 'eco', tracker=None) -> PipelineResult:
+    async def _execute_recursive_pipeline_steps(self, config_name: str, steps: List[PipelineStep], context: PipelineContext, tracker=None) -> PipelineResult:
         """Execute recursive pipeline with internal loop (e.g., Stille Post)"""
         from .random_language_selector import get_random_language, get_language_name
 
@@ -385,7 +378,7 @@ class PipelineExecutor:
 
                 logger.info(f"[RECURSIVE-LOOP] Iteration {i+1}/{iterations}: Translating to {get_language_name(target_lang)} ({target_lang})")
 
-                output = await self._execute_single_step(step, context, execution_mode, tracker=tracker)
+                output = await self._execute_single_step(step, context, tracker=tracker)
 
                 step.status = PipelineStatus.COMPLETED
                 step.output_data = output
@@ -454,7 +447,7 @@ class PipelineExecutor:
             }
         )
     
-    async def _stream_pipeline_steps(self, config_name: str, steps: List[PipelineStep], context: PipelineContext, execution_mode: str = 'eco') -> AsyncGenerator[Tuple[str, Any], None]:
+    async def _stream_pipeline_steps(self, config_name: str, steps: List[PipelineStep], context: PipelineContext) -> AsyncGenerator[Tuple[str, Any], None]:
         """Execute pipeline steps with streaming updates"""
         for i, step in enumerate(steps):
             yield ("step_started", {
@@ -465,7 +458,7 @@ class PipelineExecutor:
             
             try:
                 step.status = PipelineStatus.RUNNING
-                output = await self._execute_single_step(step, context, execution_mode)
+                output = await self._execute_single_step(step, context)
                 
                 step.status = PipelineStatus.COMPLETED
                 step.output_data = output
@@ -500,7 +493,7 @@ class PipelineExecutor:
             "total_steps": len(steps)
         })
     
-    async def _execute_single_step(self, step: PipelineStep, context: PipelineContext, execution_mode: str = 'eco', tracker=None) -> str:
+    async def _execute_single_step(self, step: PipelineStep, context: PipelineContext, tracker=None) -> str:
         """Execute single pipeline step with optional Wikipedia research capability
 
         Wikipedia Research (opt-in via config meta "wikipedia": true):

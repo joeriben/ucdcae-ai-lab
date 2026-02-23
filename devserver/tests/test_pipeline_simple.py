@@ -28,7 +28,6 @@ async def test_single_prompt(executor, prompt, safety_level='kids'):
         result = await executor.execute_pipeline(
             'dada',
             prompt,
-            execution_mode='eco',
             safety_level=safety_level
         )
         elapsed = time.time() - start

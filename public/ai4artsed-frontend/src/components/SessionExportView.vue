@@ -676,7 +676,7 @@ async function downloadSessionAsPDF(runId) {
       `Stage2-Config: ${data.config_name}`,
       `Output Mode: ${data.output_mode || 'N/A'}`,
       `Safety Level: ${data.safety_level}`,
-      `Execution Mode: ${data.execution_mode}`,
+
       `Stage: ${data.current_state?.stage || 'N/A'}`,
       `Step: ${data.current_state?.step || 'N/A'}`,
       `Entity Count: ${data.entities?.length || 0}`,
@@ -1062,7 +1062,7 @@ async function exportFilteredAsZipPDF() {
           `Stage2-Config: ${data.config_name}`,
           `Output Mode: ${data.output_mode || 'N/A'}`,
           `Safety Level: ${data.safety_level}`,
-          `Execution Mode: ${data.execution_mode}`,
+    
           `Stage: ${data.current_state?.stage || 'N/A'}`,
           `Step: ${data.current_state?.step || 'N/A'}`,
           `Entity Count: ${data.entities?.length || 0}`,

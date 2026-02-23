@@ -43,7 +43,6 @@ async def test_simple_execution():
             config_name=config_name,
             input_text=input_text,
             user_input=input_text,
-            execution_mode='eco'
         )
 
         print(f"\n✓ Pipeline execution: {result.status}")
@@ -93,7 +92,6 @@ async def test_dada_execution():
             config_name=config_name,
             input_text=input_text,
             user_input=input_text,
-            execution_mode='eco'
         )
 
         print(f"\n✓ Pipeline execution: {result.status}")

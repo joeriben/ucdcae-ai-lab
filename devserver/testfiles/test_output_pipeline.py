@@ -36,11 +36,9 @@ async def test_output_pipeline():
         # Test parameters
         config_name = "sd35_large"
         input_prompt = "A majestic dragon flying over a mountain landscape at sunset, digital art, highly detailed"
-        execution_mode = "eco"  # Local ComfyUI
 
         logger.info(f"Config: {config_name}")
         logger.info(f"Prompt: {input_prompt}")
-        logger.info(f"Mode: {execution_mode}")
         logger.info("")
 
         # Execute pipeline
@@ -49,7 +47,6 @@ async def test_output_pipeline():
             config_name=config_name,
             input_text=input_prompt,
             user_input=input_prompt,
-            execution_mode=execution_mode
         )
 
         # Display results

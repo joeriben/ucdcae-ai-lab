@@ -21,7 +21,6 @@ async def test_safe_triggers_media():
     result = await executor.execute_pipeline(
         'dada',
         'A beautiful flower',
-        execution_mode='eco'
     )
 
     print(f"Status: {result.status}")

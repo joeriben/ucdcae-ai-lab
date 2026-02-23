@@ -16,11 +16,6 @@ export const de = {
     bauhaus: 'Bauhaus (Geometrisch)',
     stillepost: 'Stille Post (Iterativ)'
   },
-  executionModes: {
-    eco: 'Eco (Schnell)',
-    fast: 'Fast (Ausgewogen)',
-    best: 'Best (Qualität)'
-  },
   safetyLevels: {
     kids: 'Kinder',
     youth: 'Jugend',

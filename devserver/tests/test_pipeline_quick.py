@@ -34,7 +34,6 @@ async def main():
             result = await executor.execute_pipeline(
                 'dada',
                 prompt,
-                execution_mode='eco',
                 safety_level='kids'
             )
             elapsed = time.time() - start

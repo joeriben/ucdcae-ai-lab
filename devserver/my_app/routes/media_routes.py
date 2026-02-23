@@ -972,7 +972,6 @@ def get_media_info(run_id: str):
         media_info = {
             'run_id': run_id,
             'schema': recorder.metadata.get('config_name', 'unknown'),
-            'execution_mode': recorder.metadata.get('execution_mode', 'unknown'),
             'timestamp': recorder.metadata.get('timestamp', ''),
             'outputs': []
         }
@@ -1028,7 +1027,6 @@ def get_run_metadata(run_id: str):
             'user_id': recorder.metadata.get('user_id', 'anonymous'),
             'timestamp': recorder.metadata.get('timestamp', ''),
             'schema': recorder.metadata.get('config_name', 'unknown'),
-            'execution_mode': recorder.metadata.get('execution_mode', 'unknown'),
             'current_state': recorder.metadata.get('current_state', {}),
             'expected_outputs': recorder.metadata.get('expected_outputs', []),
             'entities': recorder.metadata.get('entities', [])

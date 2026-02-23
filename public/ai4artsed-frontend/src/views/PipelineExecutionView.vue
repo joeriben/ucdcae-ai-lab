@@ -90,16 +90,7 @@
           <span v-else>{{ $t('phase2.executing') }}</span>
         </button>
 
-        <!-- Settings (execution mode, safety level) -->
-        <!-- DEPRECATED (Session 65): execution_mode selector - parameter no longer affects backend.
-             Model selection is now centralized in devserver/config.py.
-             TODO: Remove this UI element in future cleanup. -->
         <div class="execution-settings">
-          <select v-model="localExecutionMode" class="setting-select">
-            <option value="eco">{{ $t('executionModes.eco') }}</option>
-            <option value="fast">{{ $t('executionModes.fast') }}</option>
-            <option value="best">{{ $t('executionModes.best') }}</option>
-          </select>
         </div>
       </div>
     </div>
@@ -143,9 +134,6 @@ const userPreferences = useUserPreferencesStore()
 // Local state
 const localUserInput = ref('')
 const localMetaPrompt = ref('')
-// DEPRECATED (Session 65): execution_mode no longer affects backend. TODO: Remove in cleanup.
-const localExecutionMode = ref<'eco' | 'fast' | 'best'>('eco')
-
 const isLoading = ref(false)
 const isExecuting = ref(false)
 const error = ref<string | null>(null)
@@ -196,8 +184,6 @@ async function initializeView() {
   // Initialize local state from store
   localUserInput.value = pipelineStore.userInput
   localMetaPrompt.value = pipelineStore.metaPrompt
-  localExecutionMode.value = pipelineStore.executionMode
-
   isLoading.value = false
 }
 
@@ -225,9 +211,6 @@ watch(
 // Sync local state to store
 watch(localUserInput, (newValue) => pipelineStore.updateUserInput(newValue))
 watch(localMetaPrompt, (newValue) => pipelineStore.updateMetaPrompt(newValue))
-// DEPRECATED (Session 65): execution_mode no longer affects backend. TODO: Remove in cleanup.
-watch(localExecutionMode, (newValue) => pipelineStore.setExecutionMode(newValue))
-
 // ============================================================================
 // METHODS
 // ============================================================================
@@ -247,7 +230,6 @@ async function handleExecute() {
       schema: pipelineStore.selectedConfig.id,
       input_text: pipelineStore.userInput,
       user_language: userPreferences.language,
-      execution_mode: pipelineStore.executionMode,
       // Include context_prompt if modified
       ...(pipelineStore.metaPromptModified && {
         context_prompt: pipelineStore.metaPrompt,

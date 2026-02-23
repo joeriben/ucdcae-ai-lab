@@ -78,7 +78,6 @@ def test_surrealization_pipeline():
             chunk_name='optimize_t5_prompt',
             resolved_config=config,
             context=context,
-            execution_mode='eco',
             pipeline=pipeline
         )
 
@@ -115,7 +114,6 @@ def test_surrealization_pipeline():
             chunk_name='optimize_clip_prompt',
             resolved_config=config,
             context=context,
-            execution_mode='eco',
             pipeline=pipeline
         )
 
@@ -155,7 +153,6 @@ def test_surrealization_pipeline():
             chunk_name='dual_encoder_fusion_image',
             resolved_config=config,
             context=context_with_previous,
-            execution_mode='eco',
             pipeline=pipeline
         )
 

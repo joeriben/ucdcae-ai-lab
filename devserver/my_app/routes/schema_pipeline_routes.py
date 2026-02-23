@@ -171,17 +171,16 @@ def _resolve_vram_tier_dict(tier_dict: dict) -> str:
     return None
 
 
-def lookup_output_config(media_type: str, execution_mode: str = 'eco') -> str:
+def lookup_output_config(media_type: str) -> str:
     """
     Lookup Output-Config name from output_config_defaults.json
 
     Supports two value formats:
-    - String: direct config name (backwards compatible)
+    - String: direct config name
     - Dict: VRAM-tier mapping (e.g. {"vram_96": "...", "vram_32": "..."})
 
     Args:
         media_type: image, audio, video, music, text
-        execution_mode: eco (local) or fast (cloud)
 
     Returns:
         Config name (e.g., "sd35_large") or None if not found
@@ -192,7 +191,7 @@ def lookup_output_config(media_type: str, execution_mode: str = 'eco') -> str:
         logger.warning(f"Unknown media type: {media_type}")
         return None
 
-    config_name = defaults[media_type].get(execution_mode)
+    config_name = defaults[media_type]
 
     # Dict = VRAM-tier mapping
     if isinstance(config_name, dict):
@@ -200,10 +199,10 @@ def lookup_output_config(media_type: str, execution_mode: str = 'eco') -> str:
 
     # Filter out metadata keys that start with underscore
     if config_name and not str(config_name).startswith('_'):
-        logger.info(f"Output-Config lookup: {media_type}/{execution_mode} → {config_name}")
+        logger.info(f"Output-Config lookup: {media_type} → {config_name}")
         return config_name
     else:
-        logger.info(f"No Output-Config for {media_type}/{execution_mode} (config_name={config_name})")
+        logger.info(f"No Output-Config for {media_type} (config_name={config_name})")
         return None
 
 
@@ -406,7 +405,6 @@ def _build_stage2_result(interception_result: str, optimized_prompt: str, result
 async def execute_optimization(
     input_text: str,
     optimization_instruction: str,
-    execution_mode: str = "eco"
 ):
     """
     Optimization: Transform text using manipulate chunk + optimization_instruction
@@ -419,7 +417,6 @@ async def execute_optimization(
     Args:
         input_text: Text to optimize (typically interception_result)
         optimization_instruction: Specific transformation rules from output chunk
-        execution_mode: Execution mode (for model selection)
 
     Returns:
         Optimized text, or input_text on failure
@@ -475,7 +472,6 @@ async def execute_stage2_interception(
     schema_name: str,
     input_text: str,
     config,
-    execution_mode: str,
     safety_level: str,
     tracker=None,
     user_input: str = None
@@ -490,7 +486,6 @@ async def execute_stage2_interception(
         schema_name: Name of the interception config (e.g., "dada", "bauhaus")
         input_text: User input text (already safety-checked in Stage 1)
         config: Loaded interception config object
-        execution_mode: "eco" or "fast"
         safety_level: "kids", "youth", "adult", or "research"
         tracker: Optional execution tracker
         user_input: Optional original user input text (before safety check)
@@ -507,7 +502,6 @@ async def execute_stage2_interception(
         config_name=schema_name,
         input_text=input_text,
         user_input=user_input if user_input is not None else input_text,
-        execution_mode=execution_mode,
         safety_level=safety_level,
         tracker=tracker,
         config_override=config
@@ -537,7 +531,6 @@ async def execute_stage2_with_optimization_SINGLE_RUN_VERSION(
     schema_name: str,
     input_text: str,
     config,
-    execution_mode: str,
     safety_level: str,
     output_config: str = None,
     media_preferences = None,
@@ -556,7 +549,6 @@ async def execute_stage2_with_optimization_SINGLE_RUN_VERSION(
         schema_name: Name of the interception config (e.g., "dada", "bauhaus")
         input_text: User input text (already safety-checked in Stage 1)
         config: Loaded interception config object
-        execution_mode: "eco" or "fast"
         safety_level: "kids", "youth", "adult", or "research"
         output_config: Optional output config name for optimization (e.g., "sd35_large")
         media_preferences: Optional media preferences from config
@@ -584,7 +576,7 @@ async def execute_stage2_with_optimization_SINGLE_RUN_VERSION(
         target_output_config = media_preferences['output_configs'][0]
     elif media_preferences and media_preferences.get('default_output') and media_preferences.get('default_output') != 'text':
         # Lookup output config from default_output
-        target_output_config = lookup_output_config(media_preferences['default_output'], execution_mode)
+        target_output_config = lookup_output_config(media_preferences['default_output'])
     else:
         target_output_config = None
 
@@ -646,7 +638,6 @@ async def execute_stage2_with_optimization_SINGLE_RUN_VERSION(
         config_name=schema_name,
         input_text=input_text,
         user_input=user_input if user_input is not None else input_text,
-        execution_mode=execution_mode,
         safety_level=safety_level,
         tracker=tracker,
         config_override=stage2_config
@@ -660,7 +651,6 @@ async def execute_stage2_with_optimization(
     schema_name: str,
     input_text: str,
     config,
-    execution_mode: str,
     safety_level: str,
     output_config: str = None,
     media_preferences = None,
@@ -677,7 +667,6 @@ async def execute_stage2_with_optimization(
         schema_name: Name of the interception config (e.g., "dada", "bauhaus")
         input_text: User input text (already safety-checked in Stage 1)
         config: Loaded interception config object
-        execution_mode: "eco" or "fast"
         safety_level: "kids", "youth", "adult", or "research"
         output_config: Optional output config name for optimization (e.g., "sd35_large")
         media_preferences: Optional media preferences from config
@@ -700,7 +689,6 @@ async def execute_stage2_with_optimization(
         schema_name=schema_name,
         input_text=input_text,
         config=config,
-        execution_mode=execution_mode,
         safety_level=safety_level,
         tracker=tracker,
         user_input=user_input
@@ -719,7 +707,7 @@ async def execute_stage2_with_optimization(
         if media_preferences.get('output_configs'):
             target_output_config = media_preferences['output_configs'][0]
         elif media_preferences.get('default_output') and media_preferences.get('default_output') != 'text':
-            target_output_config = lookup_output_config(media_preferences['default_output'], execution_mode)
+            target_output_config = lookup_output_config(media_preferences['default_output'])
 
     if target_output_config:
         optimization_instruction = _load_optimization_instruction(target_output_config)
@@ -729,7 +717,6 @@ async def execute_stage2_with_optimization(
         optimized_prompt = await execute_optimization(
             input_text=interception_result,
             optimization_instruction=optimization_instruction,
-            execution_mode=execution_mode
         )
     else:
         optimized_prompt = interception_result
@@ -785,7 +772,6 @@ def execute_stage2():
         "schema": "dada",                      # Interception config
         "input_text": "Ein roter Apfel",       # User input
         "output_config": "sd35_large",         # Output config for optimization
-        "execution_mode": "eco",               # eco or fast
         "safety_level": "kids",                # kids, youth, or off
         "user_language": "de"                  # User's interface language
     }
@@ -818,7 +804,6 @@ def execute_stage2():
 
         schema_name = data.get('schema')
         input_text = data.get('input_text')
-        execution_mode = data.get('execution_mode', 'eco')
         safety_level = _default_safety
         output_config = data.get('output_config')  # Optional
         user_language = data.get('user_language', 'en')
@@ -909,7 +894,6 @@ def execute_stage2():
             is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
                 input_text,
                 safety_level,
-                execution_mode,
                 pipeline_executor
             ))
         logger.info(f"[OLLAMA-QUEUE] Stage 2 Endpoint: Released slot")
@@ -959,7 +943,6 @@ def execute_stage2():
                 schema_name=schema_name,
                 input_text=checked_text,
                 config=execution_config,  # Use execution_config (may be modified with user context)
-                execution_mode=execution_mode,
                 safety_level=safety_level,
                 output_config=output_config,
                 media_preferences=media_preferences,
@@ -1134,7 +1117,6 @@ def optimize_prompt():
         optimized = asyncio.run(execute_optimization(
             input_text=input_text,
             optimization_instruction=optimization_instruction,
-            execution_mode='eco'
         ))
 
         execution_time = int((time.time() - start_time) * 1000)
@@ -1175,7 +1157,6 @@ def execute_stage3_4():
     {
         "stage2_result": "Ein roter Apfel in dadaistischer...",  # From /stage2 (can be edited)
         "output_config": "sd35_large",                           # Output config for media generation
-        "execution_mode": "eco",                                 # eco or fast
         "safety_level": "kids",                                  # kids, youth, or off
         "run_id": "uuid",                                        # Optional: Session ID from /stage2
         "seed": 123456                                           # Optional: Seed for reproducible generation
@@ -1210,7 +1191,6 @@ def execute_stage3_4():
 
         stage2_result = data.get('stage2_result')
         output_config = data.get('output_config')
-        execution_mode = data.get('execution_mode', 'eco')
         safety_level = config.DEFAULT_SAFETY_LEVEL
         run_id = data.get('run_id', generate_run_id())
         seed_override = data.get('seed')
@@ -1229,7 +1209,6 @@ def execute_stage3_4():
         recorder = get_recorder(
             run_id=run_id,
             config_name=output_config,
-            execution_mode=execution_mode,
             safety_level=safety_level,
             base_path=JSON_STORAGE_DIR
         )
@@ -1291,7 +1270,6 @@ def execute_stage3_4():
             stage2_result,
             safety_level,
             media_type,
-            execution_mode,
             pipeline_executor
         ))
 
@@ -1326,7 +1304,6 @@ def execute_stage3_4():
                 config_name=output_config,
                 input_text=translated_prompt,
                 user_input=translated_prompt,
-                execution_mode=execution_mode,
                 tracker=tracker,
                 seed_override=calculated_seed
             ))
@@ -1466,21 +1443,19 @@ def execute_pipeline_streaming(data: dict):
     input_text = data.get('input_text', '')
     context_prompt = data.get('context_prompt', '')
     safety_level = DEFAULT_SAFETY_LEVEL
-    execution_mode = data.get('execution_mode', 'eco')
     device_id = data.get('device_id')  # Session 129: For folder structure
 
     # Session 130: Simplified - always use run_xxx from the start
     run_id = generate_run_id()
 
     logger.info(f"[UNIFIED-STREAMING] Starting orchestrated pipeline for run {run_id}")
-    logger.info(f"[UNIFIED-STREAMING] Schema: {schema_name}, Safety: {safety_level}, Mode: {execution_mode}, Device: {device_id}")
+    logger.info(f"[UNIFIED-STREAMING] Schema: {schema_name}, Safety: {safety_level}, Device: {device_id}")
 
     # Initialize recorder for export functionality
     from config import JSON_STORAGE_DIR, STAGE2_INTERCEPTION_MODEL
     recorder = get_recorder(
         run_id=run_id,
         config_name=schema_name,
-        execution_mode=execution_mode,
         safety_level=safety_level,
         device_id=device_id,  # Session 129
         base_path=JSON_STORAGE_DIR
@@ -1598,7 +1573,6 @@ def execute_pipeline_streaming(data: dict):
                 config_name=schema_name,
                 input_text=input_text,
                 user_input=input_text,
-                execution_mode=execution_mode,
                 safety_level=safety_level,
                 tracker=tracker,
                 config_override=config
@@ -1955,7 +1929,6 @@ def safety_check():
             is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
                 text,
                 safety_level,
-                'eco',  # execution_mode
                 pipeline_executor
             ))
 
@@ -1987,7 +1960,6 @@ def safety_check():
             result = asyncio.run(pipeline_executor.execute_pipeline(
                 safety_check_config,
                 text,
-                execution_mode='eco'
             ))
 
             if result.success:
@@ -2181,7 +2153,6 @@ def translate_text():
         result = asyncio.run(pipeline_executor.execute_pipeline(
             'pre_output/translation_en',
             text,
-            execution_mode='eco'
         ))
 
         duration_ms = (time.time() - start_time) * 1000
@@ -2462,7 +2433,6 @@ def execute_generation_streaming(data: dict):
             recorder = get_recorder(
                 run_id=run_id,
                 config_name=output_config,
-                execution_mode='eco',
                 safety_level=safety_level,
                 device_id=device_id,
                 base_path=JSON_STORAGE_DIR
@@ -2819,7 +2789,6 @@ async def execute_stage4_generation_only(
             recorder = get_recorder(
                 run_id=run_id,
                 config_name=output_config,
-                execution_mode='eco',
                 safety_level=safety_level,
                 device_id=device_id,
                 base_path=JSON_STORAGE_DIR
@@ -2904,7 +2873,6 @@ async def execute_stage4_generation_only(
             config_name=output_config,
             input_text=prompt,
             user_input=prompt,
-            execution_mode='eco',
             context_override=context_override,
             seed_override=seed,
             input_image=input_image,
@@ -3313,7 +3281,6 @@ async def execute_generation_stage4(
             recorder = get_recorder(
                 run_id=run_id,
                 config_name=output_config,
-                execution_mode='eco',
                 safety_level=safety_level,
                 device_id=device_id,
                 base_path=JSON_STORAGE_DIR
@@ -3515,7 +3482,6 @@ def legacy_workflow():
         recorder = get_recorder(
             run_id=run_id,
             config_name=output_config,
-            execution_mode='eco',
             safety_level=safety_level,
             base_path=JSON_STORAGE_DIR
         )
@@ -3604,7 +3570,6 @@ def legacy_workflow():
             config_name=output_config,
             input_text=prompt,
             user_input=prompt,
-            execution_mode='eco',
             context_override=context_override,
             seed_override=seed,
             alpha_factor=alpha_factor
@@ -3872,7 +3837,6 @@ def interception_pipeline():
                 'input_text': request.args.get('input_text'),
                 'context_prompt': request.args.get('context_prompt', ''),
                 'safety_level': request.args.get('safety_level', 'youth'),
-                'execution_mode': request.args.get('execution_mode', 'eco'),
                 'enable_streaming': request.args.get('enable_streaming') == 'true',
                 'device_id': request.args.get('device_id')  # Session 130: Fix missing device_id
             }
@@ -3902,7 +3866,6 @@ def interception_pipeline():
 
         schema_name = data.get('schema')
         input_text = data.get('input_text')
-        execution_mode = data.get('execution_mode', 'eco')  # eco (local) or fast (cloud)
         safety_level = _default_safety
 
         # Phase 2: Multilingual context editing support
@@ -4004,7 +3967,6 @@ def interception_pipeline():
         recorder = get_recorder(
             run_id=run_id,
             config_name=schema_name,
-            execution_mode=execution_mode,
             safety_level=safety_level,
             device_id=device_id,  # FIX: Use device_id from request instead of hardcoded 'anonymous'
             base_path=JSON_STORAGE_DIR
@@ -4128,7 +4090,6 @@ def interception_pipeline():
                     is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
                         input_text,
                         safety_level,
-                        execution_mode,
                         pipeline_executor
                     ))
                 logger.info(f"[OLLAMA-QUEUE] Unified Pipeline: Released slot")
@@ -4249,7 +4210,6 @@ def interception_pipeline():
                         schema_name=schema_name,
                         input_text=current_input,
                         config=execution_config,
-                        execution_mode=execution_mode,
                         safety_level=safety_level,
                         output_config=output_config,
                         media_preferences=media_preferences,
@@ -4353,8 +4313,6 @@ def interception_pipeline():
         logger.info(f"[DEBUG] default_output: {default_output}")
         logger.info(f"[DEBUG] output_configs: {output_configs}")
         logger.info(f"[DEBUG] output_config (from request): {output_config}")
-        logger.info(f"[DEBUG] execution_mode: {execution_mode}")
-
         # Determine which output configs to use
         # Priority: 1) Request parameter, 2) Config output_configs array, 3) Config default_output
         if output_config:
@@ -4367,8 +4325,8 @@ def interception_pipeline():
             configs_to_execute = output_configs
         elif default_output and default_output != 'text':
             # Single-Output: Use lookup from default_output
-            logger.info(f"[DEBUG] Calling lookup_output_config({default_output}, {execution_mode})")
-            output_config_name = lookup_output_config(default_output, execution_mode)
+            logger.info(f"[DEBUG] Calling lookup_output_config({default_output})")
+            output_config_name = lookup_output_config(default_output)
             logger.info(f"[DEBUG] lookup returned: {output_config_name}")
             if output_config_name:
                 configs_to_execute = [output_config_name]
@@ -4464,7 +4422,6 @@ def interception_pipeline():
                             result.final_output,
                             safety_level,
                             media_type,
-                            execution_mode,
                             pipeline_executor
                         ))
 
@@ -4479,7 +4436,6 @@ def interception_pipeline():
                             result.final_output,
                             safety_level,
                             media_type,
-                            execution_mode,
                             pipeline_executor
                         ))
 
@@ -4609,7 +4565,6 @@ def interception_pipeline():
                             config_name=output_config_name,
                             input_text=prompt_for_media,  # Use translated English text from Stage 3!
                             user_input=prompt_for_media,
-                            execution_mode=execution_mode,
                             context_override=context_override,  # NEW: Pass custom parameters uniformly
                             seed_override=calculated_seed,  # Phase 4: Intelligent seed
                             input_image=input_image,  # Session 80: IMG2IMG support
@@ -5232,10 +5187,10 @@ def interception_pipeline():
 
         elif not configs_to_execute and default_output and default_output != 'text':
             # No output config found for default_output
-            logger.info(f"[AUTO-MEDIA] No Output-Config available for {default_output}/{execution_mode}")
+            logger.info(f"[AUTO-MEDIA] No Output-Config available for {default_output}")
             response_data['media_output'] = {
                 'status': 'not_available',
-                'message': f'No Output-Config for {default_output}/{execution_mode}'
+                'message': f'No Output-Config for {default_output}'
             }
 
         # ====================================================================
