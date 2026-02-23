@@ -7,13 +7,15 @@
     "tr": "Sen Karar Ver!",
     "ko": "네가 정해!",
     "uk": "Ти вирішуєш",
-    "fr": "C'est toi qui décides !"
+    "fr": "C'est toi qui décides !",
+    "es": "¡Tú decides!"
   },
   "description": {
     "en": "When you make art, you decide what you want to use and how you want to do it. Here, you can tell the AI what to use and what rules to follow.",
     "de": "Wenn Du Kunst machst, entscheidest Du, was Du benutzen willst und wie Du es machen möchtest. Hier kannst Du der KI sagen, was sie benutzen und nach welchen Regeln sie arbeiten soll.",
     "uk": "Власна інструкція",
-    "fr": "Quand tu fais de l'art, tu décides ce que tu veux utiliser et comment tu veux le faire. Ici, tu peux dire à l'IA quoi utiliser et quelles règles suivre."
+    "fr": "Quand tu fais de l'art, tu décides ce que tu veux utiliser et comment tu veux le faire. Ici, tu peux dire à l'IA quoi utiliser et quelles règles suivre.",
+    "es": "Cuando haces arte, tú decides qué quieres usar y cómo quieres hacerlo. Aquí puedes decirle a la IA qué usar y qué reglas seguir."
   },
   "category": {
     "de": "Kunst & Kultur",

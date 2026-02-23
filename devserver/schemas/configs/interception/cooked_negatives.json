@@ -7,13 +7,15 @@
     "tr": "Pişirilmiş Negatifler",
     "ko": "조리된 네거티브",
     "uk": "Варені негативи",
-    "fr": "Négatifs cuits"
+    "fr": "Négatifs cuits",
+    "es": "Negativos cocidos"
   },
   "description": {
     "en": "Transforms ideas into the appearance of film negatives that have distorted by cooking for artistic purposes.",
     "de": "Verwandelt Ideen in den Bildeindruck von Filmnegativen die zur künstlerischen Verfremdung vor der Entwicklung gekocht wurden.",
     "uk": "Зварені фотонегативи",
-    "fr": "Transforme les idées en apparence de négatifs photographiques déformés par la cuisson à des fins artistiques."
+    "fr": "Transforme les idées en apparence de négatifs photographiques déformés par la cuisson à des fins artistiques.",
+    "es": "Transforma ideas en la apariencia de negativos fotográficos distorsionados por cocción con fines artísticos."
   },
   "category": {
     "de": "Fotografie & Medien",

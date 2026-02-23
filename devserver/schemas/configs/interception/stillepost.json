@@ -7,13 +7,15 @@
     "tr": "Kulaktan Kulağa",
     "ko": "전화 게임",
     "uk": "Зіпсований телефон",
-    "fr": "Téléphone arabe"
+    "fr": "Téléphone arabe",
+    "es": "Teléfono descompuesto"
   },
   "description": {
     "en": "Passes your text through 8 random languages like a game of telephone. Creates surprising changes as meaning shifts through multiple translations.",
     "de": "Schickt deinen Text durch 8 zufällige Sprachen wie bei Stille Post. Erzeugt überraschende Veränderungen, während die Bedeutung durch mehrere Übersetzungen wandert.",
     "uk": "Ітеративна трансформація",
-    "fr": "Fait passer ton texte à travers 8 langues aléatoires comme un jeu de téléphone arabe. Crée des changements surprenants au fur et à mesure que le sens se transforme à travers les traductions successives."
+    "fr": "Fait passer ton texte à travers 8 langues aléatoires comme un jeu de téléphone arabe. Crée des changements surprenants au fur et à mesure que le sens se transforme à travers les traductions successives.",
+    "es": "Pasa tu texto por 8 idiomas aleatorios como en un juego de teléfono descompuesto. Crea cambios sorprendentes a medida que el significado se transforma a través de múltiples traducciones."
   },
   "category": {
     "de": "Kreative Verwandlungen",

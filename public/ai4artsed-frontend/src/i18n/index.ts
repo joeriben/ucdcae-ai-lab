@@ -5,6 +5,7 @@ import { tr } from './tr'
 import { ko } from './ko'
 import { uk } from './uk'
 import { fr } from './fr'
+import { es } from './es'
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'de', label: 'Deutsch' },
@@ -13,6 +14,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ko', label: '한국어' },
   { code: 'uk', label: 'Українська' },
   { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
 ] as const
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number]['code']
@@ -25,7 +27,7 @@ export function localized(obj: Record<string, string>, locale: string): string {
   return obj[locale] || obj.en || ''
 }
 
-const messages = { de, en, tr, ko, uk, fr }
+const messages = { de, en, tr, ko, uk, fr, es }
 
 // Cast locale to SupportedLanguage so vue-i18n accepts all supported languages
 // (ko/tr messages are intentionally partial — fallbackLocale handles gaps)

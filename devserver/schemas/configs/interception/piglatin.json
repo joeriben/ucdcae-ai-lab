@@ -7,13 +7,15 @@
     "tr": "Kelime Oyunu",
     "ko": "말놀이",
     "uk": "Мовна гра",
-    "fr": "Jeu de mots"
+    "fr": "Jeu de mots",
+    "es": "Juego de palabras"
   },
   "description": {
     "en": "Transforms text into Pig Latin by moving consonants to the end and adding 'ay'. A playful language game that makes familiar words sound strange.",
     "de": "Verwandelt Text in Pig Latin, indem Konsonanten ans Ende verschoben und 'ay' angehängt wird. Ein spielerisches Sprachspiel, das vertraute Wörter fremd klingen lässt.",
     "uk": "Лінгвістична трансформація",
-    "fr": "Transforme le texte en Pig Latin en déplaçant les consonnes à la fin et en ajoutant « ay ». Un jeu de langue ludique qui rend les mots familiers étranges."
+    "fr": "Transforme le texte en Pig Latin en déplaçant les consonnes à la fin et en ajoutant « ay ». Un jeu de langue ludique qui rend les mots familiers étranges.",
+    "es": "Transforma texto en Pig Latin moviendo las consonantes al final y añadiendo \"ay\". Un juego de lenguaje lúdico que hace que las palabras familiares suenen extrañas."
   },
   "category": {
     "de": "Kreative Verwandlungen",

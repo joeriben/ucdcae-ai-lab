@@ -7,13 +7,15 @@
     "tr": "Tam Tersine!",
     "ko": "정반대로!",
     "uk": "Навпаки",
-    "fr": "Au contraire !"
+    "fr": "Au contraire !",
+    "es": "¡Al contrario!"
   },
   "description": {
     "en": "Flips everything to its exact opposite. Bright becomes dark, happy becomes sad, and all relationships reverse completely.",
     "de": "Kehrt alles ins genaue Gegenteil um. Hell wird dunkel, fröhlich wird traurig, und alle Beziehungen werden komplett umgedreht.",
     "uk": "Протилежна перспектива",
-    "fr": "Inverse tout en son exact opposé. Le lumineux devient sombre, le joyeux devient triste, et toutes les relations s'inversent complètement."
+    "fr": "Inverse tout en son exact opposé. Le lumineux devient sombre, le joyeux devient triste, et toutes les relations s'inversent complètement.",
+    "es": "Invierte todo a su opuesto exacto. Lo brillante se vuelve oscuro, lo alegre se vuelve triste y todas las relaciones se invierten completamente."
   },
   "category": {
     "de": "Kreative Verwandlungen",

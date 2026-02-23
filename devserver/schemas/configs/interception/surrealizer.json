@@ -7,13 +7,15 @@
     "tr": "Gerçeküstüleştirici",
     "ko": "초현실화기",
     "uk": "Сюрреалізатор",
-    "fr": "Surréalisateur"
+    "fr": "Surréalisateur",
+    "es": "Surrealizador"
   },
   "description": {
     "en": "Two AI 'brains' (CLIP and T5) each read your text — the slider pushes the image far beyond what either would normally produce, into unexplored territory where surreal, dreamlike compositions emerge.",
     "de": "Zwei KI-'Gehirne' (CLIP und T5) lesen deinen Text — der Regler schiebt das Bild weit über das hinaus, was beide normalerweise erzeugen würden, in unerforschtes Terrain, in dem surrealistische, traumhafte Kompositionen entstehen.",
     "uk": "Екстраполяція за межі відомого",
-    "fr": "Deux « cerveaux » d'IA (CLIP et T5) lisent chacun ton texte — le curseur pousse l'image bien au-delà de ce que chacun produirait normalement, dans un territoire inexploré où des compositions surréalistes et oniriques émergent."
+    "fr": "Deux « cerveaux » d'IA (CLIP et T5) lisent chacun ton texte — le curseur pousse l'image bien au-delà de ce que chacun produirait normalement, dans un territoire inexploré où des compositions surréalistes et oniriques émergent.",
+    "es": "Dos \"cerebros\" de IA (CLIP y T5) leen tu texto — el deslizador empuja la imagen mucho más allá de lo que cualquiera produciría normalmente, hacia territorio inexplorado donde emergen composiciones surreales y oníricas."
   },
   "category": {
     "de": "Forschung",

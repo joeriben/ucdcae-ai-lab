@@ -7,13 +7,15 @@
     "tr": "Analog Kopya",
     "ko": "아날로그 복사",
     "uk": "Аналогова копія",
-    "fr": "Copie analogique"
+    "fr": "Copie analogique",
+    "es": "Copia analógica"
   },
   "description": {
     "en": "Transforms ideas into analog-copy-based visual concepts. Emphasizes generational loss, material signal decay, soft detail, chroma drift, dropout patterns, and the structural imprint of physical duplication processes.",
     "de": "Verwandelt Ideen in visuelle Konzepte analoger Kopiertechnologien. Betont Generationenverlust, materiellen Signalabbau, weiche Detailzeichnung, Farbdifferenzen, Dropout-Muster und die strukturellen Spuren physischer Duplikationsprozesse.",
     "uk": "Копіювальна естетика",
-    "fr": "Transforme les idées en concepts visuels basés sur la copie analogique. Met l'accent sur la perte générationnelle, la dégradation matérielle du signal, le détail adouci, la dérive chromatique, les motifs de dropout et l'empreinte structurelle des processus de duplication physique."
+    "fr": "Transforme les idées en concepts visuels basés sur la copie analogique. Met l'accent sur la perte générationnelle, la dégradation matérielle du signal, le détail adouci, la dérive chromatique, les motifs de dropout et l'empreinte structurelle des processus de duplication physique.",
+    "es": "Transforma ideas en conceptos visuales basados en la copia analógica. Enfatiza la pérdida generacional, la degradación material de la señal, el detalle suavizado, la deriva cromática, patrones de dropout y la huella estructural de los procesos de duplicación física."
   },
   "category": {
     "de": "Fotografie & Medien",

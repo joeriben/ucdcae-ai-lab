@@ -7,13 +7,15 @@
     "tr": "Senin Hikayen",
     "ko": "너의 이야기",
     "uk": "Твоя історія",
-    "fr": "Ton histoire"
+    "fr": "Ton histoire",
+    "es": "Tu historia"
   },
   "description": {
     "en": "Helps you telling a story.",
     "de": "Hilft Dir, eine Geschichte zu erzählen.",
     "uk": "Розкажи свою історію",
-    "fr": "T'aide à raconter une histoire."
+    "fr": "T'aide à raconter une histoire.",
+    "es": "Te ayuda a contar una historia."
   },
   "category": {
     "de": "Kreative Verwandlungen",

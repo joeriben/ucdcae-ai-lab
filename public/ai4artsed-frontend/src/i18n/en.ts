@@ -181,7 +181,8 @@ export const en = {
       turkishTr: 'Turkish (tr)',
       koreanKo: 'Korean (ko)',
       ukrainianUk: 'Ukrainian (uk)',
-      frenchFr: 'French (fr)'
+      frenchFr: 'French (fr)',
+      spanishEs: 'Spanish (es)'
     },
     safety: {
       kidsTitle: 'Children (8–12)',

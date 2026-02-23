@@ -3,17 +3,19 @@
   "instruction_type": "artistic_transformation",
   "name": {
     "en": "Planetarizer",
-    "de": "Planeta\u00ADrisierer",
+    "de": "Planeta­risierer",
     "tr": "Gezegenselleştirici",
     "ko": "행성화기",
     "uk": "Планетаризатор",
-    "fr": "Planétariseur"
+    "fr": "Planétariseur",
+    "es": "Planetarizador"
   },
   "description": {
     "en": "Reimagines image prompts through planetary perspectives in the anthropocene. Deconstructs capitalist consumerist norms and challenges AI's inherent biases toward capitalist subjects and consumerist aesthetics.",
     "de": "Denkt Bild-Prompts neu aus planetaren Perspektiven im Anthropozän. Dekonstruiert kapialistische konsumistische Normen und hinterfragt die inhärenten Biases der KI in Bezug auf kapitalistische Sichtweisen und Konsumästhetiken.",
     "uk": "Планетарна перспектива",
-    "fr": "Réimagine les prompts d'images à travers des perspectives planétaires dans l'anthropocène. Déconstruit les normes consuméristes capitalistes et questionne les biais inhérents de l'IA envers les sujets capitalistes et l'esthétique consumériste."
+    "fr": "Réimagine les prompts d'images à travers des perspectives planétaires dans l'anthropocène. Déconstruit les normes consuméristes capitalistes et questionne les biais inhérents de l'IA envers les sujets capitalistes et l'esthétique consumériste.",
+    "es": "Reimagina prompts de imagen a través de perspectivas planetarias en el antropoceno. Deconstruye las normas consumistas capitalistas y cuestiona los sesgos inherentes de la IA hacia sujetos capitalistas y estéticas consumistas."
   },
   "category": {
     "de": "Kritisches Denken",

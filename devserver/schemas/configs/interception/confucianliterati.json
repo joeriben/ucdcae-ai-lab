@@ -7,13 +7,15 @@
     "tr": "Literati",
     "ko": "문인화",
     "uk": "Літераті",
-    "fr": "Literati"
+    "fr": "Literati",
+    "es": "Literati"
   },
   "description": {
     "en": "Critical examination tool: Tests how AI handles complex cultural knowledge. Reveals AI's limitations in understanding Confucian literati culture - not for authentic representation, but to critically investigate how generative AI deals with cultural specifics.",
     "de": "Kritisches Untersuchungswerkzeug: Prüft wie KI mit komplexem kulturellem Wissen umgeht. Zeigt die Grenzen der KI im Verständnis konfuzianischer Gelehrtenkultur - nicht zur authentischen Darstellung, sondern zur kritischen Untersuchung wie generative KI mit kulturellen Feinheiten umgeht.",
     "uk": "Конфуціанський стиль літераті",
-    "fr": "Outil d'examen critique : teste comment l'IA gère des savoirs culturels complexes. Révèle les limites de l'IA dans la compréhension de la culture lettrée confucéenne — non pour une représentation authentique, mais pour une investigation critique de la manière dont l'IA générative traite les spécificités culturelles."
+    "fr": "Outil d'examen critique : teste comment l'IA gère des savoirs culturels complexes. Révèle les limites de l'IA dans la compréhension de la culture lettrée confucéenne — non pour une représentation authentique, mais pour une investigation critique de la manière dont l'IA générative traite les spécificités culturelles.",
+    "es": "Herramienta de examen crítico: prueba cómo la IA maneja el conocimiento cultural complejo. Revela las limitaciones de la IA para comprender la cultura letrada confuciana — no para una representación auténtica, sino para investigar críticamente cómo la IA generativa trata las especificidades culturales."
   },
   "category": {
     "de": "Kunstgeschichte",
