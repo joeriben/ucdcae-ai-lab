@@ -111,3 +111,7 @@ aws_credentials.json
 gpu_service/.checkpoints/
 gpu_service/ext_weights/
 gpu_service/weights/
+
+# -------------------------------------
+# Research: generated data artifacts (tensors, corpora, WAVs)
+research/t5_interpretability/data/

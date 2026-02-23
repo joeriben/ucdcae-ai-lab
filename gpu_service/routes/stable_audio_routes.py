@@ -6,8 +6,12 @@ REST endpoints for Stable Audio Open generation.
 
 import asyncio
 import base64
+import io
 import logging
 from flask import Blueprint, request, jsonify
+
+import numpy as np
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -90,5 +94,64 @@ def generate():
         "audio_base64": base64.b64encode(audio_bytes).decode('utf-8'),
         "seed": seed,
         "duration_seconds": float(data.get('duration_seconds', 10.0)),
+        "sample_rate": backend.sample_rate,
+    })
+
+
+@stable_audio_bp.route('/api/stable_audio/generate_from_embeddings', methods=['POST'])
+def generate_from_embeddings():
+    """Generate audio from pre-computed T5 embeddings.
+
+    For research use: SAE feature sonification, cross-aesthetic generation.
+
+    Request JSON:
+        embeddings_b64: str (base64-encoded numpy array, shape [1, seq, 768], float32)
+        attention_mask_b64: str (base64-encoded numpy array, shape [1, seq], float32)
+        duration_seconds: float (default 2.0)
+        steps: int (default 100)
+        cfg_scale: float (default 7.0)
+        seed: int (default -1 = random)
+
+    Returns: { success, audio_base64, seed, duration_seconds, sample_rate }
+    """
+    data = request.get_json()
+    if not data or 'embeddings_b64' not in data:
+        return jsonify({"success": False, "error": "embeddings_b64 required"}), 400
+
+    # Decode numpy arrays from base64
+    emb_bytes = base64.b64decode(data['embeddings_b64'])
+    prompt_embeds = torch.from_numpy(
+        np.load(io.BytesIO(emb_bytes), allow_pickle=False)
+    )
+
+    attention_mask = None
+    if 'attention_mask_b64' in data:
+        mask_bytes = base64.b64decode(data['attention_mask_b64'])
+        attention_mask = torch.from_numpy(
+            np.load(io.BytesIO(mask_bytes), allow_pickle=False)
+        )
+
+    duration = float(data.get('duration_seconds', 2.0))
+    seed = int(data.get('seed', -1))
+
+    backend = _get_backend()
+    audio_bytes = _run_async(backend.generate_from_embeddings(
+        prompt_embeds=prompt_embeds,
+        attention_mask=attention_mask,
+        seconds_start=0.0,
+        seconds_end=duration,
+        steps=int(data.get('steps', 100)),
+        cfg_scale=float(data.get('cfg_scale', 7.0)),
+        seed=seed,
+    ))
+
+    if audio_bytes is None:
+        return jsonify({"success": False, "error": "Embedding generation failed"}), 500
+
+    return jsonify({
+        "success": True,
+        "audio_base64": base64.b64encode(audio_bytes).decode('utf-8'),
+        "seed": seed,
+        "duration_seconds": duration,
         "sample_rate": backend.sample_rate,
     })
