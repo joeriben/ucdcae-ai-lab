@@ -1,605 +1,235 @@
-# AI4ArtsEd DevServer - Required AI Models
+# AI4ArtsEd — Required AI Models
 
-Complete list of all AI models required for AI4ArtsEd DevServer, including download URLs, checksums, and installation paths.
-
-## Table of Contents
-1. [Overview](#overview)
-2. [Ollama Models](#ollama-models)
-3. [Stable Diffusion 3.5](#stable-diffusion-35)
-4. [CLIP Text Encoders](#clip-text-encoders)
-5. [LTX-Video Model](#ltx-video-model)
-6. [T5 Encoder for Video](#t5-encoder-for-video)
-7. [Installation Paths Summary](#installation-paths-summary)
-8. [Download Scripts](#download-scripts)
-9. [Verification](#verification)
+Complete inventory of all AI models used by the platform.
+**Updated:** 2026-02-23
 
 ---
 
 ## Overview
 
-### Total Disk Space Required
-
 | Category | Size | Purpose |
 |----------|------|---------|
-| **Ollama Models** | ~29GB | Local LLM inference (translation, safety, analysis) |
-| **SD3.5 + Encoders** | ~22GB | Image generation |
-| **LTX-Video** | ~15GB | Video generation |
-| **T5 Encoder (Video)** | ~11GB | Text encoding for video |
-| **Total** | **~77GB** | All models combined |
-
-### Download Time Estimates
-
-| Connection Speed | Estimated Time |
-|------------------|----------------|
-| **1 Gbps** | 10-15 minutes |
-| **100 Mbps** | 1.5-2 hours |
-| **50 Mbps** | 3-4 hours |
-| **10 Mbps** | 15-20 hours |
+| **Ollama Models** | ~16 GB | Safety, DSGVO, VLM, translation, interception |
+| **HuggingFace / Diffusers** | ~129 GB | Image, video, audio generation (GPU Service) |
+| **SwarmUI / ComfyUI** | ~450 GB | ComfyUI fallback models |
+| **GPU Service Weights** | ~6 GB | MMAudio (video-to-audio) |
+| **HeartMuLa** | ~21 GB | Music generation checkpoint |
+| **Total** | **~620 GB** | |
 
 ---
 
-## Ollama Models
+## 1. Ollama Models (Local LLM Inference)
 
-Ollama models are downloaded via the `ollama` CLI, not direct download.
+Referenced in `devserver/config.py`. Stored at `/usr/share/ollama/.ollama/models/`.
 
-### 1. gpt-OSS:20b
+### Required (Production)
 
-**Purpose:** Safety checks, translation, text processing
-**Size:** ~21GB
-**Model ID:** `gpt-OSS:20b`
-**Provider:** Ollama model library
+| Model | Config Variable | Purpose | Size |
+|-------|----------------|---------|------|
+| `llama-guard3:1b` | `SAFETY_MODEL` | Stage 1/3 content filtering, DSGVO | 1.6 GB |
+| `qwen3:1.7b` | `DSGVO_VERIFY_MODEL` | NER verification (is this a person name?) | 1.4 GB |
+| `qwen3-vl:2b` | `VLM_SAFETY_MODEL` | Post-generation image safety check | 1.9 GB |
+| `qwen3:4b` | `LOCAL_DEFAULT_MODEL` | Stages 1-4, chat, interception | 3.0 GB |
+| `llama3.2-vision:latest` | `LOCAL_VISION_MODEL` | Image analysis, Stage 1 vision | 7.8 GB |
+| **Total** | | | **~16 GB** |
 
-**Download:**
+### Install
+
 ```bash
-ollama pull gpt-OSS:20b
-```
-
-**Verification:**
-```bash
-ollama list | grep gpt-OSS
-```
-
-**Expected Output:**
-```
-gpt-OSS:20b    abc123def456    21 GB    2 minutes ago
-```
-
-**Used By:**
-- Stage 1: Input translation (German → English)
-- Stage 3: Safety validation
-- Legacy workflows: Prompt interception
-
----
-
-### 2. llama3.2-vision:latest
-
-**Purpose:** Image analysis and vision tasks
-**Size:** ~8GB
-**Model ID:** `llama3.2-vision:latest`
-**Provider:** Ollama model library (Meta Llama 3.2 Vision)
-
-**Download:**
-```bash
+ollama pull llama-guard3:1b
+ollama pull qwen3:1.7b
+ollama pull qwen3-vl:2b
+ollama pull qwen3:4b
 ollama pull llama3.2-vision:latest
 ```
 
-**Verification:**
+### Verify
+
 ```bash
-ollama list | grep llama3.2-vision
-```
-
-**Expected Output:**
-```
-llama3.2-vision:latest    def789ghi012    8.0 GB    1 minute ago
-```
-
-**Used By:**
-- Stage 1: Image analysis
-- Custom workflows: Visual understanding
-
----
-
-## Stable Diffusion 3.5
-
-### sd3.5_large.safetensors
-
-**Purpose:** Primary image generation model
-**Size:** 15.9GB
-**Architecture:** Stable Diffusion 3.5 Large
-**Resolution:** Up to 1024x1024 (native 768x768)
-**Provider:** Stability AI
-
-**Download URL:**
-```
-https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/sd3.5_large.safetensors
-```
-
-**SHA256 Checksum:**
-```
-TBD - Verify after download with: sha256sum sd3.5_large.safetensors
-```
-
-**Installation Path:**
-```
-/opt/ai4artsed/SwarmUI/Models/Stable-Diffusion/OfficialStableDiffusion/sd3.5_large.safetensors
-```
-
-**Download Command:**
-```bash
-mkdir -p /opt/ai4artsed/SwarmUI/Models/Stable-Diffusion/OfficialStableDiffusion
-cd /opt/ai4artsed/SwarmUI/Models/Stable-Diffusion/OfficialStableDiffusion
-wget https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/sd3.5_large.safetensors
-```
-
-**Faster Download (aria2c):**
-```bash
-aria2c -x 16 -s 16 https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/sd3.5_large.safetensors
-```
-
-**Used By:**
-- Stage 4: Image generation (primary output config)
-- Output configs: `sd35_large.json`
-
----
-
-## CLIP Text Encoders
-
-SD3.5 requires two CLIP text encoders for prompt understanding.
-
-### 1. clip_g.safetensors
-
-**Purpose:** CLIP-G text encoder for SD3.5
-**Size:** 1.3GB
-**Architecture:** OpenAI CLIP-G
-**Provider:** Stability AI
-
-**Download URL:**
-```
-https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/clip_g.safetensors
-```
-
-**SHA256 Checksum:**
-```
-TBD - Verify after download
-```
-
-**Installation Path:**
-```
-/opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/clip/clip_g.safetensors
-```
-
-**Download Command:**
-```bash
-cd /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/clip
-wget https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/clip_g.safetensors
+ollama list
+# Should show all 5 models
 ```
 
 ---
 
-### 2. t5xxl_enconly.safetensors
+## 2. HuggingFace / Diffusers Models (GPU Service)
 
-**Purpose:** T5-XXL text encoder for SD3.5
-**Size:** 4.6GB
-**Architecture:** Google T5-XXL (encoder only)
-**Provider:** Stability AI
+Used by the GPU Service (`gpu_service/services/diffusers_backend.py`).
+Stored at `~/.cache/huggingface/hub/` (content-addressable, directly portable).
 
-**Download URL:**
-```
-https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/t5xxl_enconly.safetensors
-```
+### Image Generation
 
-**SHA256 Checksum:**
-```
-TBD - Verify after download
-```
+| Model | HF ID | Size | Purpose |
+|-------|-------|------|---------|
+| SD 3.5 Large | `stabilityai/stable-diffusion-3.5-large` | 26 GB | Primary image generation |
+| SD 3.5 Large Turbo | `stabilityai/stable-diffusion-3.5-large-turbo` | 55 GB | Fast image generation |
 
-**Installation Path:**
-```
-/opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/clip/t5xxl_enconly.safetensors
-```
+### Video Generation
 
-**Download Command:**
-```bash
-cd /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/clip
-wget https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/t5xxl_enconly.safetensors
-```
+| Model | HF ID | Size | Purpose |
+|-------|-------|------|---------|
+| Wan 2.2 TI2V 5B | `Wan-AI/Wan2.2-TI2V-5B-Diffusers` | 32 GB | Text/image-to-video |
 
----
+### Audio Generation
 
-## LTX-Video Model
+| Model | HF ID | Size | Purpose |
+|-------|-------|------|---------|
+| Stable Audio Open 1.0 | `stabilityai/stable-audio-open-1.0` | 9.5 GB | Text-to-audio |
 
-### ltxv-13b-0.9.7-distilled-fp8.safetensors
+### Encoders / Utility
 
-**Purpose:** Video generation (text-to-video, image-to-video)
-**Size:** 14.8GB
-**Architecture:** LTX-Video 13B (FP8 quantized)
-**Resolution:** 768x512 (recommended), up to 1216x704
-**FPS:** 24-25 default
-**Steps:** 6 (distilled model - very fast)
-**Provider:** Lightricks
+| Model | HF ID | Size | Purpose |
+|-------|-------|------|---------|
+| CLIP ViT-L/14 | `openai/clip-vit-large-patch14` | 1.6 GB | Cross-aesthetic, Hallucinator fusion |
+| DFN5B CLIP ViT-H-14 | `apple/DFN5B-CLIP-ViT-H-14-384` | 3.7 GB | Cross-aesthetic generation |
+| BigVGAN v2 44kHz | `nvidia/bigvgan_v2_44khz_128band_512x` | 467 MB | Audio vocoder |
 
-**Download URL:**
-```
-https://huggingface.co/Lightricks/LTX-Video/resolve/main/ltxv-13b-0.9.7-distilled-fp8.safetensors
-```
+### HF Cache Portability
 
-**SHA256 Checksum:**
-```
-TBD - Verify after download
-```
+The HuggingFace cache is directly portable between machines:
+1. Copy `~/.cache/huggingface/hub/models--org--name/` directories
+2. Place at the same path on target machine
+3. `from_pretrained()` finds cached models automatically (sha256-based blob storage)
 
-**Installation Path:**
-```
-/opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/checkpoints/ltxv-13b-0.9.7-distilled-fp8.safetensors
-```
+### Extra Diffusers Caches
 
-**Download Command:**
-```bash
-cd /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/checkpoints
-wget https://huggingface.co/Lightricks/LTX-Video/resolve/main/ltxv-13b-0.9.7-distilled-fp8.safetensors
-```
-
-**Faster Download:**
-```bash
-aria2c -x 16 -s 16 https://huggingface.co/Lightricks/LTX-Video/resolve/main/ltxv-13b-0.9.7-distilled-fp8.safetensors
-```
-
-**Used By:**
-- Stage 4: Video generation
-- Output configs: `ltx_video.json`
-
-**Generation Time:**
-- 5-15 seconds for 25-frame video (768x512)
-- RTX 5090: ~8 seconds average
-- RTX 4090: ~12 seconds average
+These are duplicates in non-standard locations (referenced by `config.py`):
+- `~/ai/models/diffusers/` — SD 3.5 Large Turbo (~16 GB)
+- `~/ai/diffusers_cache/` — SD 3.5 Large (~1.6 GB, partial)
 
 ---
 
-## T5 Encoder for Video
+## 3. HeartMuLa (Music Generation)
 
-### t5xxl_fp16.safetensors
+Checkpoint at `~/ai/heartlib/ckpt/`. Installed as editable package: `pip install --no-deps -e ~/ai/heartlib`.
 
-**Purpose:** Text encoder for LTX-Video model
-**Size:** 10.9GB
-**Architecture:** Google T5-XXL (FP16)
-**Provider:** mcmonkey (HuggingFace)
+| File | Size |
+|------|------|
+| `HeartMuLa-oss-3B/model-0000{1-4}-of-00004.safetensors` | 14.7 GB |
+| `HeartCodec-oss/model-0000{1-2}-of-00002.safetensors` | 6.2 GB |
+| `tokenizer.json` | 8.7 MB |
+| **Total** | **~21 GB** |
 
-**Download URL:**
-```
-https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/t5xxl_fp16.safetensors
-```
-
-**SHA256 Checksum:**
-```
-TBD - Verify after download
-```
-
-**Installation Path:**
-```
-/opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/clip/t5xxl_fp16.safetensors
-```
-
-**Download Command:**
-```bash
-cd /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/clip
-wget https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/t5xxl_fp16.safetensors
-```
-
-**Note:** This is a different T5 model than `t5xxl_enconly.safetensors` (SD3.5). Both are required.
+**Critical notes:**
+- Vocab/codebook mismatch: MuLa vocab=8197, codec codebook=8192. Clamp fix in `flow_matching.py:75`
+- DO NOT wrap `self._pipeline()` in `torch.autocast` — heartlib handles autocast internally
 
 ---
 
-## Installation Paths Summary
+## 4. GPU Service Weights (MMAudio)
 
-### Directory Structure
+Stored in `gpu_service/weights/` and `gpu_service/ext_weights/`.
 
-```
-/opt/ai4artsed/SwarmUI/
-├── Models/
-│   └── Stable-Diffusion/
-│       └── OfficialStableDiffusion/
-│           └── sd3.5_large.safetensors (16GB)
-│
-└── dlbackend/ComfyUI/models/
-    ├── clip/
-    │   ├── clip_g.safetensors (1.3GB)
-    │   ├── t5xxl_enconly.safetensors (4.6GB)
-    │   └── t5xxl_fp16.safetensors (11GB)
-    │
-    └── checkpoints/
-        ├── ltxv-13b-0.9.7-distilled-fp8.safetensors (15GB)
-        └── OfficialStableDiffusion/ (symlink → ../../../Models/Stable-Diffusion/OfficialStableDiffusion)
-```
-
-### Required Symlink
-
-```bash
-cd /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/checkpoints
-ln -s ../../../Models/Stable-Diffusion/OfficialStableDiffusion OfficialStableDiffusion
-```
-
-**Purpose:** Allows both SwarmUI and ComfyUI to access SD3.5 model using different path formats.
+| File | Size | Purpose |
+|------|------|---------|
+| `weights/mmaudio_large_44k_v2.pth` | 3.9 GB | MMAudio main model |
+| `ext_weights/v1-44.pth` | 1.2 GB | Visual encoder |
+| `ext_weights/synchformer_state_dict.pth` | 907 MB | Sync model |
+| **Total** | **~6 GB** | |
 
 ---
 
-## Download Scripts
+## 5. SwarmUI / ComfyUI Models (Fallback)
 
-### Complete Download Script
+Stored at `~/ai/SwarmUI/Models/`. Used as ComfyUI fallback when Diffusers GPU Service is unavailable.
 
-Save as `download_models.sh`:
+### Stable-Diffusion/ (~169 GB)
 
-```bash
-#!/bin/bash
-set -e
+| File | Size |
+|------|------|
+| `Flux1/flux2-dev.safetensors` | 61 GB |
+| `Flux1/flux2_dev_fp8mixed.safetensors` | 34 GB |
+| `OfficialStableDiffusion/sd3.5_large.safetensors` | 16 GB |
+| `ltxv-13b-0.9.7-dev-fp8.safetensors` | 15 GB |
+| `ace_step_v1_3.5b.safetensors` | 7.2 GB |
+| `OfficialStableDiffusion/stableaudio_model.safetensors` | 4.6 GB |
 
-BASE_PATH="/opt/ai4artsed/SwarmUI"
+### clip/ (~134 GB)
 
-echo "=== AI4ArtsEd Model Downloader ==="
-echo ""
-echo "Total download: ~48GB"
-echo "Estimated time: 30-60 minutes (100Mbps)"
-echo ""
+| File | Size |
+|------|------|
+| `mistral_3_small_flux2_bf16.safetensors` | 34 GB |
+| `mistral_3_small_flux2_fp8.safetensors` | 17 GB |
+| `qwen_image_official/.../qwen_2.5_vl_7b.safetensors` | 16 GB |
+| `t5xxl_fp16.safetensors` | 9.2 GB |
+| `qwen_2.5_vl_7b_fp8_scaled.safetensors` | 8.8 GB |
+| `qwen_3_4b.safetensors` | 7.5 GB |
+| `t5xxl_enconly.safetensors` | 4.6 GB |
+| `clip_g.safetensors` | 1.3 GB |
+| `clip_l.safetensors` | 235 MB |
+| (+ weitere) | |
 
-# Create directories
-echo "[1/5] Creating directories..."
-mkdir -p ${BASE_PATH}/Models/Stable-Diffusion/OfficialStableDiffusion
-mkdir -p ${BASE_PATH}/dlbackend/ComfyUI/models/clip
-mkdir -p ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints
+### diffusion_models/ (~118 GB)
 
-# Download SD3.5 Large
-echo "[2/5] Downloading SD3.5 Large (16GB)..."
-cd ${BASE_PATH}/Models/Stable-Diffusion/OfficialStableDiffusion
-if [ ! -f "sd3.5_large.safetensors" ]; then
-    wget https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/sd3.5_large.safetensors
-else
-    echo "✓ Already downloaded"
-fi
+| File | Size |
+|------|------|
+| `qwen_image_official/.../qwen_image_bf16.safetensors` | 39 GB |
+| `qwen_image_fp8_e4m3fn.safetensors` | 20 GB |
+| `qwen_image_edit_2511_fp8mixed.safetensors` | 20 GB |
+| `wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors` | 14 GB |
+| `wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors` | 14 GB |
+| `wan2.2_ti2v_5B_fp16.safetensors` | 9.4 GB |
 
-# Download CLIP encoders
-echo "[3/5] Downloading CLIP encoders (6GB)..."
-cd ${BASE_PATH}/dlbackend/ComfyUI/models/clip
+### vae/ (~5.4 GB)
 
-if [ ! -f "clip_g.safetensors" ]; then
-    wget https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/clip_g.safetensors
-else
-    echo "✓ clip_g already downloaded"
-fi
+| File | Size |
+|------|------|
+| `LTXV/ltxv_vae.safetensors` | 2.4 GB |
+| `wan2.2_vae.safetensors` | 1.4 GB |
+| `diffusion_pytorch_model.safetensors` | 596 MB |
+| `Flux/flux2-vae.safetensors` | 321 MB |
+| `wan_2.1_vae.safetensors` | 243 MB |
 
-if [ ! -f "t5xxl_enconly.safetensors" ]; then
-    wget https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/t5xxl_enconly.safetensors
-else
-    echo "✓ t5xxl_enconly already downloaded"
-fi
+### loras/ (~9.8 GB)
 
-if [ ! -f "t5xxl_fp16.safetensors" ]; then
-    echo "Downloading t5xxl_fp16.safetensors (11GB)..."
-    wget https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/t5xxl_fp16.safetensors
-else
-    echo "✓ t5xxl_fp16 already downloaded"
-fi
-
-# Download LTX-Video
-echo "[4/5] Downloading LTX-Video (15GB)..."
-cd ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints
-if [ ! -f "ltxv-13b-0.9.7-distilled-fp8.safetensors" ]; then
-    wget https://huggingface.co/Lightricks/LTX-Video/resolve/main/ltxv-13b-0.9.7-distilled-fp8.safetensors
-else
-    echo "✓ Already downloaded"
-fi
-
-# Create symlink
-echo "[5/5] Creating symlink..."
-cd ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints
-if [ ! -L "OfficialStableDiffusion" ]; then
-    ln -s ../../../Models/Stable-Diffusion/OfficialStableDiffusion OfficialStableDiffusion
-    echo "✓ Symlink created"
-else
-    echo "✓ Symlink already exists"
-fi
-
-echo ""
-echo "=== Download Complete! ==="
-echo ""
-echo "Verify installation:"
-echo "  ls -lh ${BASE_PATH}/Models/Stable-Diffusion/OfficialStableDiffusion/"
-echo "  ls -lh ${BASE_PATH}/dlbackend/ComfyUI/models/clip/"
-echo "  ls -lh ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints/"
-```
-
-**Run:**
-```bash
-chmod +x download_models.sh
-./download_models.sh
-```
+| File | Size |
+|------|------|
+| `wan2.2_*_lightx2v_4steps_lora_*.safetensors` | 4.8 GB (4 files) |
+| `Qwen-Image-Edit-Lightning-*.safetensors` | 1.6 GB (2 files) |
+| `sd35_solarization*.safetensors` | 1.6 GB (5 files) |
+| `sd3.5-large_cooked_negatives*.safetensors` | 1.6 GB (5 files) |
+| `flux2_berthe_morisot.safetensors` | 373 MB |
 
 ---
 
-## Verification
+## 6. Python Dependencies
 
-### Check All Models Exist
+See `requirements.txt` for the full list. Key packages:
 
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `torch` | 2.11.0.dev (nightly, cu130) | GPU compute (Blackwell CUDA 13.0) |
+| `diffusers` | 0.36.0 | HuggingFace image/video/audio generation |
+| `transformers` | 4.57.0 | Text encoders |
+| `spacy` | 3.8.11 | NER for DSGVO check |
+| `de_core_news_lg` | 3.8.0 | German NER model |
+| `xx_ent_wiki_sm` | 3.8.0 | Multilingual NER model |
+
+**PyTorch install (Blackwell GPUs):**
 ```bash
-BASE_PATH="/opt/ai4artsed/SwarmUI"
-
-# SD3.5 Large
-ls -lh ${BASE_PATH}/Models/Stable-Diffusion/OfficialStableDiffusion/sd3.5_large.safetensors
-
-# CLIP encoders
-ls -lh ${BASE_PATH}/dlbackend/ComfyUI/models/clip/clip_g.safetensors
-ls -lh ${BASE_PATH}/dlbackend/ComfyUI/models/clip/t5xxl_enconly.safetensors
-ls -lh ${BASE_PATH}/dlbackend/ComfyUI/models/clip/t5xxl_fp16.safetensors
-
-# LTX-Video
-ls -lh ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints/ltxv-13b-0.9.7-distilled-fp8.safetensors
-
-# Symlink
-ls -l ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints/OfficialStableDiffusion
+pip install --pre torch torchaudio torchvision --index-url https://download.pytorch.org/whl/nightly/cu130
 ```
 
-### Expected Output
-
-```
--rw-r--r-- 1 user user 16G Jan 15 10:30 sd3.5_large.safetensors
--rw-r--r-- 1 user user 1.3G Jan 15 10:45 clip_g.safetensors
--rw-r--r-- 1 user user 4.6G Jan 15 10:50 t5xxl_enconly.safetensors
--rw-r--r-- 1 user user 11G Jan 15 11:05 t5xxl_fp16.safetensors
--rw-r--r-- 1 user user 15G Jan 15 11:25 ltxv-13b-0.9.7-distilled-fp8.safetensors
-lrwxrwxrwx 1 user user 68 Jan 15 11:30 OfficialStableDiffusion -> ../../../Models/Stable-Diffusion/OfficialStableDiffusion
-```
-
-### Calculate SHA256 Checksums
-
+**SpaCy models:**
 ```bash
-# SD3.5
-sha256sum ${BASE_PATH}/Models/Stable-Diffusion/OfficialStableDiffusion/sd3.5_large.safetensors
-
-# CLIP
-sha256sum ${BASE_PATH}/dlbackend/ComfyUI/models/clip/clip_g.safetensors
-sha256sum ${BASE_PATH}/dlbackend/ComfyUI/models/clip/t5xxl_enconly.safetensors
-sha256sum ${BASE_PATH}/dlbackend/ComfyUI/models/clip/t5xxl_fp16.safetensors
-
-# LTX-Video
-sha256sum ${BASE_PATH}/dlbackend/ComfyUI/models/checkpoints/ltxv-13b-0.9.7-distilled-fp8.safetensors
+python -m spacy download de_core_news_lg
+python -m spacy download xx_ent_wiki_sm
 ```
 
-**Save checksums for verification after reinstallation.**
-
-### Test Model Loading
-
-```bash
-# Start SwarmUI
-cd /opt/ai4artsed/SwarmUI
-./launch-linux.sh
-
-# Watch logs for model loading
-# Should see: "Loaded model: sd3.5_large"
-# Press Ctrl+C after successful start
-```
+Only these 2 SpaCy models are needed. Adding more causes cross-language false positives.
 
 ---
 
-## Optional Models (Not Required)
+## Cloud API Models (not local)
 
-These models are installed on the current system but not required for AI4ArtsEd:
+These are accessed via API and do not require local storage:
 
-### FLUX Models
-- `flux1-schnell.safetensors` - Fast image generation
-- `flux_dev.safetensors` - Development version
+| Config Variable | Model | Provider |
+|----------------|-------|----------|
+| `REMOTE_FAST_MODEL` | claude-haiku-4-5 | AWS Bedrock EU |
+| `REMOTE_ADVANCED_MODEL` | claude-sonnet-4-5 | AWS Bedrock EU |
+| `REMOTE_EXTREME_MODEL` | claude-opus-4-5 | AWS Bedrock EU |
+| `REMOTE_MULTIMODAL_MODEL` | gemini-2.5-flash-lite | OpenRouter |
+| `CODING_MODEL` | codestral-latest | Mistral API |
 
-**Not configured** in AI4ArtsEd output configs.
-
-### Stable Audio
-- `stableaudio/model.safetensors` - Audio generation
-
-**Config disabled** in current version.
-
-### AceStep Audio
-- `ace_step_v1_3.5b.safetensors` - Instrumental generation
-
-**Referenced but not downloaded** - optional for future audio features.
-
----
-
-## Troubleshooting
-
-### Download Fails/Interrupted
-
-**Resume with wget:**
-```bash
-wget -c [URL]
-# -c flag resumes partial downloads
-```
-
-**Resume with aria2c:**
-```bash
-aria2c -c -x 16 -s 16 [URL]
-# aria2c automatically resumes
-```
-
-### Checksum Mismatch
-
-**Re-download the file:**
-```bash
-rm [filename]
-wget [URL]
-sha256sum [filename]
-```
-
-### Model Not Found by SwarmUI
-
-**Check symlink:**
-```bash
-ls -l /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/checkpoints/OfficialStableDiffusion
-# Should point to ../../../Models/Stable-Diffusion/OfficialStableDiffusion
-```
-
-**Recreate symlink:**
-```bash
-cd /opt/ai4artsed/SwarmUI/dlbackend/ComfyUI/models/checkpoints
-rm -f OfficialStableDiffusion
-ln -s ../../../Models/Stable-Diffusion/OfficialStableDiffusion OfficialStableDiffusion
-```
-
-### Out of Disk Space
-
-**Check space:**
-```bash
-df -h /opt
-```
-
-**Clean package caches:**
-```bash
-# Ubuntu/Debian
-sudo apt clean
-
-# Fedora
-sudo dnf clean all
-
-# Python pip cache
-pip cache purge
-
-# npm cache
-npm cache clean --force
-```
-
----
-
-## Required Software Repositories
-
-### SwarmUI + ComfyUI
-
-- **SwarmUI:** https://github.com/mcmonkeyprojects/SwarmUI
-  - Version: Latest from main (tested: commit 4c00e2a, 2025-11-22)
-  - Includes integrated ComfyUI
-
-### ComfyUI Custom Nodes
-
-- **ComfyUI-LTXVideo:** https://github.com/Lightricks/ComfyUI-LTXVideo
-  - Purpose: LTX-Video text-to-video generation
-  - Required for video output
-
-- **ai4artsed_comfyui:** https://github.com/joeriben/ai4artsed_comfyui_nodes
-  - Purpose: Custom pedagogical nodes (prompt interception, safety filters)
-  - Version: 0.7
-  - License: EUPL-1.2
-
-- **comfyui-sound-lab:** https://github.com/MixLabPro/comfyui-sound-lab
-  - Purpose: Audio generation (AceStep, Stable Audio)
-  - Optional for current version
-
----
-
-## Model Information Sources
-
-- **Stability AI:** https://huggingface.co/stabilityai
-- **LTX-Video:** https://huggingface.co/Lightricks/LTX-Video
-- **T5 Encoders:** https://huggingface.co/mcmonkey
-- **Ollama Models:** https://ollama.com/library
-
----
-
-## Next Steps
-
-After downloading all models:
-- Return to [INSTALLATION.md](INSTALLATION.md) to continue setup
-- Configure paths in [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md)
+API keys stored in `devserver/*.key` files (gitignored).
