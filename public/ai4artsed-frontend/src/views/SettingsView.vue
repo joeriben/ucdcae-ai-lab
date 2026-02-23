@@ -95,11 +95,11 @@
                 <select v-model="settings.DEFAULT_LANGUAGE">
                   <option value="de">{{ $t('settings.general.germanDe') }}</option>
                   <option value="en">{{ $t('settings.general.englishEn') }}</option>
-                  <option value="tr">{{ $t('settings.general.turkishTr') }}</option>
-                  <option value="ko">{{ $t('settings.general.koreanKo') }}</option>
-                  <option value="uk">{{ $t('settings.general.ukrainianUk') }}</option>
-                  <option value="fr">{{ $t('settings.general.frenchFr') }}</option>
                   <option value="es">{{ $t('settings.general.spanishEs') }}</option>
+                  <option value="fr">{{ $t('settings.general.frenchFr') }}</option>
+                  <option value="tr">{{ $t('settings.general.turkishTr') }}</option>
+                  <option value="uk">{{ $t('settings.general.ukrainianUk') }}</option>
+                  <option value="ko">{{ $t('settings.general.koreanKo') }}</option>
                 </select>
               </td>
             </tr>

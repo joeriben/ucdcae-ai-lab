@@ -10,11 +10,11 @@ import { es } from './es'
 export const SUPPORTED_LANGUAGES = [
   { code: 'de', label: 'Deutsch' },
   { code: 'en', label: 'English' },
-  { code: 'tr', label: 'Türkçe' },
-  { code: 'ko', label: '한국어' },
-  { code: 'uk', label: 'Українська' },
-  { code: 'fr', label: 'Français' },
   { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'uk', label: 'Українська' },
+  { code: 'ko', label: '한국어' },
 ] as const
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number]['code']
