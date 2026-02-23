@@ -1,5 +1,44 @@
 # Development Log
 
+## Session 201 - Hebrew (he) + Arabic (ar) RTL Language Support
+**Date:** 2026-02-23
+**Focus:** Add RTL infrastructure for Hebrew and Arabic, CSS logical properties, LTR-pinned components
+
+### Problem
+The i18n system supported 7 LTR languages but had zero RTL support. Simply adding `he.ts`/`ar.ts` without `dir="rtl"` would render translated text left-to-right — unreadable for native speakers. With `dir="rtl"`, hardcoded `margin-left`/`border-left`/`text-align: left` CSS would partially break.
+
+### Solution — 4 Phases
+
+**Phase 1: RTL Infrastructure (3 files + 2 new)**
+- `SUPPORTED_LANGUAGES` gains `dir: 'ltr' | 'rtl'` property per language
+- `getLanguageDir()` helper exported from `index.ts`
+- `main.ts` dynamically sets `<html dir>` and `<html lang>` on language change
+- `index.html` defaults to `lang="de" dir="ltr"`
+- Empty `he.ts`/`ar.ts` stubs (fallback to English)
+
+**Phase 2: Pin LTR + CSS Fixes (29 files)**
+- 23 visual/technical components pinned with `dir="ltr"` (canvas, pipeline, edutainment) — immune to RTL flip
+- 6 text-heavy components converted to CSS logical properties: `margin-inline-start/end`, `border-inline-start`, `text-align: start`, `inset-inline-end` (SettingsView, App.vue, DokumentationModal, ChatOverlay, MediaInputBox, WelcomeItem)
+
+**Phase 3: Language Files**
+- `en.ts`: Added `arabicAr`/`hebrewHe` keys
+- SettingsView: he/ar in language dropdown
+- 3 work orders in `WORK_ORDERS.md` for batch translator
+
+**Phase 4: Verification**
+- `vue-tsc --noEmit` passes, `npm run build` passes
+
+### Design Decisions
+- **Full layout flip, not just text**: RTL users expect flex/grid to flip. Browser handles this natively via `dir="rtl"` on `<html>` — no custom code needed.
+- **CSS logical properties**: `margin-inline-start` behaves identically to `margin-left` in LTR — zero regression risk for existing 7 languages.
+- **LTR pins**: Canvas, pipeline arrows, edutainment games are universally left-to-right (data flow direction, not text direction).
+- **Translations deferred**: Infrastructure first, translations via batch workflow second. English fallback keeps UI functional.
+
+### Files Changed
+36 files (34 modified, 2 new) — commit `d12107b`
+
+---
+
 ## Session 199 - i18n Split + Batch Translation Workflow
 **Date:** 2026-02-23
 **Focus:** Split 8275-line i18n.ts monolith into per-language files, establish batch translation workflow
