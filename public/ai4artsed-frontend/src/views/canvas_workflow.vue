@@ -317,7 +317,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="canvas-workflow-view">
+  <div dir="ltr" class="canvas-workflow-view">
     <!-- Toolbar -->
     <div class="toolbar">
       <div class="toolbar-left">

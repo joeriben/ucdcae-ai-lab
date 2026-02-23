@@ -83,7 +83,7 @@
                   <strong style="margin-bottom: 4px;">{{ $t('settings.safety.adultTitle') }}</strong>
                   <p style="margin: 2px 0;">{{ $t('settings.safety.adultDesc') }}</p>
                 </div>
-                <div v-else-if="settings.DEFAULT_SAFETY_LEVEL === 'research'" class="info-box" style="margin-top: 8px; padding: 8px 12px; border-color: #c62828; border-left: 4px solid #c62828; background: #ffebee;">
+                <div v-else-if="settings.DEFAULT_SAFETY_LEVEL === 'research'" class="info-box" style="margin-top: 8px; padding: 8px 12px; border-color: #c62828; border-inline-start: 4px solid #c62828; background: #ffebee;">
                   <strong style="margin-bottom: 4px; color: #c62828;">{{ $t('settings.safety.researchTitle') }}</strong>
                   <p style="margin: 2px 0;">{{ $t('settings.safety.researchDesc') }}</p>
                 </div>
@@ -93,10 +93,12 @@
               <td class="label-cell">{{ $t('settings.general.defaultLanguage') }}</td>
               <td class="value-cell">
                 <select v-model="settings.DEFAULT_LANGUAGE">
+                  <option value="ar">{{ $t('settings.general.arabicAr') }}</option>
                   <option value="de">{{ $t('settings.general.germanDe') }}</option>
                   <option value="en">{{ $t('settings.general.englishEn') }}</option>
                   <option value="es">{{ $t('settings.general.spanishEs') }}</option>
                   <option value="fr">{{ $t('settings.general.frenchFr') }}</option>
+                  <option value="he">{{ $t('settings.general.hebrewHe') }}</option>
                   <option value="tr">{{ $t('settings.general.turkishTr') }}</option>
                   <option value="uk">{{ $t('settings.general.ukrainianUk') }}</option>
                   <option value="ko">{{ $t('settings.general.koreanKo') }}</option>
@@ -350,7 +352,7 @@
         <button @click="$router.push('/animation-test')" class="action-btn" style="margin-top: 10px;">
           {{ $t('settings.testingTools.openPreview') }}
         </button>
-        <button @click="$router.push('/dev/pixel-editor')" class="action-btn" style="margin-top: 10px; margin-left: 10px;">
+        <button @click="$router.push('/dev/pixel-editor')" class="action-btn" style="margin-top: 10px; margin-inline-start: 10px;">
           {{ $t('settings.testingTools.pixelEditor') }}
         </button>
         <p class="help" style="margin-top: 10px; font-size: 12px; color: #888;">
@@ -858,7 +860,7 @@ onMounted(() => {
 .section.dsgvo-warning {
   background: #fff3cd;
   border: 2px solid #ffc107;
-  border-left: 5px solid #ff9800;
+  border-inline-start: 5px solid #ff9800;
 }
 
 .section.dsgvo-warning h2 {
@@ -867,7 +869,7 @@ onMounted(() => {
 
 .section.dsgvo-warning ul {
   margin: 10px 0;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 
 .section.dsgvo-warning li {
@@ -918,14 +920,14 @@ onMounted(() => {
   font-size: 13px;
   color: #000;
   vertical-align: middle;
-  text-align: left;
-  border-right: 1px solid #999;
+  text-align: start;
+  border-inline-end: 1px solid #999;
 }
 
 .value-cell {
   padding: 8px 12px;
   background: #fff;
-  text-align: left;
+  text-align: start;
   color: #000;
 }
 
@@ -942,16 +944,16 @@ onMounted(() => {
 }
 
 .value-cell input[type="radio"] {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 .value-cell label {
-  margin-right: 15px;
+  margin-inline-end: 15px;
   color: #000;
 }
 
 .help-text {
-  margin-left: 10px;
+  margin-inline-start: 10px;
   color: #666;
   font-size: 12px;
 }
@@ -1001,7 +1003,7 @@ onMounted(() => {
   font-size: 14px;
   cursor: pointer;
   font-weight: 500;
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 .apply-btn:hover:not(:disabled) {
@@ -1035,7 +1037,7 @@ onMounted(() => {
   padding: 12px 15px;
   background: #fff4e6;
   border: 1px solid #ffa500;
-  border-left: 4px solid #ffa500;
+  border-inline-start: 4px solid #ffa500;
   border-radius: 4px;
   font-size: 13px;
   color: #333;
@@ -1045,7 +1047,7 @@ onMounted(() => {
 .info-box-success {
   background: #e6f7e6;
   border-color: #4CAF50;
-  border-left-color: #4CAF50;
+  border-inline-start-color: #4CAF50;
 }
 
 .info-box strong {
@@ -1069,7 +1071,7 @@ onMounted(() => {
 
 .info-box ul {
   margin: 8px 0;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 
 .info-box li {

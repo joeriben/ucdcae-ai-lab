@@ -516,7 +516,7 @@ onUnmounted(() => {
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
-  border-left: 3px solid #4CAF50;
+  border-inline-start: 3px solid #4CAF50;
 }
 
 .mode-item-header {
@@ -569,7 +569,7 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 1.25rem;
   margin-bottom: 1rem;
-  border-left: 3px solid #4CAF50;
+  border-inline-start: 3px solid #4CAF50;
 }
 
 .principle-header {
@@ -609,7 +609,7 @@ onUnmounted(() => {
   padding: 0.75rem;
   background: rgba(255, 152, 0, 0.15);
   border-radius: 6px;
-  border-left: 3px solid #FF9800;
+  border-inline-start: 3px solid #FF9800;
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.9rem;
 }
@@ -617,7 +617,7 @@ onUnmounted(() => {
 .tension-label {
   color: #FF9800;
   font-weight: 600;
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
 }
 
 .circularity-chain {
@@ -647,11 +647,11 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.experiment-card.surrealizer { border-left: 3px solid #9C27B0; }
-.experiment-card.attention-cartography { border-left: 3px solid #2196F3; }
-.experiment-card.feature-probing { border-left: 3px solid #4CAF50; }
-.experiment-card.concept-algebra { border-left: 3px solid #FF9800; }
-.experiment-card.denoising-archaeology { border-left: 3px solid #FF5722; }
+.experiment-card.surrealizer { border-inline-start: 3px solid #9C27B0; }
+.experiment-card.attention-cartography { border-inline-start: 3px solid #2196F3; }
+.experiment-card.feature-probing { border-inline-start: 3px solid #4CAF50; }
+.experiment-card.concept-algebra { border-inline-start: 3px solid #FF9800; }
+.experiment-card.denoising-archaeology { border-inline-start: 3px solid #FF5722; }
 
 .experiment-card h3 {
   margin: 0 0 0.5rem 0;
@@ -699,14 +699,14 @@ onUnmounted(() => {
 .experiment-example strong {
   color: #81C784;
   font-style: normal;
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
 }
 
 .experiment-negative {
   margin-top: 0.75rem;
   padding: 0.75rem;
   background: rgba(147, 51, 234, 0.1);
-  border-left: 3px solid rgba(147, 51, 234, 0.5);
+  border-inline-start: 3px solid rgba(147, 51, 234, 0.5);
   border-radius: 6px;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.8);
@@ -790,8 +790,8 @@ onUnmounted(() => {
 }
 
 .math-list {
-  padding-left: 0.5rem;
-  border-left: 2px solid rgba(59, 130, 246, 0.3);
+  padding-inline-start: 0.5rem;
+  border-inline-start: 2px solid rgba(59, 130, 246, 0.3);
   margin: 0.5rem 0;
 }
 
@@ -822,7 +822,7 @@ onUnmounted(() => {
 
 .workshop-card ul {
   margin: 0;
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -864,11 +864,11 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.canvas-card.paradigm { border-left: 3px solid #3b82f6; }
-.canvas-card.interception { border-left: 3px solid #8b5cf6; }
-.canvas-card.recursive { border-left: 3px solid #f59e0b; }
-.canvas-card.nodes { border-left: 3px solid #10b981; }
-.canvas-card.target-groups { border-left: 3px solid #06b6d4; }
+.canvas-card.paradigm { border-inline-start: 3px solid #3b82f6; }
+.canvas-card.interception { border-inline-start: 3px solid #8b5cf6; }
+.canvas-card.recursive { border-inline-start: 3px solid #f59e0b; }
+.canvas-card.nodes { border-inline-start: 3px solid #10b981; }
+.canvas-card.target-groups { border-inline-start: 3px solid #06b6d4; }
 
 .canvas-card h3 {
   margin: 0 0 1rem 0;
@@ -894,7 +894,7 @@ onUnmounted(() => {
 
 .canvas-card ul {
   margin: 0.5rem 0 0 0;
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
   color: rgba(255, 255, 255, 0.8);
 }
 

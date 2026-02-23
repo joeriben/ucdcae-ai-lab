@@ -481,6 +481,7 @@ const nodeHeight = computed(() => {
 
 <template>
   <div
+    dir="ltr"
     class="stage-module"
     :class="{
       selected,

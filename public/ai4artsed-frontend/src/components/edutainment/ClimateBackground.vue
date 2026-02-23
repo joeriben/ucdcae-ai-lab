@@ -1,5 +1,5 @@
 <template>
-  <div class="climate-background" :style="skyStyle">
+  <div dir="ltr" class="climate-background" :style="skyStyle">
     <!-- Sun - size based on power consumption -->
     <div class="sun" :style="sunStyle">
       <div class="sun-glow" :style="sunGlowStyle"></div>

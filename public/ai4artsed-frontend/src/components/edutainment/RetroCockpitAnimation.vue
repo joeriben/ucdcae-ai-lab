@@ -1,5 +1,5 @@
 <template>
-  <div class="retro-cockpit">
+  <div dir="ltr" class="retro-cockpit">
     <!-- Scanlines overlay for retro effect -->
     <div class="scanlines"></div>
 

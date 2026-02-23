@@ -1,5 +1,5 @@
 <template>
-  <div class="rareearth-game" @click="handleClick">
+  <div dir="ltr" class="rareearth-game" @click="handleClick">
     <!-- Sky (darkens with pollution) -->
     <div class="sky" :style="skyStyle"></div>
 

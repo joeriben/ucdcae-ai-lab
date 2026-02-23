@@ -1,5 +1,5 @@
 <template>
-  <div class="pipeline-flow-container">
+  <div dir="ltr" class="pipeline-flow-container">
     <!-- Pipeline Type Badge (optional, can be hidden) -->
     <div v-if="showPipelineType && pipelineVisualization" class="pipeline-header">
       <span class="pipeline-badge">{{ pipelineVisualization.pipeline_type }}</span>

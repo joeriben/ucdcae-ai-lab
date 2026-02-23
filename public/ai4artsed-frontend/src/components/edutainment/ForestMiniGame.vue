@@ -1,5 +1,6 @@
 <template>
   <div
+    dir="ltr"
     class="forest-game"
     @click="handleClick"
     @mouseenter="handleMouseEnter"

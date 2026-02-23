@@ -1,5 +1,5 @@
 <template>
-  <div ref="containerRef" class="forest-game-canvas">
+  <div ref="containerRef" dir="ltr" class="forest-game-canvas">
     <!-- Climate background (sky, sun, clouds) - reused from IcebergAnimation -->
     <ClimateBackground
       :power-watts="effectivePower"

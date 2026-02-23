@@ -1,5 +1,5 @@
 <template>
-  <div class="vector-fusion-flow">
+  <div dir="ltr" class="vector-fusion-flow">
     <!-- Step 1: Input Stage -->
     <div v-if="currentStep === 'input'" class="input-stage">
       <div class="input-container">

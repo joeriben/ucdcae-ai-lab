@@ -1,5 +1,5 @@
 <template>
-  <div class="facts-bubble-container" v-if="visible && gpuStats.available">
+  <div dir="ltr" class="facts-bubble-container" v-if="visible && gpuStats.available">
     <!-- Rising bubble with mini-visualization -->
     <Transition name="bubble-rise" @after-leave="onBubbleLeft">
       <div

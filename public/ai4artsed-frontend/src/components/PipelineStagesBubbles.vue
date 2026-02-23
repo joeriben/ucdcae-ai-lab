@@ -1,5 +1,5 @@
 <template>
-  <div class="pipeline-stages">
+  <div dir="ltr" class="pipeline-stages">
     <!-- Stage Bubbles -->
     <div
       v-for="(stage, index) in stages"

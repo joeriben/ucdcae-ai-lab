@@ -1,5 +1,5 @@
 <template>
-  <div class="iceberg-animation">
+  <div dir="ltr" class="iceberg-animation">
     <!-- Climate background (sky, sun, clouds) -->
     <ClimateBackground
       :power-watts="effectivePower"

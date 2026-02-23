@@ -1,5 +1,5 @@
 <template>
-  <div class="progress-animation-container">
+  <div dir="ltr" class="progress-animation-container">
     <div class="token-processing-scene">
       <!-- GPU Stats Bar -->
       <div class="stats-bar">

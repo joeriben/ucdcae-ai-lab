@@ -1,5 +1,5 @@
 <template>
-  <div class="iceberg-drawing-canvas" ref="containerRef">
+  <div dir="ltr" class="iceberg-drawing-canvas" ref="containerRef">
     <canvas
       ref="canvasRef"
       :width="canvasWidth"

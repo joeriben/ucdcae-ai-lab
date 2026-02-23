@@ -1,5 +1,5 @@
 <template>
-  <div class="random-edutainment">
+  <div dir="ltr" class="random-edutainment">
     <!-- Pixel Animation (GPU Stats + Smartphone) -->
     <EdutainmentProgressAnimation
       v-if="selectedAnimation === 'pixel'"

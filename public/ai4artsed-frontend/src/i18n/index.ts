@@ -6,15 +6,19 @@ import { ko } from './ko'
 import { uk } from './uk'
 import { fr } from './fr'
 import { es } from './es'
+import { he } from './he'
+import { ar } from './ar'
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'de', label: 'Deutsch' },
-  { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
-  { code: 'fr', label: 'Français' },
-  { code: 'tr', label: 'Türkçe' },
-  { code: 'uk', label: 'Українська' },
-  { code: 'ko', label: '한국어' },
+  { code: 'ar', label: 'العربية', dir: 'rtl' as const },
+  { code: 'de', label: 'Deutsch', dir: 'ltr' as const },
+  { code: 'en', label: 'English', dir: 'ltr' as const },
+  { code: 'es', label: 'Español', dir: 'ltr' as const },
+  { code: 'fr', label: 'Français', dir: 'ltr' as const },
+  { code: 'he', label: 'עברית', dir: 'rtl' as const },
+  { code: 'tr', label: 'Türkçe', dir: 'ltr' as const },
+  { code: 'uk', label: 'Українська', dir: 'ltr' as const },
+  { code: 'ko', label: '한국어', dir: 'ltr' as const },
 ] as const
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number]['code']
@@ -27,7 +31,13 @@ export function localized(obj: Record<string, string>, locale: string): string {
   return obj[locale] || obj.en || ''
 }
 
-const messages = { de, en, tr, ko, uk, fr, es }
+/** Get text direction for a language code */
+export function getLanguageDir(code: string): 'ltr' | 'rtl' {
+  const lang = SUPPORTED_LANGUAGES.find(l => l.code === code)
+  return lang?.dir ?? 'ltr'
+}
+
+const messages = { de, en, tr, ko, uk, fr, es, he, ar }
 
 // Cast locale to SupportedLanguage so vue-i18n accepts all supported languages
 // (ko/tr messages are intentionally partial — fallbackLocale handles gaps)

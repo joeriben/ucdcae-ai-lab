@@ -379,6 +379,7 @@ onUnmounted(() => {
 <template>
   <div
     ref="canvasRef"
+    dir="ltr"
     class="canvas-workspace"
     @click="onCanvasClick"
     @drop="onDrop"

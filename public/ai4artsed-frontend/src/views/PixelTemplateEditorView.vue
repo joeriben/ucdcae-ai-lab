@@ -1,5 +1,5 @@
 <template>
-  <div class="pixel-editor-page">
+  <div dir="ltr" class="pixel-editor-page">
     <h1>Pixel Template Editor</h1>
     <p class="subtitle">Create and edit 14x14 pixel templates for the Bits &amp; Pixels animation</p>
 

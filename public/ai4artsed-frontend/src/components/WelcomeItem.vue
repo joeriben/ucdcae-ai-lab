@@ -21,7 +21,7 @@
 
 .details {
   flex: 1;
-  margin-left: 1rem;
+  margin-inline-start: 1rem;
 }
 
 i {
@@ -49,7 +49,7 @@ h3 {
 
   i {
     top: calc(50% - 25px);
-    left: -26px;
+    inset-inline-start: -26px;
     position: absolute;
     border: 1px solid var(--color-border);
     background: var(--color-background);
@@ -60,18 +60,18 @@ h3 {
 
   .item:before {
     content: ' ';
-    border-left: 1px solid var(--color-border);
+    border-inline-start: 1px solid var(--color-border);
     position: absolute;
-    left: 0;
+    inset-inline-start: 0;
     bottom: calc(50% + 25px);
     height: calc(50% - 25px);
   }
 
   .item:after {
     content: ' ';
-    border-left: 1px solid var(--color-border);
+    border-inline-start: 1px solid var(--color-border);
     position: absolute;
-    left: 0;
+    inset-inline-start: 0;
     top: calc(50% + 25px);
     height: calc(50% - 25px);
   }

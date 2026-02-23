@@ -1,5 +1,5 @@
 <template>
-  <div class="config-canvas">
+  <div dir="ltr" class="config-canvas">
     <!-- Config tiles -->
     <ConfigTile
       v-for="config in positionedConfigs"

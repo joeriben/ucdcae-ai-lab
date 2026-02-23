@@ -17,6 +17,7 @@ app.use(i18n)
 // Must be done after pinia and i18n are installed
 import { useUserPreferencesStore } from './stores/userPreferences'
 import { useSafetyLevelStore } from './stores/safetyLevel'
+import { getLanguageDir } from './i18n'
 import { watch } from 'vue'
 
 const userPreferences = useUserPreferencesStore()
@@ -25,15 +26,19 @@ const userPreferences = useUserPreferencesStore()
 const safetyLevelStore = useSafetyLevelStore()
 safetyLevelStore.fetchLevel()
 
-// Initial sync with vue-i18n
+// Initial sync with vue-i18n + document direction
 i18n.global.locale.value = userPreferences.language
+document.documentElement.setAttribute('lang', userPreferences.language)
+document.documentElement.setAttribute('dir', getLanguageDir(userPreferences.language))
 
-// Watch for language changes and sync with i18n
+// Watch for language changes and sync with i18n + document direction
 watch(
   () => userPreferences.language,
   (newLanguage) => {
     i18n.global.locale.value = newLanguage
-    console.log(`[i18n] Language synced to: ${newLanguage}`)
+    document.documentElement.setAttribute('lang', newLanguage)
+    document.documentElement.setAttribute('dir', getLanguageDir(newLanguage))
+    console.log(`[i18n] Language synced to: ${newLanguage} (dir: ${getLanguageDir(newLanguage)})`)
   }
 )
 

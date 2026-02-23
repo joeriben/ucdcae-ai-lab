@@ -8,7 +8,7 @@
   Kept for reference in case precise mask-based inpainting is needed in the future.
 -->
 <template>
-  <div class="mask-editor">
+  <div dir="ltr" class="mask-editor">
     <!-- Header mit Tool-Auswahl -->
     <div class="editor-header">
       <h3>Maske malen</h3>

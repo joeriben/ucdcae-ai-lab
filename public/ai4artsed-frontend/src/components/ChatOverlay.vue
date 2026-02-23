@@ -872,7 +872,7 @@ watch(
   line-height: 1.4;
   padding: 0.4rem 0.5rem;
   margin-top: 0.3rem;
-  border-left: 2px solid #444;
+  border-inline-start: 2px solid #444;
   white-space: pre-wrap;
   word-wrap: break-word;
 }

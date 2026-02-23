@@ -598,7 +598,7 @@ onUnmounted(() => {
 .bubble-actions {
   display: flex;
   gap: 0.25rem;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .action-btn {
@@ -623,7 +623,7 @@ onUnmounted(() => {
   opacity: 1;
   color: #FFB300;
   filter: drop-shadow(0 0 4px rgba(255, 179, 0, 0.6));
-  margin-right: 30px;
+  margin-inline-end: 30px;
 }
 
 .action-btn.preset-btn svg {

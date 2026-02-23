@@ -427,7 +427,7 @@ html, body {
 .lang-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  inset-inline-end: 0;
   margin-top: 0.25rem;
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -445,7 +445,7 @@ html, body {
   border: none;
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.8rem;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -503,7 +503,7 @@ html, body {
 
   .header-nav-links {
     gap: 0.25rem;
-    padding-left: 0.5rem;
+    padding-inline-start: 0.5rem;
   }
 
   .nav-link {

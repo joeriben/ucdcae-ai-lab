@@ -1,5 +1,5 @@
 <template>
-  <div class="property-canvas">
+  <div dir="ltr" class="property-canvas">
     <div class="cluster-wrapper">
       <PropertyBubble
         v-for="category in categories"

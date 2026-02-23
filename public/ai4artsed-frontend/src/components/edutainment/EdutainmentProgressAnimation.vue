@@ -1,5 +1,5 @@
 <template>
-  <div class="edutainment-animation-wrapper">
+  <div dir="ltr" class="edutainment-animation-wrapper">
     <!-- Original Pixel Animation with GPU Stats -->
     <SpriteProgressAnimation
       :progress="internalProgress"

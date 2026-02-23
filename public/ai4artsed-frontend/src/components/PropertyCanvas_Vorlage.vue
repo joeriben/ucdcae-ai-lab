@@ -1,6 +1,6 @@
 <template>
   <!-- Main Container - Fullscreen viewport overlay -->
-  <div class="property-canvas">
+  <div dir="ltr" class="property-canvas">
     <!-- Centered Container for all bubbles -->
     <div class="bubble-viewport">
       <!-- Inner Container - Maintains aspect ratio -->

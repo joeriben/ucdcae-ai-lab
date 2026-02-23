@@ -178,6 +178,8 @@ export const en = {
       defaultLanguage: 'Default Language',
       germanDe: 'German (de)',
       englishEn: 'English (en)',
+      arabicAr: 'Arabic (ar)',
+      hebrewHe: 'Hebrew (he)',
       turkishTr: 'Turkish (tr)',
       koreanKo: 'Korean (ko)',
       ukrainianUk: 'Ukrainian (uk)',

@@ -1,5 +1,5 @@
 <template>
-  <div class="environment-animation">
+  <div dir="ltr" class="environment-animation">
     <!-- Sky gradient changes with energy use -->
     <div class="sky" :style="skyStyle">
       <!-- Sun grows with power consumption -->
