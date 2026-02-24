@@ -1,5 +1,66 @@
 # Development Log
 
+## Session 207 - GPU Service VRAM/RAM Bugs: LLM Migration + Flux2
+**Date:** 2026-02-24
+**Focus:** Fix 4 critical VRAM/RAM management bugs in GPU Service
+
+### Background
+The LLM-Inference-Migration (commit `ac047ce`) introduced 3 bugs. Testing also revealed a 4th bug in DiffusersBackend that made Flux2 via Diffusers unusable. Previous sessions (2-3) had failed to get Flux2 working through the GPU Service.
+
+### Bug 1: VRAM Overhead — `device_map="auto"` (LLM + Text Backend)
+**Problem:** `device_map="auto"` in both `llm_inference_backend.py` and `text_backend.py` creates CPU-staging + GPU-residency simultaneously. Qwen3-4B consumed 36GB instead of ~8GB.
+
+**Fix:** Removed `device_map="auto"`, added explicit `model.to(device)` after `from_pretrained()` — same pattern DiffusersBackend uses.
+
+**Result:** Qwen3-4B: 7698 MB (was 36000 MB). Llama-Guard-3-1B: 2864 MB.
+
+### Bug 2: Global `_load_lock` Blocking All Requests
+**Problem:** A single `threading.Lock()` serialized ALL model loads. Loading safety model blocked translation, chat, interception — everything queued behind one download.
+
+**Fix:** Per-model locks with double-checked locking pattern. `_model_locks` dict protected by lightweight `_model_locks_lock`. Fast path (already loaded) needs no lock at all.
+
+**Result:** Qwen3-4B and Llama-Guard-3-1B load concurrently, no mutual blocking.
+
+### Bug 3: Ollama Fallback for `qwen3:4b`
+**Problem:** `qwen3:4b` is `LOCAL_DEFAULT_MODEL` but was missing from Ollama. GPU Service error → Ollama fallback → model not found → silent failure.
+
+**Fix:** `ollama pull qwen3:4b` (one-time).
+
+### Bug 4: Flux2 — The One That Failed 2-3 Sessions
+
+**The core challenge:** Flux2-dev is ~106GB in float32 / ~24GB in bf16. With 96GB VRAM and 64GB RAM, loading strategy is critical. Previous sessions tried various approaches and failed.
+
+**What finally worked — 3 layered fixes:**
+
+1. **`enable_model_cpu_offload()` instead of `.to(device)`** — The original code did `pipe.to(self.device)` which tries to load the entire model onto GPU at once. For Flux2 at 106GB float32, this overflows VRAM into RAM+swap. `enable_model_cpu_offload()` keeps components in CPU RAM and moves them to GPU one-at-a-time during inference. Peak VRAM ~61GB during generation.
+
+2. **Keep `torch_dtype` for Diffusers (do NOT use `dtype`)** — Critical lesson: `transformers` library migrated `torch_dtype` → `dtype`, but `diffusers` 0.36.0 has inconsistent support. `Flux2Pipeline.from_pretrained()` **silently ignores** the `dtype` kwarg ("not expected...will be ignored") and loads in float32. With `torch_dtype`, it loads in bf16 (~24GB). Without the correct dtype, `from_pretrained` loads 48GB+ into 64GB RAM → OOM kill (SIGTERM/signal 15). The deprecation warning from `torch_dtype` is harmless; the silent ignore of `dtype` is fatal.
+
+3. **Flux2Pipeline-specific generation kwargs:**
+   - `negative_prompt` → unsupported, raises TypeError. Fix: skip for Flux/Flux2 pipelines.
+   - `torch.Generator(device=self.device)` → crashes with CPU offload. Fix: `device="cpu"` when using `enable_model_cpu_offload()`.
+
+**Why previous sessions failed:** Each session likely hit one of these 3 issues but couldn't see all of them together. The `dtype` vs `torch_dtype` trap is especially insidious — it's a silent behavioral change (model loads, but in wrong dtype → OOM) rather than an explicit error.
+
+### Files Changed
+| File | Changes |
+|------|---------|
+| `gpu_service/services/llm_inference_backend.py` | Remove `device_map="auto"`, add `.to(device)`, per-model locks |
+| `gpu_service/services/text_backend.py` | Remove `device_map="auto"`, add `.to(device)`, `torch_dtype`→`dtype` (transformers) |
+| `gpu_service/services/diffusers_backend.py` | Flux2 CPU offload, keep `torch_dtype` (diffusers), skip `negative_prompt`, CPU generator |
+
+### Commits
+- `c447791` — `fix(gpu-service): VRAM/RAM management bugs in LLM + Diffusers backends`
+- `e73c08c` — `fix(diffusers): Flux2Pipeline negative_prompt + generator device`
+
+### Key Lessons (for future sessions)
+- **`device_map="auto"` is not free** — it creates CPU mirror + GPU copy. For models that fit in VRAM, explicit `.to(device)` is always better.
+- **`torch_dtype` vs `dtype` is library-specific** — transformers uses `dtype`, diffusers still uses `torch_dtype`. Flux2Pipeline silently ignores `dtype`. Always check whether kwargs are actually being applied.
+- **`enable_model_cpu_offload()` has side effects** — generator must be on CPU, not GPU. Any kwarg the pipeline doesn't recognize is silently dropped.
+- **Per-model locking > global locking** — for multi-model services, a single lock serializes everything. Double-checked locking with per-model granularity is trivial to implement and eliminates all cross-model contention.
+
+---
+
 ## Session 206 - Complete Hebrew and Arabic i18n Translations
 **Date:** 2026-02-24
 **Focus:** Full translation of all ~1370 i18n keys into Hebrew (he) and Arabic (ar)
