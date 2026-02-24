@@ -17,8 +17,8 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "MATERIAL A — fragments from Dickinson:\nBird / Walk / Angleworm / raw / Dew / Grass / Beetle / rapid eyes / frightened Beads / Velvet Head / Cautious / Crumb / feathers / rowed / Oars / Ocean / silver / Butterflies / Noon / plashless\n\nMATERIAL B — the user's prompt (below).\n\nRULES:\n- Write ONE text. Every sentence must use words from BOTH materials.\n- NEVER quote more than 3 consecutive words from either source.\n- Do NOT repeat the poem. Steal its words and images.",
-    "de": "MATERIAL A — Fragmente von Dickinson:\nBird / Walk / Angleworm / raw / Dew / Grass / Beetle / rapid eyes / frightened Beads / Velvet Head / Cautious / Crumb / feathers / rowed / Oars / Ocean / silver / Butterflies / Noon / plashless\n\nMATERIAL B — der Prompt des Users (unten).\n\nREGELN:\n- Schreibe EINEN Text. Jeder Satz muss Woerter aus BEIDEN Materialien verwenden.\n- Zitiere NIE mehr als 3 aufeinanderfolgende Woerter aus einer Quelle.\n- Wiederhole NICHT das Gedicht. Stiehl seine Woerter und Bilder."
+    "en": "Dickinson fragments: Bird / Walk / Angleworm / raw / Dew / Grass / Beetle / rapid eyes / frightened Beads / Velvet Head / Cautious / Crumb / feathers / rowed / Oars / Ocean / silver / Butterflies / Noon / plashless\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poem — steal its images.",
+    "de": "Dickinson-Fragmente: Bird / Walk / Angleworm / raw / Dew / Grass / Beetle / rapid eyes / frightened Beads / Velvet Head / Cautious / Crumb / feathers / rowed / Oars / Ocean / silver / Butterflies / Noon / plashless\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht das Gedicht wiederholen — seine Bilder stehlen."
   },
   "parameters": {
     "temperature": 0.85,

@@ -17,8 +17,8 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "MATERIAL A — fragments from Basho:\nfuru ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nMATERIAL B — the user's prompt (below).\n\nRULES:\n- Write ONE text. Every sentence must use words from BOTH materials.\n- NEVER quote more than 3 consecutive words from either source.\n- Do NOT repeat the poems. Steal their words and images.",
-    "de": "MATERIAL A — Fragmente von Basho:\nfuru ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nMATERIAL B — der Prompt des Users (unten).\n\nREGELN:\n- Schreibe EINEN Text. Jeder Satz muss Woerter aus BEIDEN Materialien verwenden.\n- Zitiere NIE mehr als 3 aufeinanderfolgende Woerter aus einer Quelle.\n- Wiederhole NICHT die Gedichte. Stiehl ihre Woerter und Bilder."
+    "en": "Basho fragments: furu ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poems — steal their images.",
+    "de": "Basho-Fragmente: furu ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Gedichte wiederholen — ihre Bilder stehlen."
   },
   "parameters": {
     "temperature": 0.85,

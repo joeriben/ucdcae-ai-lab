@@ -17,8 +17,8 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "MATERIAL A — fragments from Whitman:\nleaf of grass / journey-work / stars / pismire / grain of sand / egg of the wren / tree-toad / chef-d'oeuvre / blackberry / parlors of heaven / hinge / machinery / cow / statue / mouse / miracle / sextillions\n\nMATERIAL B — the user's prompt (below).\n\nRULES:\n- Write ONE text. Every sentence must use words from BOTH materials.\n- NEVER quote more than 3 consecutive words from either source.\n- Do NOT repeat the poem. Steal its words and images.",
-    "de": "MATERIAL A — Fragmente von Whitman:\nleaf of grass / journey-work / stars / pismire / grain of sand / egg of the wren / tree-toad / chef-d'oeuvre / blackberry / parlors of heaven / hinge / machinery / cow / statue / mouse / miracle / sextillions\n\nMATERIAL B — der Prompt des Users (unten).\n\nREGELN:\n- Schreibe EINEN Text. Jeder Satz muss Woerter aus BEIDEN Materialien verwenden.\n- Zitiere NIE mehr als 3 aufeinanderfolgende Woerter aus einer Quelle.\n- Wiederhole NICHT das Gedicht. Stiehl seine Woerter und Bilder."
+    "en": "Whitman fragments: leaf of grass / journey-work / stars / pismire / grain of sand / egg of the wren / tree-toad / chef-d'oeuvre / blackberry / parlors of heaven / hinge / machinery / cow / statue / mouse / miracle / sextillions\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poem — steal its images.",
+    "de": "Whitman-Fragmente: leaf of grass / journey-work / stars / pismire / grain of sand / egg of the wren / tree-toad / chef-d'oeuvre / blackberry / parlors of heaven / hinge / machinery / cow / statue / mouse / miracle / sextillions\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht das Gedicht wiederholen — seine Bilder stehlen."
   },
   "parameters": {
     "temperature": 0.85,
