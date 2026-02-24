@@ -29,12 +29,6 @@ Tags:
   - `settings.general.arabicAr` (NEW): "Arabic (ar)"
 - **Context**: New language option labels for Hebrew and Arabic RTL language support. Translate the language name into each target language. Examples: German "Hebräisch (he)" / "Arabisch (ar)", Turkish "İbranice (he)" / "Arapça (ar)", Korean "히브리어 (he)" / "아랍어 (ar)", Ukrainian "Іврит (he)" / "Арабська (ar)", French "Hébreu (he)" / "Arabe (ar)", Spanish "Hebreo (he)" / "Árabe (ar)". Note: he.ts should have hebrewHe = "עברית (he)" and ar.ts should have arabicAr = "العربية (ar)".
 
-### WO-2026-02-23-arabic-full-translation
-- **Session**: 201
-- **Scope**: ar.ts (NEW file — full translation of all ~1370 keys from en.ts)
-- **Changed keys**: ALL keys in en.ts need translation into Arabic
-- **Context**: Arabic is an RTL language. Brand-new language file (currently empty stub that falls back to English). The translator agent should create complete translations mirroring the en.ts key structure. Important RTL notes: (1) Arabic uses Eastern Arabic numerals in some contexts but Western numerals are standard for web UI — use Western numerals. (2) Directional terms like "left"/"right" in UI descriptions should be adapted accordingly.
-
 ### WO-2026-02-23-hebrew-arabic-interception-configs
 - **Session**: 201
 - **Scope**: All 36 JSON files in `devserver/schemas/configs/interception/` + `devserver/schemas/llama_guard_explanations.json`
@@ -54,3 +48,8 @@ Tags:
 - **Completed**: 2026-02-24
 - **Scope**: he.ts — full translation of all ~1370 keys from en.ts
 - **Result**: All 30 top-level sections translated. vue-tsc and build pass.
+
+### WO-2026-02-23-arabic-full-translation
+- **Completed**: 2026-02-24
+- **Scope**: ar.ts — full translation of all ~1370 keys from en.ts
+- **Result**: All sections translated (3-way parallel split + assembly). vue-tsc and build pass.
