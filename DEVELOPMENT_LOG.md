@@ -57,11 +57,34 @@ The three contingency sources identified in the Trans-Aktion concept:
 | `devserver/schemas/configs/interception/trans_aktion_kulinarisch.json` | DELETED |
 | `public/ai4artsed-frontend/src/i18n/WORK_ORDERS.md` | Added WO for tr/ko/uk/fr/es/he/ar translations |
 
+### Research: Why the Collision Failed (Rilke Test)
+
+First test with real poetry (Rilke + "Waldspaziergang mit Hund und Kind") showed: model echoes poem verbatim, then writes a separate conventional text. No fusion. Systematic literature review revealed multiple converging causes:
+
+**1. Qwen3 Thinking Mode ON by default** — Both transformers (`apply_chat_template`) and Ollama generate `<think>` blocks, consuming token budget on garbled reasoning before output. `llm_inference_backend.py` extracts them post-hoc but the tokens are already spent. Fix: `/no_think` in system prompt or suppress `<think>` token generation.
+
+**2. No repetition penalty** — `repetition_penalty: 1.5` in transformers `gen_kwargs` (Qwen3's own recommendation). Currently not passed through `llm_inference_backend.py` at all. Single highest-impact parameter.
+
+**3. Induction Head Toxicity** (ACL 2025, arXiv 2504.14218) — Attention heads copy patterns from context. RLHF models have prior toward preserving user input verbatim. Formatted poem = immutable block.
+
+**4. CS4 Constraint Degradation** (arXiv 2410.04197) — Small models satisfy easiest constraints, drop hard ones. "Include poem" (easy: copy) + "include prompt" (easy: write about) + "make inseparable" (hard: dropped).
+
+**5. LLM-Prompted Fusion is fundamentally wrong** — EBR cut-up study (2024): even GPT-4o inserts "thematic materials." CHI 2024: LLMs produce "convergent, mid-novelty outputs." Research consistently identifies prompted fusion as lowest-genuineness approach.
+
+**Solution: Three-layer collision architecture:**
+1. Mechanical (no model): N+7, sentence-interleaving, SpaCy-based
+2. Insufficient model (qwen3:1.7b, `/no_think`, `presence_penalty: 1.5`): partial-failure art
+3. Embedding (future): SLERP between T5 encodings → diffusion model conditioned on mathematical phantom
+
+Full analysis with 20+ sources documented in `docs/DEVELOPMENT_DECISIONS.md` under "Trans-Aktion: Forschungsstand und Konsequenzen".
+
 ### Next Steps
-- Vector operations: Generalize Surrealizer latent-space manipulation for Trans-Aktion
-- Depraved Encoder: Intentionally corrupted text encoders as contingency source
-- Multimodal impulses: Image/audio collision materials (not just text)
-- Test all 5 configs with diverse prompts across SD3.5/FLUX/Wan2.1
+1. Add `repetition_penalty` support to `llm_inference_backend.py` gen_kwargs + `llm_client.py` API (currently no penalty parameter at all)
+2. Disable thinking for Trans-Aktion: `/no_think` in system prompt via config context, or suppress `<think>` token generation in transformers
+3. Prompt restructure: fragment poem, use completion mode, concrete constraints — empirical testing
+4. Mechanical pre-processing layer (SpaCy sentence-interleaving + N+7) as Python chunk
+5. SLERP on T5 embeddings (connects to T5 SAE research, Session 192)
+6. Test across SD3.5/FLUX/Wan2.1
 
 ---
 

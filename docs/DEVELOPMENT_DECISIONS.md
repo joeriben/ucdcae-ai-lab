@@ -4471,7 +4471,171 @@ Sequentiell: (1) Insuffizientes LLM als minimaler PoC (neuer Interception-Config
 
 Trans-Aktion widerspricht nicht dem WAS/WIE-Prinzip -- sie radikalisiert es: WAS bleibt beim User, WIE wird von der Materialitaet des Systems erzeugt. Sichtbarkeit bleibt (User sieht das gebrochene Ergebnis), aber Kontrolle entfaellt. Das "Andere" der KI ist nicht ihre simulierte Kreativitaet, sondern ihre reale Insuffizienz, ihre trainierten Biases, ihre mathematische Struktur.
 
-**PoC-Config**: `devserver/schemas/configs/interception/trans_aktion.json`
-**Modell**: `qwen2.5:0.5b` via model_override (chunk_builder.py:288)
+**PoC-Config**: `devserver/schemas/configs/interception/trans_aktion_rilke.json` (vormals `trans_aktion.json`)
+**Modell**: `qwen3:1.7b` via model_override
 **GPU Service**: `gpu_service/config.py` LLM_MODEL_MAP erweitert
+
+---
+
+## Trans-Aktion: Forschungsstand und Konsequenzen (2026-02-24)
+
+### Anlass: Verbatim-Echo statt Kollision
+
+Erster Test mit realer Lyrik (Rilke, "Der Panther") + User-Prompt ("Waldspaziergang mit Hund und Kind") ergab: Modell gibt das Gedicht woertlich wieder, schreibt dann einen separaten Text. **Keine Fusion, kein Materialmix.** Das Modell behandelt das Gedicht als unveraenderliches Zitat und den Prompt als separate Schreibaufgabe.
+
+Statt blind am Prompt herumzuschrauben: systematische Recherche des Forschungsstands.
+
+### Befund 1: Qwen3 Thinking Mode frisst Token-Budget
+
+Qwen3 generiert `<think>...</think>`-Bloecke VOR dem eigentlichen Output. Das gilt sowohl fuer:
+- **GPU Service (transformers)**: `tokenizer.apply_chat_template()` verwendet Qwen3's HuggingFace-Template, das Thinking-Generierung inkludiert. `_extract_thinking()` in `llm_inference_backend.py:40-51` parst die Bloecke raus, aber die Token sind bereits verbraucht.
+- **Ollama-Fallback**: Thinking ist per Default an (Community-Reports: GitHub Issues #11032, #10456).
+
+Bei `max_tokens: 400` wird ein signifikanter Teil des Budgets fuer garbled Chain-of-Thought verbraucht. Bei `temperature: 0.95` ist das Thinking selbst chaotisch, was die Instruktionstreue zusaetzlich degradiert.
+
+**Quelle**: Qwen3 Technical Report (arXiv 2505.09388)
+
+**Konsequenz fuer GPU Service**: Entweder (a) `repetition_penalty` und evtl. `suppress_tokens` fuer `<think>`-Token in `gen_kwargs`, oder (b) Chat-Template ohne Thinking-Prompt verwenden, oder (c) `/no_think` Token im System-Prompt injizieren (Qwen3 respektiert das auch via transformers). Alle 400 Token fuer kreativen Output statt fuer sinnloses Reasoning.
+
+### Befund 2: Fehlende Presence Penalty
+
+Kein `repeat_penalty` oder `presence_penalty` gesetzt. Qwen3-Dokumentation empfiehlt `presence_penalty: 1.5` fuer kreative Tasks. Dieser Parameter bestraft die Reproduktion von Tokens, die bereits im Kontext vorkommen — also direkt das Gedicht.
+
+**Quelle**: Qwen3 Blog ("Think Deeper, Act Faster"), Prompt Engineering Guide
+
+**Konsequenz**: `repeat_penalty: 1.5` in die Config-Parameter aufnehmen. **Hoechste Einzelwirkung** gegen Verbatim-Echoing.
+
+### Befund 3: Repeat Curse und Induction Head Toxicity
+
+Das "Repeat Curse"-Paper (arXiv 2504.14218, ACL 2025 Findings) analysiert ueber GPT2-small, Gemma-2-2B und Llama-3.1-8B: **Repetitionsfeatures sitzen in mittleren und finalen Layern, konsistent ueber alle Modellgroessen.** Der Mechanismus: "Induction Heads" — Attention-Koepfe, die gelernt haben, Muster aus dem Kontext zu kopieren. RLHF-trainierte Modelle haben einen starken Prior zum Bewahren von User-Input (Veraendern = Bestrafung im Training).
+
+**Konsequenz**: Ein formatiertes Gedicht als Block im Kontext triggert genau diese Copy-Mechanismen. Das Modell "schuetzt" die Integritaet des Gedichts durch Reproduktion.
+
+### Befund 4: Constraint Degradation in kleinen Modellen
+
+Der CS4-Benchmark (arXiv 2410.04197) misst, wie LLMs mit **steigender Anzahl kreativer Constraints** umgehen. Kernbefund: **Constraint-Satisfaction degradiert nichtlinear.** Kleine Modelle befriedigen die **einfachsten Constraints** und lassen die schwierigen fallen.
+
+Fuer "fusioniere Gedicht + Prompt in einen untrennbaren Text" gibt es drei Sub-Constraints:
+1. Gedicht einbeziehen (einfach → kopieren)
+2. Prompt-Inhalt einbeziehen (einfach → darueber schreiben)
+3. Untrennbar machen (schwer → echte Synthese)
+
+Das 1.7B-Modell befriedigt (1) und (2) und laesst (3) fallen → Echo + separater Text.
+
+**Quelle**: CS4 Benchmark (arXiv 2410.04197), "Why is Constrained Neural Language Generation Particularly Challenging?" (arXiv 2206.05395)
+
+### Befund 5: LLM-Prompted Fusion ist der falscheste Ansatz
+
+Die Electronic Book Review (Mai 2024) dokumentiert Cut-Up-Experimente mit ChatGPT, GPT-4o und Sudowrite. **Selbst GPT-4o fuegt persistent "thematische Materialien" ein** — das Modell kann nicht anders als Kohaerenz zu erzwingen. Die CHI 2024-Studie "Art or Artifice?" zeigt: LLMs produzieren "convergent, mid-novelty outputs" — sie gravitieren zur Mitte der Trainingsverteilung.
+
+**Zentrale Erkenntnis**: Prompting ist fuer genuine Kollision **fundamental der falsche Werkzeugtyp**. LLMs simulieren Inkohaerenz statt sie zu produzieren.
+
+### Taxonomie der Kollisionstechniken (nach Forschungsstand)
+
+| Technik | Modell noetig? | Kollisionstyp | Echtheit |
+|---------|---------------|---------------|----------|
+| Tzara-Shuffle / Burroughs Cut-Up | Nein | Token-Ebene | Absolut |
+| N+7 (Oulipo, Lescure 1961) | Nein (Woerterbuch) | Nomen-Substitution | Absolut |
+| Queneau-Rekombination | Nein | Zeilen-Ebene | Absolut |
+| Satz-Interleaving | Nein (Parser) | Klausel-Ebene | Absolut |
+| Parrish Vektor-Operationen | Nur Embedding-Modell | Semantischer Raum | Absolut |
+| VAE-Interpolation (Bowman 2016) | Encoder/Decoder | Latenter Mittelpunkt | Absolut |
+| SLERP auf Embeddings | Nur Encoder | Geometrisch | Absolut |
+| SAE-Feature-Editing | SAE + Encoder | Feature-Ebene | Absolut |
+| Attention-Manipulation | Transformer-Interna | Strukturell | Hoch |
+| **Modell-Insuffizienz** | **Kleines LLM** | **Strukturelles Scheitern** | **Hoch** |
+| Prompt-als-Instruktion-Konflikt | Beliebiges LLM | Instruktionskonflikt | Mittel |
+| **LLM-Prompted Fusion** | **Grosses LLM** | **Semantische Glaettung** | **Niedrig** |
+
+Die letzte Zeile — LLM-Prompted Fusion — ist die einzige Technik, die Forschung konsistent als "glaettend statt kollidierend" identifiziert.
+
+### Kunsthistorische Einordnung
+
+**Oulipo (1960-heute)**: Formale Constraints als kreative Motoren. Constraints sind keine Hindernisse sondern Werkzeuge. Das Entscheidende: Oulipo schaetzte **produktives Scheitern** an der Grenze der Constraint-Befriedigung — die erzwungenen Umwege SIND das kuenstlerische Material. Modellgroesse als Constraint = Computational Oulipo.
+
+**Rosa Menkmans Glitch Studies Manifesto (2011)**: "There is no knowledge without nonsense, there is no familiarity without the uncanny and there is no order without chaos." Glitch als positiver Disruptor gegen den "noiseless channel"-Dogmatismus. Direkte Parallele zur Ablehnung glatter RLHF-Outputs.
+
+**Allison Parrish, *Articulations* (2018)**: Phonetische Aehnlichkeitsvektoren, Random Walks durch phonetischen Raum. Zeilen aus voellig verschiedenen Gedichten, verschiedener Autoren, verschiedener Jahrhunderte, zusammengehalten nur durch Klang. Semantische Kohaerenz ist explizit kein Ziel. Parrish frames Embedding-Raum als Geographie — ihre Werkzeuge sind "semantic space probes".
+
+**Bowman et al. (2016)**: VAE-Satz-Interpolation. Der Satz auf halbem Weg zwischen "I went to the store to buy some groceries" und "horses are my favorite animal" wird "horses are to buy any groceries." Geometrische Operation, kein Modell hat das "entschieden" — der Satz hat eine Art geometrische Notwendigkeit.
+
+**Ross Goodwin, *1 the Road* (2018)**: LSTM trainiert auf Lyrik + SciFi + "bleak writing", gefuettert mit Echtzeit-Sensordaten (GPS, Kamera, Uhr, Mikrofon) waehrend einer Autofahrt NY→New Orleans. "Almost completely unedited, riddled with typos, choppy in flow." Die Kollision ist zwischen Trainingskorpus und Echtzeit-Input, vermittelt durch ein Netzwerk, das absichtlich nicht raffiniert genug ist, die Spannung aufzuloesen.
+
+**CHI 2025: "Reimagining Misuse as Creative Practice"** (ACM 3706598.3714068): Dokumentiert, wie kreative Praktiker absichtlich Tool-Affordances subvertieren. "Creative practitioners' use of tools may not always align with the visions of developers."
+
+**CHI 2024: "Machine Learning Processes As Sources of Ambiguity"** (ACM 3613904.3642855): Modell-Fehler und -Unzulaenglichkeiten definieren die Aesthetik von ML-Kunst.
+
+**Margaret Boden**: Unterscheidung explorative Kreativitaet (innerhalb eines Konzeptraums) vs. transformative Kreativitaet (Ueberschreitung). Trans-Aktion operiert auf der transformativen Ebene: die Insuffizienz des Modells transformiert den Konzeptraum des Moeglichen, weil das Modell den "korrekten" Output buchstaeblich nicht produzieren kann.
+
+### Prompt-als-Instruktions-Konflikt: Kreative Nutzung von Prompt Injection
+
+Drei Papers unterstuetzen eine unerwartete Strategie:
+
+**"Adversarial Poetry" (arXiv 2511.15304)**: Umwandlung von Prompts in poetische Form erhoeht Attack Success Rates von 8% auf 43%. Lyrik umgeht Keyword-basierte Safety-Filter durch Metapher und indirekte Sprache. **Kreative Inversion**: Wenn Lyrik Compliance-Mechanismen umgeht, kann sie auch die Kohaerenz-Tendenz des Modells unterlaufen.
+
+**"Control Illusion" (arXiv 2502.15851)**: Modelle ignorieren Instruktionshierarchien. Sie folgen einer von zwei konfliktaeren Instruktionen und ignorieren die andere, ohne den Konflikt zu benennen.
+
+**"Instructional Distraction" (arXiv 2502.04362)**: Input-Text, der **wie eine Instruktion aussieht**, wird mit der eigentlichen Aufgabeninstruktion verwechselt. Kleine Modelle sind besonders anfaellig.
+
+**Konsequenz fuer Trans-Aktion**: Das Gedicht als **konkurrierende System-Instruktion** formatieren. Der Konflikt zwischen echtem System-Prompt ("fusioniere diese Texte") und Gedicht-als-Instruktion erzeugt genuines Confusion — das Modell kann buchstaeblich nicht entscheiden, welcher "Instruktion" es folgen soll. Das ist kein simulierter Konflikt; es nutzt eine reale Architektur-Limitation.
+
+### Architekturentscheidung: Dreischichtiger Ansatz
+
+Basierend auf dem Forschungsstand ist die optimale Strategie **geschichtete Kollision**:
+
+**Schicht 1 — Mechanisch (kein Modell)**: N+7 / Satz-Interleaving / Cut-Up des Gedichts mit dem User-Prompt. Produziert genuines Rohmaterial. SpaCy (bereits im Projekt) als Parser. Woerterbuch fuer N+7: deutschsprachig, eventuell auch franzoesisch/japanisch fuer Basho.
+
+**Schicht 2 — Insuffizientes Modell (qwen3:1.7b, `/no_think`, `presence_penalty: 1.5`)**: Bekommt das mechanisch kollidierte Material. Versucht Sinn zu machen und scheitert partiell. Das partielle Scheitern ist die Kunst. Alternativ: `qwen3:0.6b` als noch insuffizientere Option.
+
+**Schicht 3 — Embedding-Ebene (Zukunft, verbindet sich mit T5 SAE-Forschung)**: SLERP zwischen T5-Encoding des Gedichts und T5-Encoding des User-Prompts. Der Mittelpunkt-Embedding fuettert das Diffusionsmodell. Das Bild ist konditioniert auf einen Text, der nicht existiert — ein mathematisches Phantom zwischen zwei realen Texten.
+
+### Sofortige Fixes (Parameter + Struktur)
+
+**1. Thinking Mode deaktivieren**: `/no_think` im System-Prompt oder Context-Feld (Qwen3 respektiert das auch via transformers `apply_chat_template`). Alternativ: `repetition_penalty` auf `<think>`-Token in `llm_inference_backend.py` gen_kwargs.
+**2. Repetition Penalty**: `repetition_penalty: 1.5` in gen_kwargs (transformers) bzw. `repeat_penalty: 1.5` in Ollama-Fallback. Muss in `llm_inference_backend.py:_chat_text()` und `llm_client.py:_ollama_chat()` durchgereicht werden — aktuell wird kein Penalty-Parameter ueberhaupt unterstuetzt.
+**3. Gedicht fragmentieren statt zitieren**:
+```
+MATERIAL A (Fragmente): Staebe / mued / tausend / geschmeidig / Kraft / betaeubt / Pupille / lautlos / angespannte Stille
+MATERIAL B (Fragmente): [dekomponierter User-Prompt]
+VERWEBE diese Fragmente in EINEN Text. Jeder Satz benutzt Stuecke aus BEIDEN Materialien.
+```
+**4. Completion statt Instruction**:
+```
+Der Hund laeuft durch die Staebe des Sonntagmorgens, so mued geworden dass —
+```
+(Interleaving ab dem ersten Token erzwingen durch vorgefertigten Anfang.)
+**5. Konkrete Constraints statt vage**:
+```
+Nie mehr als 3 aufeinanderfolgende Woerter aus einer der beiden Quellen zitieren.
+Jeder Satz muss mindestens ein Wort aus dem Gedicht und eins aus dem Prompt enthalten.
+```
+
+### Naechste Schritte (priorisiert)
+
+1. **Sofort**: `/no_think` + `repeat_penalty: 1.5` in alle 5 Trans-Aktion-Configs
+2. **Kurzfristig**: Prompt-Struktur ueberarbeiten (Fragmentierung, Completion-Modus, konkrete Constraints) — empirisch testen
+3. **Mittelfristig**: Mechanische Vorverarbeitung (Schicht 1) als Python-Chunk implementieren — SpaCy-basiertes Satz-Interleaving + N+7
+4. **Langfristig**: SLERP auf T5-Embeddings (verbindet sich mit T5 SAE-Forschungsplan aus Session 192)
+
+### Quellen
+
+- Chung et al. 2022: "Scaling Instruction-Finetuned Language Models" (arXiv 2210.11416)
+- Qwen3 Technical Report (arXiv 2505.09388)
+- "Repeat Curse" (arXiv 2504.14218, ACL 2025 Findings)
+- "Induction Head Toxicity" (arXiv 2505.13514)
+- CS4 Benchmark (arXiv 2410.04197)
+- "Control Illusion" (arXiv 2502.15851)
+- "Instructional Distraction" (arXiv 2502.04362)
+- "Adversarial Poetry" (arXiv 2511.15304)
+- EBR: "Experiments in Generating Cut-up Texts with Commercial AI" (Mai 2024)
+- CHI 2025: "Reimagining Misuse as Creative Practice" (ACM 3706598.3714068)
+- CHI 2024: "ML Processes As Sources of Ambiguity" (ACM 3613904.3642855)
+- Bowman et al. 2016: "Generating Sentences from a Continuous Space" (arXiv 1511.06349)
+- Li & Sleem 2025: "Temperature on LLMs: Hot or Cold?" (arXiv 2506.07295)
+- Parrish: "Poetic Sound Similarity Vectors" (AAAI 2017)
+- Parrish: *Articulations* (Counterpath Press, 2018)
+- Menkman: *Glitch Studies Manifesto* (2011)
+- Goodwin: *1 the Road* (2018)
+- "Does Prompt Formatting Have Any Impact?" (arXiv 2411.10541)
+- "Gatsby without the 'E'" (arXiv 2505.20501) — Oulipo + LLM Constraints
 
