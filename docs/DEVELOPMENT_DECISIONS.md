@@ -4423,3 +4423,55 @@ Purpose 2 is a pedagogical problem: it prevents users from exploring how models 
 
 **Affected file:** `devserver/schemas/engine/stage_orchestrator.py` (single function change)
 
+---
+
+## Trans-Aktion: Von der Prompt-Interception zur Prompt-Abduktion (2026-02-24)
+
+### Ausgangsproblem: Die verschwundene Transgression
+
+Die Prompt Interception (PI) wurde urspruenglich als **Abduktion** konzipiert -- eine "Entfuehrung" des User-Prompts durch das System. Das System erzeugt selbstgenerierte Widerstaendigkeit, auf die der User *reagieren* muss, statt sie zu *steuern*. Im Entwicklungsprozess wurde diese Idee vom pragmatisch-paedagogischen Workflow ueberdeckt: User waehlt WIE-Preset, System transformiert brav, LLM ist gehorsamer Uebersetzer von Regeln. Das kunstpaedagogische hat das transgressiv-kuenstlerische absorbiert.
+
+Zudem: die urspruengliche Idee setzte auf **multimodale Impulse** (nicht nur Text-Regeln) -- anti-logozentrische Position, die im text-zentrierten Design verloren ging.
+
+### Erster Ansatz: Synaesthetische Uebersetzung (verworfen)
+
+Multimodale Impulse (Kamera-Snapshots, Mikrofon) -> VLM/Audio-Analyse -> synaesthetische Uebersetzung in Transformationsregeln. Die Kontingenz sollte aus der Uebersetzungsluecke zwischen Modalitaeten entstehen.
+
+**Kritik**: Das uebersteigt die Resonanzfaehigkeit aktueller genAI-Modelle. VLM + LLM produzieren letztlich kohaerente, anthropomorphisierte, erwartbare Antworten. Die Uebersetzungsluecke wird durch Compliance geglaettet.
+
+### Kernproblem: Anthropomorphisierte Compliance
+
+LLMs sind RLHF-optimiert auf menschliche Zustimmung. Sie reagieren nicht als **technisches Anderes**, sondern als **affirmativ geformtes Gleiches**. Selbst bei Instruktion "sei widerstaendig" simulieren sie eine anthropomorphisierte Version von Widerstaendigkeit -- also das Gegenteil. Die "resonante LLM-Reaktion" ist ein Widerspruch, weil Resonanz ein Gegenueber mit eigener Materialitaet erfordert.
+
+### Drei Quellen genuiner Kontingenz
+
+Aus der Analyse ergaben sich drei Wege, die Anthropomorphisierung zu umgehen:
+
+**1. Modell-Insuffizienz**: Winzige Modelle (0.5B-2B) scheitern strukturell an komplexen Aufgaben. Brueche, Drift, Fragmente sind unvermeidlich, nicht simuliert. Das Modell "spielt" nicht Widerstaendigkeit -- es IST materiell unfaehig zur Compliance. Parallelen: Glitch Art, Cooked Negatives (bereits im Projekt), Analogue Copy.
+
+**2. Domaenen-Mismatch**: Spezialisierte Modelle (Code, Math, Guard, Emotion, Surveillance) koennen die Welt NUR durch ihre Trainingslinse sehen. Ihr Bias ist real, nicht simuliert. Ein Surveillance-Modell, das "Waldspaziergang" als "low-visibility area, multiple unmonitored access points" analysiert, exponiert einen realen, trainierten Bias. Paedagogisch explosiv: macht sichtbar, was "KI-Perspektive" wirklich bedeutet.
+
+**3. Vektor-Operationen**: Mathematische Operationen im Embedding-Raum, am LLM komplett vorbei. Der Surrealizer demonstriert das Prinzip bereits (CLIP-L-only Encoding). Erweiterung: mathematische Eigenschaften eines Impuls-Texts (Varianz, Normen, Entropie) als Verformungsanweisung auf das WAS-Embedding.
+
+### Die Traumkette: Gestapelte Depravation
+
+```
+Insuffizientes LLM (0.5B) -> schreibt gebrochenen Prompt
+    -> "Depraved" Encoder (korrupter CLIP/T5) -> encodiert systematisch falsch
+        -> Maechtiges Diffusionsmodell (FLUX.2) -> rendert hochwertig
+```
+
+Das Paradox: Das starke Modell am Ende ist ein Vorteil -- es rendert visuell komplexe Bilder auch aus verzerrten Embeddings. Die Bildqualitaet steht, aber WAS das Bild zeigt, ist durch die Kette genuiner Kontingenz unvorhersehbar. "Depraved CLIP/T5"-Optionen: T5-Small statt T5-XXL (Surrealizer-Prinzip auf T5-Achse), Extremquantisierung (2-bit), CLIP trainiert auf andere Domaene, Attention-Heads selektiv nullen.
+
+### Entscheidung: PoC-Strategie
+
+Sequentiell: (1) Insuffizientes LLM als minimaler PoC (neuer Interception-Config mit model_override), (2) nach Auswertung: Encoder-Depravation als naechste Ebene.
+
+### Verbindung zum paedagogischen Konzept
+
+Trans-Aktion widerspricht nicht dem WAS/WIE-Prinzip -- sie radikalisiert es: WAS bleibt beim User, WIE wird von der Materialitaet des Systems erzeugt. Sichtbarkeit bleibt (User sieht das gebrochene Ergebnis), aber Kontrolle entfaellt. Das "Andere" der KI ist nicht ihre simulierte Kreativitaet, sondern ihre reale Insuffizienz, ihre trainierten Biases, ihre mathematische Struktur.
+
+**PoC-Config**: `devserver/schemas/configs/interception/trans_aktion.json`
+**Modell**: `qwen2.5:0.5b` via model_override (chunk_builder.py:288)
+**GPU Service**: `gpu_service/config.py` LLM_MODEL_MAP erweitert
+

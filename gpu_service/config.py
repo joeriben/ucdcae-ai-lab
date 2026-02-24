@@ -118,6 +118,8 @@ LLM_MODEL_MAP = {
     # General purpose
     "qwen3:1.7b": "Qwen/Qwen3-1.7B",
     "qwen3:4b": "Qwen/Qwen3-4B",
+    # Trans-Aktion: deliberately insufficient model for productive failure
+    "qwen2.5:0.5b": "Qwen/Qwen2.5-0.5B-Instruct",
     # Vision
     "qwen3-vl:2b": "Qwen/Qwen2.5-VL-3B-Instruct",
     "llama3.2-vision:latest": "meta-llama/Llama-3.2-11B-Vision-Instruct",
