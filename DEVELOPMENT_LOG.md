@@ -1,5 +1,56 @@
 # Development Log
 
+## Session 209 - Trans-Aktion: Parameter Pipeline Fix + Global Poet Lineup
+**Date:** 2026-02-24
+**Focus:** Wire generation parameters through pipeline, fix collision prompts, diversify poet selection
+
+### Problems Solved
+
+1. **Parameters silently dropped**: `temperature`, `max_tokens`, `repetition_penalty` from config JSON never reached `generate()`. Chain: Config → ChunkBuilder (merged) → `_process_prompt_interception_request()` → `PromptInterceptionRequest` (no field) → `_call_ollama()` (no params) → `llm_client.generate()` (never received them).
+
+2. **Thinking mode wasted tokens**: Qwen3's `apply_chat_template()` enables `<think>` by default, consuming token budget on garbled CoT before any output.
+
+3. **Prompt architecture violation**: Initial fix put "MATERIAL A / MATERIAL B / RULES" labels in config `context` field — redundant with PI architecture's `task_instruction` from `instruction_selector.py`. Context should be material only, not meta-instructions.
+
+4. **Western canon bias**: 4M/1F, all Western/Japanese. Replaced with global lineup.
+
+### Implementation
+
+**Parameter pipeline** (5 Python files): Added `repetition_penalty` + `enable_thinking` through all 5 layers: `llm_inference_backend.py` → `llm_inference_routes.py` → `llm_client.py` → `prompt_interception_engine.py` → `backend_router.py`. Ollama fallback maps `repetition_penalty` → `options.repeat_penalty`, `enable_thinking=False` → `payload["think"] = False`.
+
+**Config updates**: `temperature` 0.95→0.85, `repetition_penalty: 1.5`, `enable_thinking: false`. Context: poem fragments (not full text) + minimal fusion instruction. No meta-labels.
+
+**UI**: Quill icon (history_edu SVG) for `trans_aktion` category, `#FF1744` color, shortened tile names (just poet names).
+
+**New poet lineup** (6 configs, 2F + 2M + 2 collective):
+
+| Config | Source | Origin | Type |
+|--------|--------|--------|------|
+| `trans_aktion_sappho.json` | Sappho, Fragment 31 | Greece, ~600 BCE | F |
+| `trans_aktion_hoelderlin.json` | Hoelderlin, Haelfte des Lebens | Germany, 1805 | M |
+| `trans_aktion_basho.json` | Basho, 3 Haiku | Japan, 17th c | M |
+| `trans_aktion_mirabai.json` | Mirabai, Bhajans | India, ~1500 | F |
+| `trans_aktion_yoruba_oriki.json` | Yoruba Oriki (Oya) | West Africa, oral tradition | collective |
+| `trans_aktion_nahuatl.json` | Nahuatl Xochicuicatl | Mesoamerica, oral tradition | collective |
+
+### Known Issue: Fallback Defeats model_override
+
+When GPU is full (e.g. Flux2 loaded), `qwen3:1.7b` fails with OOM → fallback chain escalates to Mistral Large (cloud) → collision doesn't happen because model is too capable. Needs: either Ollama GGUF fallback only, or fail instead of silent escalation. VRAM eviction fix is Flux2-session scope.
+
+### Files Changed (10 + 1 new)
+| File | Change |
+|------|--------|
+| `gpu_service/services/llm_inference_backend.py` | `repetition_penalty`, `enable_thinking` in generate/chat |
+| `gpu_service/routes/llm_inference_routes.py` | Extract + pass new params |
+| `devserver/my_app/services/llm_client.py` | API + Ollama mapping for new params |
+| `devserver/schemas/engine/prompt_interception_engine.py` | `parameters` dict in dataclass, pass to LLM call |
+| `devserver/schemas/engine/backend_router.py` | Pass `parameters` to PromptInterceptionRequest |
+| `devserver/schemas/configs/interception/trans_aktion_*.json` (×6) | New poets + params + fragments |
+| `public/.../PropertyBubble.vue` | Quill SVG for trans_aktion |
+| `public/.../PropertyCanvas.vue` | trans_aktion color in categoryColorMap |
+
+---
+
 ## Session 208 - Trans-Aktion: Real Poetry as Collision Material
 **Date:** 2026-02-24
 **Focus:** Replace AI-generated collision materials with genuine poetry
