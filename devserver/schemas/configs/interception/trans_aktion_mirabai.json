@@ -41,12 +41,12 @@
     "wikipedia": false
   },
   "display": {
-    "icon": "\u26a1",
+    "icon": "⚡",
     "color": "#FF1744",
     "category": "trans_aktion",
     "difficulty": 3,
     "order": 4,
-    "hidden": false
+    "hidden": true
   },
   "tags": {
     "en": [],
