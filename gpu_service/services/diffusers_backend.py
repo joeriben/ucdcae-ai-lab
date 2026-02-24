@@ -280,10 +280,12 @@ class DiffusersImageGenerator:
 
                 pipe = PipelineClass.from_pretrained(model_id, **kwargs)
 
-                # Flux2: 106GB model — use CPU offload (components to GPU one at a time)
+                # Flux2: torch_dtype silently ignored → loads float32 (~106GB).
+                # With 64GB RAM: must use CPU offload + bfloat16 casting.
                 if pipeline_class == "Flux2Pipeline":
+                    pipe = pipe.to(torch.bfloat16)  # cast in-place before offload
                     pipe.enable_model_cpu_offload()
-                    logger.info(f"[DIFFUSERS] Using CPU offload for large model: {model_id}")
+                    logger.info(f"[DIFFUSERS] Flux2: cast to bf16 + CPU offload for {model_id}")
                 else:
                     pipe = pipe.to(self.device)
 
