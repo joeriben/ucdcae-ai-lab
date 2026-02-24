@@ -1,5 +1,47 @@
 # Development Log
 
+## Session 206 - Complete Hebrew and Arabic i18n Translations
+**Date:** 2026-02-24
+**Focus:** Full translation of all ~1370 i18n keys into Hebrew (he) and Arabic (ar)
+
+### Background
+Hebrew and Arabic infrastructure (stub files, index.ts imports, SUPPORTED_LANGUAGES with `dir: 'rtl'`) was added in Session 201. Both `.ts` files were empty stubs falling back to English. This session populates them with complete translations.
+
+### Changes
+
+**Hebrew (`he.ts`)** — 1369 lines added
+- Single-pass translation by i18n-translator agent
+- All 30 top-level sections translated
+- `vue-tsc --build` and `npm run build-only` passed
+
+**Arabic (`ar.ts`)** — 1367 lines added
+- Initial single-agent attempt hit 32K output token limit
+- Successfully completed via 3-way parallel split (parts 1-3), then assembled
+- All sections translated in Modern Standard Arabic (MSA)
+- Western numerals (0-9) used throughout
+- `vue-tsc --build` and `npm run build-only` passed
+
+**WORK_ORDERS.md** — Both work orders moved from Pending to Completed
+
+### Translation Quality Notes
+- All template variables preserved (`{count}`, `{watts}`, `{co2}`, etc.)
+- All Unicode escapes preserved (`\u2014`, `\u2212`, `\u00d7`, etc.)
+- `{'|'}` vue-i18n pipe escape syntax preserved
+- All technical terms kept as-is (GPU, VRAM, CLIP, T5, CFG, LLM, MMDiT, etc.)
+- Brand/model names preserved verbatim
+- Emoji prefixes preserved in edutainment section
+
+### Commits
+- `fdf120c` — `chore(i18n): Add complete Hebrew (he) translation — all ~1370 keys`
+- `7daedaa` — `chore(i18n): Add complete Arabic (ar) translation — all ~1370 keys`
+
+### Remaining Pending Work Orders
+- `WO-2026-02-23-hebrew-arabic-language-labels` — language label translations in de/tr/ko/uk/fr/es
+- `WO-2026-02-23-hebrew-arabic-interception-configs` — he/ar entries in 36 interception JSON files
+- `WO-2026-02-23-spanish-language-label` — Spanish language label in other language files
+
+---
+
 ## Session 205 - Remove Deprecated execution_mode (eco/fast) Parameter
 **Date:** 2026-02-23
 **Focus:** Remove the deprecated execution_mode parameter that threaded through ~80 call sites across ~50 files but did nothing
