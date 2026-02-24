@@ -342,7 +342,8 @@ class BackendRouter:
                 style_prompt=style_prompt,
                 model=model,
                 debug=request.parameters.get('debug', False),
-                unload_model=request.parameters.get('unload_model', False)
+                unload_model=request.parameters.get('unload_model', False),
+                parameters=request.parameters,
             )
             
             # Engine-Request ausführen

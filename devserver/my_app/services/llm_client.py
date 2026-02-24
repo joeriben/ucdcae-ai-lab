@@ -55,7 +55,9 @@ class LLMClient:
 
     def _ollama_chat(self, model: str, messages: list, images: Optional[list] = None,
                      temperature: float = 0.7, max_new_tokens: int = 500,
-                     keep_alive: str = "10m") -> Optional[Dict[str, Any]]:
+                     keep_alive: str = "10m",
+                     repetition_penalty: Optional[float] = None,
+                     enable_thinking: bool = True) -> Optional[Dict[str, Any]]:
         """Ollama fallback for chat."""
         import requests
 
@@ -70,13 +72,20 @@ class LLMClient:
                 m["images"] = images
             ollama_messages.append(m)
 
+        options = {"temperature": temperature, "num_predict": max_new_tokens}
+        if repetition_penalty is not None:
+            options["repeat_penalty"] = repetition_penalty
+
         payload = {
             "model": ollama_model,
             "messages": ollama_messages,
             "stream": False,
             "keep_alive": keep_alive,
-            "options": {"temperature": temperature, "num_predict": max_new_tokens}
+            "options": options,
         }
+        # Ollama Qwen3 thinking suppression: /no_think suffix or think param
+        if not enable_thinking:
+            payload["think"] = False
 
         try:
             resp = requests.post(f"{self.ollama_url}/api/chat", json=payload, timeout=120)
@@ -92,19 +101,27 @@ class LLMClient:
 
     def _ollama_generate(self, model: str, prompt: str,
                          temperature: float = 0.7, max_new_tokens: int = 500,
-                         keep_alive: str = "10m") -> Optional[Dict[str, Any]]:
+                         keep_alive: str = "10m",
+                         repetition_penalty: Optional[float] = None,
+                         enable_thinking: bool = True) -> Optional[Dict[str, Any]]:
         """Ollama fallback for generate."""
         import requests
 
         ollama_model = model.replace("local/", "") if model.startswith("local/") else model
+
+        options = {"temperature": temperature, "num_predict": max_new_tokens}
+        if repetition_penalty is not None:
+            options["repeat_penalty"] = repetition_penalty
 
         payload = {
             "model": ollama_model,
             "prompt": prompt,
             "stream": False,
             "keep_alive": keep_alive,
-            "options": {"temperature": temperature, "num_predict": max_new_tokens}
+            "options": options,
         }
+        if not enable_thinking:
+            payload["think"] = False
 
         try:
             resp = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=120)
@@ -132,7 +149,9 @@ class LLMClient:
 
     def chat(self, model: str, messages: list, images: Optional[list] = None,
              temperature: float = 0.7, max_new_tokens: int = 500,
-             keep_alive: str = "10m") -> Optional[Dict[str, Any]]:
+             keep_alive: str = "10m",
+             repetition_penalty: Optional[float] = None,
+             enable_thinking: bool = True) -> Optional[Dict[str, Any]]:
         """Messages-based chat. GPU Service primary, Ollama fallback.
 
         Returns {"content": str, "thinking": str|None} or None on total failure.
@@ -143,9 +162,12 @@ class LLMClient:
             "messages": messages,
             "temperature": temperature,
             "max_new_tokens": max_new_tokens,
+            "enable_thinking": enable_thinking,
         }
         if images:
             gpu_data["images"] = images
+        if repetition_penalty is not None:
+            gpu_data["repetition_penalty"] = repetition_penalty
 
         result = self._gpu_post('/api/llm/chat', gpu_data)
 
@@ -161,21 +183,28 @@ class LLMClient:
 
         # Fallback to Ollama
         logger.info(f"[LLM-CLIENT] Falling back to Ollama for chat ({model})")
-        return self._ollama_chat(model, messages, images, temperature, max_new_tokens, keep_alive)
+        return self._ollama_chat(model, messages, images, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
 
     def generate(self, model: str, prompt: str,
                  temperature: float = 0.7, max_new_tokens: int = 500,
-                 keep_alive: str = "10m") -> Optional[Dict[str, Any]]:
+                 keep_alive: str = "10m",
+                 repetition_penalty: Optional[float] = None,
+                 enable_thinking: bool = True) -> Optional[Dict[str, Any]]:
         """Raw prompt generation. GPU Service primary, Ollama fallback.
 
         Returns {"response": str, "thinking": str|None} or None on total failure.
         """
-        result = self._gpu_post('/api/llm/generate', {
+        gpu_data = {
             "model": model,
             "prompt": prompt,
             "temperature": temperature,
             "max_new_tokens": max_new_tokens,
-        })
+            "enable_thinking": enable_thinking,
+        }
+        if repetition_penalty is not None:
+            gpu_data["repetition_penalty"] = repetition_penalty
+
+        result = self._gpu_post('/api/llm/generate', gpu_data)
 
         if result is not None:
             if result.get("success"):
@@ -187,7 +216,7 @@ class LLMClient:
 
         # Fallback to Ollama
         logger.info(f"[LLM-CLIENT] Falling back to Ollama for generate ({model})")
-        return self._ollama_generate(model, prompt, temperature, max_new_tokens, keep_alive)
+        return self._ollama_generate(model, prompt, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
 
     def list_models(self) -> list:
         """List loaded models on GPU service."""

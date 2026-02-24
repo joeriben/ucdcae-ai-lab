@@ -17,13 +17,15 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "COLLISION MATERIAL:\nFuru ike ya / kawazu tobikomu / mizu no oto\n(Old pond — a frog jumps in — sound of water)\n\nNatsugusa ya / tsuwamonodomo ga / yume no ato\n(Summer grass — all that remains of warriors' dreams)\n\nShizukasa ya / iwa ni shimiiru / semi no koe\n(Stillness — seeping into the rock — cicada voice)\n\n— Matsuo Basho (17th century)\n\nWrite a single text where the poems above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
-    "de": "KOLLISIONSMATERIAL:\nFuru ike ya / kawazu tobikomu / mizu no oto\n(Alter Teich — ein Frosch springt hinein — Gerausch des Wassers)\n\nNatsugusa ya / tsuwamonodomo ga / yume no ato\n(Sommergras — alles was von Kriegertraeumen uebrig ist)\n\nShizukasa ya / iwa ni shimiiru / semi no koe\n(Stille — in den Fels sickert ein — Zikadenstimme)\n\n— Matsuo Basho (17. Jahrhundert)\n\nSchreibe einen einzigen Text, in dem die Gedichte oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+    "en": "MATERIAL A — fragments from Basho:\nfuru ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nMATERIAL B — the user's prompt (below).\n\nRULES:\n- Write ONE text. Every sentence must use words from BOTH materials.\n- NEVER quote more than 3 consecutive words from either source.\n- Do NOT repeat the poems. Steal their words and images.",
+    "de": "MATERIAL A — Fragmente von Basho:\nfuru ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nMATERIAL B — der Prompt des Users (unten).\n\nREGELN:\n- Schreibe EINEN Text. Jeder Satz muss Woerter aus BEIDEN Materialien verwenden.\n- Zitiere NIE mehr als 3 aufeinanderfolgende Woerter aus einer Quelle.\n- Wiederhole NICHT die Gedichte. Stiehl ihre Woerter und Bilder."
   },
   "parameters": {
-    "temperature": 0.95,
+    "temperature": 0.85,
     "top_p": 0.95,
-    "max_tokens": 400
+    "max_tokens": 400,
+    "repetition_penalty": 1.5,
+    "enable_thinking": false
   },
   "media_preferences": {
     "default_output": "image",

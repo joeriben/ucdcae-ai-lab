@@ -45,6 +45,7 @@ class PromptInterceptionRequest:
     - model: Which LLM to use
     - debug: Enable debug output
     - unload_model: Unload model after request
+    - parameters: Generation parameters from config (temperature, max_tokens, etc.)
     """
     input_prompt: str
     input_context: str = ""
@@ -53,6 +54,11 @@ class PromptInterceptionRequest:
     model: str = "local/gemma2:9b"
     debug: bool = False
     unload_model: bool = False
+    parameters: Dict[str, Any] = None
+
+    def __post_init__(self):
+        if self.parameters is None:
+            self.parameters = {}
 
 @dataclass
 class PromptInterceptionResponse:
@@ -147,7 +153,8 @@ class PromptInterceptionEngine:
             # Canvas and other components select specific providers via prefix
             if request.model.startswith("local/") or real_model_name in self.ollama_models:
                 output_text, model_used = await self._call_ollama(
-                    full_prompt, real_model_name, request.debug, request.unload_model
+                    full_prompt, real_model_name, request.debug, request.unload_model,
+                    parameters=request.parameters
                 )
             elif request.model.startswith("bedrock/"):
                 output_text, model_used = await self._call_aws_bedrock(
@@ -250,13 +257,29 @@ class PromptInterceptionEngine:
             else:
                 raise e
     
-    async def _call_ollama(self, prompt: str, model: str, debug: bool, unload_model: bool) -> Tuple[str, str]:
+    async def _call_ollama(self, prompt: str, model: str, debug: bool, unload_model: bool,
+                           parameters: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
         """LLM inference via GPU Service (primary) with Ollama fallback."""
         try:
             logger.info(f"[BACKEND] LLM Request: {model}")
 
+            # Extract generation parameters from config
+            params = parameters or {}
+            gen_kwargs = {}
+            if "temperature" in params:
+                gen_kwargs["temperature"] = params["temperature"]
+            if "max_tokens" in params:
+                gen_kwargs["max_new_tokens"] = params["max_tokens"]
+            if "repetition_penalty" in params:
+                gen_kwargs["repetition_penalty"] = params["repetition_penalty"]
+            if "enable_thinking" in params:
+                gen_kwargs["enable_thinking"] = params["enable_thinking"]
+
+            if gen_kwargs:
+                logger.info(f"[BACKEND] Generation params: {gen_kwargs}")
+
             from my_app.services.llm_backend import get_llm_backend
-            result = get_llm_backend().generate(model=model, prompt=prompt)
+            result = get_llm_backend().generate(model=model, prompt=prompt, **gen_kwargs)
 
             if result:
                 output = result.get("response", "")
@@ -279,10 +302,10 @@ class PromptInterceptionEngine:
             if fallback_model and fallback_model != model:
                 if debug:
                     logger.info(f"LLM Fallback: {fallback_model}")
-                return await self._call_ollama(prompt, fallback_model, debug, unload_model)
+                return await self._call_ollama(prompt, fallback_model, debug, unload_model, parameters=parameters)
             else:
                 raise e
-    
+
     async def _call_anthropic(self, prompt: str, model: str, debug: bool) -> Tuple[str, str]:
         """Anthropic API Call (direct, DSGVO-compliant with EU region)"""
         try:

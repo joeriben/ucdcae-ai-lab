@@ -339,6 +339,8 @@ class LLMInferenceBackend:
         images: Optional[List[str]] = None,
         temperature: float = 0.7,
         max_new_tokens: int = 500,
+        repetition_penalty: Optional[float] = None,
+        enable_thinking: bool = True,
     ) -> Optional[Dict[str, Any]]:
         """Messages-based chat inference.
 
@@ -348,6 +350,8 @@ class LLMInferenceBackend:
             images: Optional list of base64-encoded images (for vision models)
             temperature: Sampling temperature
             max_new_tokens: Maximum new tokens to generate
+            repetition_penalty: Penalty for repeated tokens (e.g. 1.5 for Qwen3)
+            enable_thinking: Whether to enable <think> mode in chat template (default True)
 
         Returns:
             {"content": str, "thinking": str|None} or None on failure
@@ -368,7 +372,7 @@ class LLMInferenceBackend:
             if model_type == "vision" and images:
                 return await self._chat_vision(model, tokenizer_or_processor, messages, images, temperature, max_new_tokens)
             else:
-                return await self._chat_text(model, tokenizer_or_processor, messages, temperature, max_new_tokens)
+                return await self._chat_text(model, tokenizer_or_processor, messages, temperature, max_new_tokens, repetition_penalty, enable_thinking)
         except Exception as e:
             logger.error(f"[LLM-INF] Chat inference failed ({model_id}): {e}")
             import traceback
@@ -377,14 +381,22 @@ class LLMInferenceBackend:
         finally:
             self._model_in_use[model_id] -= 1
 
-    async def _chat_text(self, model, tokenizer, messages, temperature, max_new_tokens):
+    async def _chat_text(self, model, tokenizer, messages, temperature, max_new_tokens, repetition_penalty=None, enable_thinking=True):
         """Text-only chat inference."""
         import torch
 
         def _run():
             # Apply chat template
             if hasattr(tokenizer, 'apply_chat_template'):
-                input_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+                # Pass enable_thinking to suppress <think> mode when False
+                template_kwargs = {"tokenize": False, "add_generation_prompt": True}
+                if not enable_thinking:
+                    template_kwargs["enable_thinking"] = False
+                try:
+                    input_text = tokenizer.apply_chat_template(messages, **template_kwargs)
+                except TypeError:
+                    # Tokenizer doesn't support enable_thinking kwarg — fall back
+                    input_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             else:
                 # Fallback: concatenate messages
                 input_text = "\n".join(f"{m['role']}: {m['content']}" for m in messages)
@@ -402,6 +414,9 @@ class LLMInferenceBackend:
                     gen_kwargs["temperature"] = temperature
                 else:
                     gen_kwargs["do_sample"] = False
+
+                if repetition_penalty is not None:
+                    gen_kwargs["repetition_penalty"] = repetition_penalty
 
                 outputs = model.generate(inputs.input_ids, attention_mask=inputs.attention_mask, **gen_kwargs)
 
@@ -483,6 +498,8 @@ class LLMInferenceBackend:
         prompt: str,
         temperature: float = 0.7,
         max_new_tokens: int = 500,
+        repetition_penalty: Optional[float] = None,
+        enable_thinking: bool = True,
     ) -> Optional[Dict[str, Any]]:
         """Raw prompt generation (mirrors Ollama /api/generate).
 
@@ -491,6 +508,8 @@ class LLMInferenceBackend:
             prompt: Raw prompt string
             temperature: Sampling temperature
             max_new_tokens: Maximum new tokens to generate
+            repetition_penalty: Penalty for repeated tokens (e.g. 1.5 for Qwen3)
+            enable_thinking: Whether to enable <think> mode (for generate, suppresses via chat template wrapper)
 
         Returns:
             {"response": str, "thinking": str|None} or None on failure
@@ -520,6 +539,9 @@ class LLMInferenceBackend:
                         gen_kwargs["temperature"] = temperature
                     else:
                         gen_kwargs["do_sample"] = False
+
+                    if repetition_penalty is not None:
+                        gen_kwargs["repetition_penalty"] = repetition_penalty
 
                     outputs = model.generate(inputs.input_ids, attention_mask=inputs.attention_mask, **gen_kwargs)
 

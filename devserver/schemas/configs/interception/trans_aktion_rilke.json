@@ -17,13 +17,15 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "COLLISION MATERIAL:\nSein Blick ist vom Voruebergehn der Staebe\nso mued geworden, dass er nichts mehr haelt.\nIhm ist, als ob es tausend Staebe gaebe\nund hinter tausend Staeben keine Welt.\n\nDer weiche Gang geschmeidig starker Schritte,\nder sich im allerkleinsten Kreise dreht,\nist wie ein Tanz von Kraft um eine Mitte,\nin der betaeubt ein grosser Wille steht.\n\nNur manchmal schiebt der Vorhang der Pupille\nsich lautlos auf –. Dann geht ein Bild hinein,\ngeht durch der Glieder angespannte Stille –\nund hoert im Herzen auf zu sein.\n\n— Rainer Maria Rilke, Der Panther (1902)\n\nWrite a single text where the poem above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
-    "de": "KOLLISIONSMATERIAL:\nSein Blick ist vom Voruebergehn der Staebe\nso mued geworden, dass er nichts mehr haelt.\nIhm ist, als ob es tausend Staebe gaebe\nund hinter tausend Staeben keine Welt.\n\nDer weiche Gang geschmeidig starker Schritte,\nder sich im allerkleinsten Kreise dreht,\nist wie ein Tanz von Kraft um eine Mitte,\nin der betaeubt ein grosser Wille steht.\n\nNur manchmal schiebt der Vorhang der Pupille\nsich lautlos auf –. Dann geht ein Bild hinein,\ngeht durch der Glieder angespannte Stille –\nund hoert im Herzen auf zu sein.\n\n— Rainer Maria Rilke, Der Panther (1902)\n\nSchreibe einen einzigen Text, in dem das Gedicht oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+    "en": "MATERIAL A — fragments from Rilke:\nStaebe / mued / tausend / geschmeidig / Kraft / betaeubt / Tanz / Kreise / Vorhang / Pupille / lautlos / angespannte Stille / Herzen / Wille\n\nMATERIAL B — the user's prompt (below).\n\nRULES:\n- Write ONE text. Every sentence must use words from BOTH materials.\n- NEVER quote more than 3 consecutive words from either source.\n- Do NOT repeat the poem. Steal its words and images.",
+    "de": "MATERIAL A — Fragmente von Rilke:\nStaebe / mued / tausend / geschmeidig / Kraft / betaeubt / Tanz / Kreise / Vorhang / Pupille / lautlos / angespannte Stille / Herzen / Wille\n\nMATERIAL B — der Prompt des Users (unten).\n\nREGELN:\n- Schreibe EINEN Text. Jeder Satz muss Woerter aus BEIDEN Materialien verwenden.\n- Zitiere NIE mehr als 3 aufeinanderfolgende Woerter aus einer Quelle.\n- Wiederhole NICHT das Gedicht. Stiehl seine Woerter und Bilder."
   },
   "parameters": {
-    "temperature": 0.95,
+    "temperature": 0.85,
     "top_p": 0.95,
-    "max_tokens": 400
+    "max_tokens": 400,
+    "repetition_penalty": 1.5,
+    "enable_thinking": false
   },
   "media_preferences": {
     "default_output": "image",

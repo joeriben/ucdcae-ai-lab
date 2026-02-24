@@ -65,13 +65,17 @@ def chat():
     images = data.get("images")
     temperature = data.get("temperature", 0.7)
     max_new_tokens = data.get("max_new_tokens", data.get("num_predict", 500))
+    repetition_penalty = data.get("repetition_penalty")
+    enable_thinking = data.get("enable_thinking", True)
 
-    # Ollama compat: options.temperature / options.num_predict
+    # Ollama compat: options.temperature / options.num_predict / options.repeat_penalty
     options = data.get("options", {})
     if "temperature" in options:
         temperature = options["temperature"]
     if "num_predict" in options:
         max_new_tokens = options["num_predict"]
+    if "repeat_penalty" in options:
+        repetition_penalty = options["repeat_penalty"]
 
     from services.llm_inference_backend import get_llm_inference_backend
     backend = get_llm_inference_backend()
@@ -82,6 +86,8 @@ def chat():
         images=images,
         temperature=temperature,
         max_new_tokens=max_new_tokens,
+        repetition_penalty=repetition_penalty,
+        enable_thinking=enable_thinking,
     ))
 
     if result is None:
@@ -135,6 +141,8 @@ def generate():
 
     temperature = data.get("temperature", 0.7)
     max_new_tokens = data.get("max_new_tokens", data.get("num_predict", 500))
+    repetition_penalty = data.get("repetition_penalty")
+    enable_thinking = data.get("enable_thinking", True)
 
     from services.llm_inference_backend import get_llm_inference_backend
     backend = get_llm_inference_backend()
@@ -144,6 +152,8 @@ def generate():
         prompt=prompt,
         temperature=temperature,
         max_new_tokens=max_new_tokens,
+        repetition_penalty=repetition_penalty,
+        enable_thinking=enable_thinking,
     ))
 
     if result is None:
