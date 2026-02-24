@@ -1,0 +1,58 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Trans-Aktion: Whitman",
+    "de": "Trans-Aktion: Whitman"
+  },
+  "description": {
+    "en": "Material collision with Walt Whitman's 'Song of Myself' \u00a731 (1855). Expansive, cataloguing, bodily — colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Walt Whitmans 'Song of Myself' \u00a731 (1855). Expansiv, katalogisierend, koerperlich — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "COLLISION MATERIAL:\nI believe a leaf of grass is no less than the journey-work of the stars,\nAnd the pismire is equally perfect, and a grain of sand, and the egg of the wren,\nAnd the tree-toad is a chef-d'oeuvre for the highest,\nAnd the running blackberry would adorn the parlors of heaven,\nAnd the narrowest hinge in my hand puts to scorn all machinery,\nAnd the cow crunching with depress'd head surpasses any statue,\nAnd a mouse is miracle enough to stagger sextillions of infidels.\n\n— Walt Whitman, Song of Myself \u00a731 (1855)\n\nWrite a single text where the poem above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
+    "de": "KOLLISIONSMATERIAL:\nI believe a leaf of grass is no less than the journey-work of the stars,\nAnd the pismire is equally perfect, and a grain of sand, and the egg of the wren,\nAnd the tree-toad is a chef-d'oeuvre for the highest,\nAnd the running blackberry would adorn the parlors of heaven,\nAnd the narrowest hinge in my hand puts to scorn all machinery,\nAnd the cow crunching with depress'd head surpasses any statue,\nAnd a mouse is miracle enough to stagger sextillions of infidels.\n\n— Walt Whitman, Song of Myself \u00a731 (1855)\n\nSchreibe einen einzigen Text, in dem das Gedicht oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+  },
+  "parameters": {
+    "temperature": 0.95,
+    "top_p": 0.95,
+    "max_tokens": 400
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 5,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 10,
+    "complexity": "experimental"
+  }
+}

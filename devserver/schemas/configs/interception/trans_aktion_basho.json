@@ -1,0 +1,58 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Trans-Aktion: Basho",
+    "de": "Trans-Aktion: Basho"
+  },
+  "description": {
+    "en": "Material collision with three haiku by Matsuo Basho (17th century). Maximum compression, Japanese originals alongside German translation — colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit drei Haiku von Matsuo Basho (17. Jh.). Maximale Kompression, japanische Originale neben deutscher Uebersetzung — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "COLLISION MATERIAL:\nFuru ike ya / kawazu tobikomu / mizu no oto\n(Old pond — a frog jumps in — sound of water)\n\nNatsugusa ya / tsuwamonodomo ga / yume no ato\n(Summer grass — all that remains of warriors' dreams)\n\nShizukasa ya / iwa ni shimiiru / semi no koe\n(Stillness — seeping into the rock — cicada voice)\n\n— Matsuo Basho (17th century)\n\nWrite a single text where the poems above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
+    "de": "KOLLISIONSMATERIAL:\nFuru ike ya / kawazu tobikomu / mizu no oto\n(Alter Teich — ein Frosch springt hinein — Gerausch des Wassers)\n\nNatsugusa ya / tsuwamonodomo ga / yume no ato\n(Sommergras — alles was von Kriegertraeumen uebrig ist)\n\nShizukasa ya / iwa ni shimiiru / semi no koe\n(Stille — in den Fels sickert ein — Zikadenstimme)\n\n— Matsuo Basho (17. Jahrhundert)\n\nSchreibe einen einzigen Text, in dem die Gedichte oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+  },
+  "parameters": {
+    "temperature": 0.95,
+    "top_p": 0.95,
+    "max_tokens": 400
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 3,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 8,
+    "complexity": "experimental"
+  }
+}

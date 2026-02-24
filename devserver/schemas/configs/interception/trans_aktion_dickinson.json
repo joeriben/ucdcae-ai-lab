@@ -1,0 +1,58 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Trans-Aktion: Dickinson",
+    "de": "Trans-Aktion: Dickinson"
+  },
+  "description": {
+    "en": "Material collision with Emily Dickinson's 'A Bird came down the Walk' (~1862). Precise nature observation tipping into the uncannily beautiful — colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Emily Dickinsons 'A Bird came down the Walk' (~1862). Praezise Naturbeobachtung, die ins Unheimlich-Schoene kippt — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "COLLISION MATERIAL:\nA Bird came down the Walk —\nHe did not know I saw —\nHe bit an Angleworm in halves\nAnd ate the fellow, raw,\n\nAnd then he drank a Dew\nFrom a convenient Grass —\nAnd then hopped sidewise to the Wall\nTo let a Beetle pass —\n\nHe glanced with rapid eyes\nThat hurried all around —\nThey looked like frightened Beads, I thought —\nHe stirred his Velvet Head\n\nLike one in danger, Cautious,\nI offered him a Crumb\nAnd he unrolled his feathers\nAnd rowed him softer home —\n\nThan Oars divide the Ocean,\nToo silver for a seam —\nOr Butterflies, off Banks of Noon\nLeap, plashless as they swim.\n\n— Emily Dickinson, #328 (~1862)\n\nWrite a single text where the poem above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
+    "de": "KOLLISIONSMATERIAL:\nA Bird came down the Walk —\nHe did not know I saw —\nHe bit an Angleworm in halves\nAnd ate the fellow, raw,\n\nAnd then he drank a Dew\nFrom a convenient Grass —\nAnd then hopped sidewise to the Wall\nTo let a Beetle pass —\n\nHe glanced with rapid eyes\nThat hurried all around —\nThey looked like frightened Beads, I thought —\nHe stirred his Velvet Head\n\nLike one in danger, Cautious,\nI offered him a Crumb\nAnd he unrolled his feathers\nAnd rowed him softer home —\n\nThan Oars divide the Ocean,\nToo silver for a seam —\nOr Butterflies, off Banks of Noon\nLeap, plashless as they swim.\n\n— Emily Dickinson, #328 (~1862)\n\nSchreibe einen einzigen Text, in dem das Gedicht oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+  },
+  "parameters": {
+    "temperature": 0.95,
+    "top_p": 0.95,
+    "max_tokens": 400
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 4,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 8,
+    "complexity": "experimental"
+  }
+}

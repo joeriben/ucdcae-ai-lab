@@ -1,0 +1,58 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Trans-Aktion: Hoelderlin",
+    "de": "Trans-Aktion: Hoelderlin"
+  },
+  "description": {
+    "en": "Material collision with Hoelderlin's 'Haelfte des Lebens' (1805). Fullness shattering into emptiness — colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Hoelderlins 'Haelfte des Lebens' (1805). Fuelle die in Leere zerbricht — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "COLLISION MATERIAL:\nMit gelben Birnen haenget\nUnd voll mit wilden Rosen\nDas Land in den See,\nIhr holden Schwaene,\nUnd trunken von Kuessen\nTunkt ihr das Haupt\nIns heilignuechterne Wasser.\n\nWeh mir, wo nehm ich, wenn\nEs Winter ist, die Blumen, und wo\nDen Sonnenschein,\nUnd Schatten der Erde?\nDie Mauern stehn\nSprachlos und kalt, im Winde\nKlirren die Fahnen.\n\n— Friedrich Hoelderlin, Haelfte des Lebens (1805)\n\nWrite a single text where the poem above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
+    "de": "KOLLISIONSMATERIAL:\nMit gelben Birnen haenget\nUnd voll mit wilden Rosen\nDas Land in den See,\nIhr holden Schwaene,\nUnd trunken von Kuessen\nTunkt ihr das Haupt\nIns heilignuechterne Wasser.\n\nWeh mir, wo nehm ich, wenn\nEs Winter ist, die Blumen, und wo\nDen Sonnenschein,\nUnd Schatten der Erde?\nDie Mauern stehn\nSprachlos und kalt, im Winde\nKlirren die Fahnen.\n\n— Friedrich Hoelderlin, Haelfte des Lebens (1805)\n\nSchreibe einen einzigen Text, in dem das Gedicht oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+  },
+  "parameters": {
+    "temperature": 0.95,
+    "top_p": 0.95,
+    "max_tokens": 400
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 2,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 10,
+    "complexity": "experimental"
+  }
+}

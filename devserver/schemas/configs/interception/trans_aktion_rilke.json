@@ -1,0 +1,58 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Trans-Aktion: Rilke",
+    "de": "Trans-Aktion: Rilke"
+  },
+  "description": {
+    "en": "Material collision with Rilke's 'Der Panther' (1902). Caged force, circular motion, images that dissolve — colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Rilkes 'Der Panther' (1902). Eingesperrte Kraft, kreisende Bewegung, Bilder die sich aufloesen — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "COLLISION MATERIAL:\nSein Blick ist vom Voruebergehn der Staebe\nso mued geworden, dass er nichts mehr haelt.\nIhm ist, als ob es tausend Staebe gaebe\nund hinter tausend Staeben keine Welt.\n\nDer weiche Gang geschmeidig starker Schritte,\nder sich im allerkleinsten Kreise dreht,\nist wie ein Tanz von Kraft um eine Mitte,\nin der betaeubt ein grosser Wille steht.\n\nNur manchmal schiebt der Vorhang der Pupille\nsich lautlos auf –. Dann geht ein Bild hinein,\ngeht durch der Glieder angespannte Stille –\nund hoert im Herzen auf zu sein.\n\n— Rainer Maria Rilke, Der Panther (1902)\n\nWrite a single text where the poem above and the prompt below become inseparable. Not a comparison. Not alternating. One text that cannot decide which material it is.",
+    "de": "KOLLISIONSMATERIAL:\nSein Blick ist vom Voruebergehn der Staebe\nso mued geworden, dass er nichts mehr haelt.\nIhm ist, als ob es tausend Staebe gaebe\nund hinter tausend Staeben keine Welt.\n\nDer weiche Gang geschmeidig starker Schritte,\nder sich im allerkleinsten Kreise dreht,\nist wie ein Tanz von Kraft um eine Mitte,\nin der betaeubt ein grosser Wille steht.\n\nNur manchmal schiebt der Vorhang der Pupille\nsich lautlos auf –. Dann geht ein Bild hinein,\ngeht durch der Glieder angespannte Stille –\nund hoert im Herzen auf zu sein.\n\n— Rainer Maria Rilke, Der Panther (1902)\n\nSchreibe einen einzigen Text, in dem das Gedicht oben und der Prompt unten untrennbar werden. Kein Vergleich. Kein Abwechseln. Ein Text, der nicht entscheiden kann, welches Material er ist."
+  },
+  "parameters": {
+    "temperature": 0.95,
+    "top_p": 0.95,
+    "max_tokens": 400
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 1,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 8,
+    "complexity": "experimental"
+  }
+}

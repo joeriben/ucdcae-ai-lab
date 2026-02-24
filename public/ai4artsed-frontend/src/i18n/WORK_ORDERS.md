@@ -21,6 +21,12 @@ Tags:
   - (MODIFIED) = English text changed, all 5 translations are stale and must be re-done
 -->
 
+### WO-2026-02-24-trans-aktion-poetry-configs
+- **Session**: 208
+- **Scope**: 5 JSON files in `devserver/schemas/configs/interception/`: `trans_aktion_rilke.json`, `trans_aktion_hoelderlin.json`, `trans_aktion_basho.json`, `trans_aktion_dickinson.json`, `trans_aktion_whitman.json`
+- **Changed keys**: Add `tr`, `ko`, `uk`, `fr`, `es`, `he`, `ar` entries to `name`, `description`, `category` LocalizedString objects
+- **Context**: 5 new Trans-Aktion interception configs using real poetry as collision material. Each config has `en` + `de` already. Translate ONLY `name`, `description`, and `category` — the `context` field contains meta-prompts (LLM instructions) and poems and must NOT be translated. The poet names (Rilke, Hoelderlin, Basho, Dickinson, Whitman) should remain unchanged in all languages.
+
 ### WO-2026-02-23-hebrew-arabic-language-labels
 - **Session**: 201
 - **Scope**: en.ts + all language files (de, tr, ko, uk, fr, es, he, ar)

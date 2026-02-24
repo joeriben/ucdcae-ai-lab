@@ -1,5 +1,70 @@
 # Development Log
 
+## Session 208 - Trans-Aktion: Real Poetry as Collision Material
+**Date:** 2026-02-24
+**Focus:** Replace AI-generated collision materials with genuine poetry
+
+### Background
+
+Session 207.5 developed the Trans-Aktion concept: **Material-Kollision** via model insufficiency. A deliberately tiny LLM (qwen3:1.7b) receives two semantically alien texts — the user's prompt and a "collision material" — and attempts to fuse them. The model is large enough to understand the task but too small for a smooth synthesis. The structural failure produces genuine contingency.
+
+The PoC succeeded (commit `447ea3a`): a prompt "Ein Waldspaziergang am Sonntagmorgen" collided with crystallography text yielded a Baumquerschnitt that was simultaneously wood and crystal.
+
+### Problem: AI-Generated Collision Material = Anthropomorphized Compliance
+
+The initial collision materials (crystallography, surgical anatomy, astronomy, bureaucracy, culinary) were AI-generated. This contradicts the core concept: LLM-generated "foreign" text is itself shaped by RLHF compliance patterns — it's "anthropomorphized sameness," not genuine alterity. Real collision requires material with its own materiality: rhythm, sound, history, cultural weight.
+
+### Solution: Public-Domain Poetry
+
+Replaced all 5 configs with genuine poems (all public domain, all age-appropriate 8-17):
+
+| Config | Poet | Poem | Year | Character |
+|--------|------|------|------|-----------|
+| `trans_aktion_rilke.json` | Rilke | Der Panther | 1902 | Dense, spatial, bodily |
+| `trans_aktion_hoelderlin.json` | Hoelderlin | Haelfte des Lebens | 1805 | Extreme fullness/emptiness contrast |
+| `trans_aktion_basho.json` | Basho | 3 Haiku | 17th c. | Maximum compression, JP+DE bilingual |
+| `trans_aktion_dickinson.json` | Dickinson | A Bird came down the Walk | ~1862 | Precise observation → uncanny beauty |
+| `trans_aktion_whitman.json` | Whitman | Song of Myself §31 | 1855 | Expansive, cataloguing, bodily |
+
+### Technical Details
+
+- Renamed `trans_aktion.json` → `trans_aktion_rilke.json` (Rilke replaces crystallography)
+- Deleted 4 AI-slop configs (chirurgisch, astronomisch, buerokratisch, kulinarisch)
+- Created 4 new poet-named configs (hoelderlin, basho, dickinson, whitman)
+- All configs: identical structure, `model_override: "qwen3:1.7b"`, `temperature: 0.95`, `max_tokens: 400`
+- Context instruction pattern: poem text + "Write a single text where the poem above and the prompt below become inseparable"
+- Basho config uses Japanese originals alongside German translations (bilingual collision)
+- Dickinson/Whitman: English originals in both `en` and `de` context (the poem IS the material, not a translation target)
+
+### Key Insight
+
+The three contingency sources identified in the Trans-Aktion concept:
+1. **Model insufficiency** (qwen3:1.7b can't smoothly synthesize) ✓ implemented
+2. **Domain mismatch** (poem ↔ prompt semantic distance) ✓ now with genuine material
+3. **Vector operations** (Surrealizer-style latent space manipulation) → future work
+
+### Files Changed
+| File | Changes |
+|------|---------|
+| `devserver/schemas/configs/interception/trans_aktion_rilke.json` | NEW (renamed from trans_aktion.json, Rilke replaces crystallography) |
+| `devserver/schemas/configs/interception/trans_aktion_hoelderlin.json` | NEW |
+| `devserver/schemas/configs/interception/trans_aktion_basho.json` | NEW |
+| `devserver/schemas/configs/interception/trans_aktion_dickinson.json` | NEW |
+| `devserver/schemas/configs/interception/trans_aktion_whitman.json` | NEW |
+| `devserver/schemas/configs/interception/trans_aktion_chirurgisch.json` | DELETED |
+| `devserver/schemas/configs/interception/trans_aktion_astronomisch.json` | DELETED |
+| `devserver/schemas/configs/interception/trans_aktion_buerokratisch.json` | DELETED |
+| `devserver/schemas/configs/interception/trans_aktion_kulinarisch.json` | DELETED |
+| `public/ai4artsed-frontend/src/i18n/WORK_ORDERS.md` | Added WO for tr/ko/uk/fr/es/he/ar translations |
+
+### Next Steps
+- Vector operations: Generalize Surrealizer latent-space manipulation for Trans-Aktion
+- Depraved Encoder: Intentionally corrupted text encoders as contingency source
+- Multimodal impulses: Image/audio collision materials (not just text)
+- Test all 5 configs with diverse prompts across SD3.5/FLUX/Wan2.1
+
+---
+
 ## Session 207 - GPU Service VRAM/RAM Bugs: LLM Migration + Flux2
 **Date:** 2026-02-24
 **Focus:** Fix 4 critical VRAM/RAM management bugs in GPU Service
