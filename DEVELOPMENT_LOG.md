@@ -95,34 +95,64 @@ The LLM-Inference-Migration (commit `ac047ce`) introduced 3 bugs. Testing also r
 
 **The core challenge:** Flux2-dev is ~106GB in float32 / ~24GB in bf16. With 96GB VRAM and 64GB RAM, loading strategy is critical. Previous sessions tried various approaches and failed.
 
-**What finally worked — 3 layered fixes:**
+**Phase 1 — Initial fixes (3 layered):**
 
-1. **`enable_model_cpu_offload()` instead of `.to(device)`** — The original code did `pipe.to(self.device)` which tries to load the entire model onto GPU at once. For Flux2 at 106GB float32, this overflows VRAM into RAM+swap. `enable_model_cpu_offload()` keeps components in CPU RAM and moves them to GPU one-at-a-time during inference. Peak VRAM ~61GB during generation.
+1. **`enable_model_cpu_offload()` instead of `.to(device)`** — The original code did `pipe.to(self.device)` which tries to load the entire model onto GPU at once. For Flux2 at 106GB float32, this overflows VRAM into RAM+swap. `enable_model_cpu_offload()` keeps components in CPU RAM and moves them to GPU one-at-a-time during inference. Peak VRAM ~63GB during generation.
 
-2. **Keep `torch_dtype` for Diffusers (do NOT use `dtype`)** — Critical lesson: `transformers` library migrated `torch_dtype` → `dtype`, but `diffusers` 0.36.0 has inconsistent support. `Flux2Pipeline.from_pretrained()` **silently ignores** the `dtype` kwarg ("not expected...will be ignored") and loads in float32. With `torch_dtype`, it loads in bf16 (~24GB). Without the correct dtype, `from_pretrained` loads 48GB+ into 64GB RAM → OOM kill (SIGTERM/signal 15). The deprecation warning from `torch_dtype` is harmless; the silent ignore of `dtype` is fatal.
+2. **`torch_dtype` vs `dtype` — library-specific behavior** — `transformers` migrated to `dtype`, but `diffusers` 0.36.0 is inconsistent. `Flux2Pipeline.from_pretrained()` **silently ignores** `dtype` ("not expected...will be ignored"). Solution: dynamic `dtype_key` — `"torch_dtype"` for Flux2, `"dtype"` for all other pipelines.
 
 3. **Flux2Pipeline-specific generation kwargs:**
    - `negative_prompt` → unsupported, raises TypeError. Fix: skip for Flux/Flux2 pipelines.
    - `torch.Generator(device=self.device)` → crashes with CPU offload. Fix: `device="cpu"` when using `enable_model_cpu_offload()`.
 
-**Why previous sessions failed:** Each session likely hit one of these 3 issues but couldn't see all of them together. The `dtype` vs `torch_dtype` trap is especially insidious — it's a silent behavioral change (model loads, but in wrong dtype → OOM) rather than an explicit error.
+**Phase 2 — The real breakthrough: component-level loading**
+
+Phase 1 worked but was painfully slow: `Flux2Pipeline.from_pretrained()` silently ignores `torch_dtype` and loads ALL weights in float32 (~106GB into 64GB RAM + 70GB swap). The subsequent `pipe.to(bfloat16)` cast added minutes of CPU work. Total load time: several minutes with the system nearly unusable.
+
+**Key discovery:** The safetensors files on disk are already bfloat16 (verified with `safe_open`). The float32 doubling happens entirely inside `from_pretrained` because Flux2Pipeline doesn't pass `torch_dtype` through to its subcomponents.
+
+**Solution:** `_load_flux2_pipeline()` loads each component individually — `Flux2Transformer2DModel`, `AutoModelForImageTextToText` (Mistral3), `AutoencoderKLFlux2`, `PixtralProcessor`, `FlowMatchEulerDiscreteScheduler` — with explicit `torch_dtype=bfloat16`. These component classes DO respect the kwarg. Then assembles the pipeline manually via `Flux2Pipeline(transformer=..., text_encoder=..., ...)`.
+
+**Result:**
+- RAM: 1.2 GB (was 106 GB) — `low_cpu_mem_usage=True` memory-maps tensors from disk
+- Load time: 4 seconds (was several minutes)
+- Generation: 2:03 at 1024x1024 (20 steps, ~6s/step)
+- Peak VRAM: ~63 GB during generation, released after
+
+**Why previous sessions failed:** Each session hit a different layer of the problem — `.to(device)` OOM, `dtype` silently ignored, `negative_prompt` TypeError, generator device mismatch — but couldn't see all of them together. The component-level loading was the key insight that none of the previous sessions reached.
+
+### Additional Fixes
+- **Stale `'eco'` argument** in `schema_pipeline_routes.py:2383` — leftover from Session 205's `execution_mode` removal, caused TypeError in Stage 3 streaming path.
+- **Flux2 config consolidation** — `flux2.json` now points to Diffusers chunk (primary) with ComfyUI fallback, matching SD3.5 pattern. Removed redundant `flux2_diffusers.json` and `flux2_fp8.json`.
 
 ### Files Changed
 | File | Changes |
 |------|---------|
 | `gpu_service/services/llm_inference_backend.py` | Remove `device_map="auto"`, add `.to(device)`, per-model locks |
 | `gpu_service/services/text_backend.py` | Remove `device_map="auto"`, add `.to(device)`, `torch_dtype`→`dtype` (transformers) |
-| `gpu_service/services/diffusers_backend.py` | Flux2 CPU offload, keep `torch_dtype` (diffusers), skip `negative_prompt`, CPU generator |
+| `gpu_service/services/diffusers_backend.py` | `_load_flux2_pipeline()` component-level bf16, dynamic `dtype_key`, skip `negative_prompt`, CPU generator |
+| `devserver/my_app/routes/schema_pipeline_routes.py` | Remove stale `'eco'` arg from Stage 3 call |
+| `devserver/schemas/configs/output/flux2.json` | Switch to Diffusers primary with ComfyUI fallback |
+| `devserver/schemas/configs/output/flux2_diffusers.json` | Deleted (redundant) |
+| `devserver/schemas/configs/output/flux2_fp8.json` | Deleted (redundant) |
 
 ### Commits
 - `c447791` — `fix(gpu-service): VRAM/RAM management bugs in LLM + Diffusers backends`
 - `e73c08c` — `fix(diffusers): Flux2Pipeline negative_prompt + generator device`
+- `0c9affb` — `docs: Add Session 207 devlog`
+- `42c6caf` — `refactor(flux2): Diffusers primary with ComfyUI fallback (like SD3.5)`
+- `f5c0181` — `fix: remove leftover 'eco' execution_mode arg from Stage 3 call`
+- `39779d2` — `fix(diffusers): use dtype for modern pipelines, torch_dtype for Flux2`
+- `f790cb3` — `fix(diffusers): Flux2 bf16 cast before CPU offload`
+- `4e987fd` — `perf(diffusers): Flux2 component-level bf16 loading (1.2GB RAM, 4s)`
 
 ### Key Lessons (for future sessions)
 - **`device_map="auto"` is not free** — it creates CPU mirror + GPU copy. For models that fit in VRAM, explicit `.to(device)` is always better.
-- **`torch_dtype` vs `dtype` is library-specific** — transformers uses `dtype`, diffusers still uses `torch_dtype`. Flux2Pipeline silently ignores `dtype`. Always check whether kwargs are actually being applied.
-- **`enable_model_cpu_offload()` has side effects** — generator must be on CPU, not GPU. Any kwarg the pipeline doesn't recognize is silently dropped.
-- **Per-model locking > global locking** — for multi-model services, a single lock serializes everything. Double-checked locking with per-model granularity is trivial to implement and eliminates all cross-model contention.
+- **`torch_dtype` vs `dtype` is library-specific** — transformers uses `dtype`, diffusers still uses `torch_dtype`. Flux2Pipeline silently ignores BOTH. Always verify with `safetensors.safe_open()` and `psutil` whether kwargs are actually being applied.
+- **`Flux2Pipeline.from_pretrained` is broken for dtype** — it doesn't pass `torch_dtype` to subcomponents. Load components individually with explicit dtype, then assemble. This is likely a diffusers bug that will be fixed eventually.
+- **`low_cpu_mem_usage=True` on components = memory-mapped loading** — tensors reference disk directly, not copied to RAM. This is why 105GB of weights load in 1.2GB RAM.
+- **`enable_model_cpu_offload()` has side effects** — generator must be on CPU, not GPU. `negative_prompt` not supported by Flux/Flux2.
+- **Per-model locking > global locking** — for multi-model services, a single lock serializes everything. Double-checked locking with per-model granularity eliminates cross-model contention.
 
 ---
 
