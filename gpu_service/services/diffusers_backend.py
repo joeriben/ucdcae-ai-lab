@@ -223,7 +223,7 @@ class DiffusersImageGenerator:
         )
         pipe.enable_model_cpu_offload()
 
-        logger.info(f"[DIFFUSERS] Flux2: all components loaded in bf16 + CPU offload")
+        logger.info(f"[DIFFUSERS] Flux2: pipeline loaded with cpu_offload")
         return pipe
 
     def _ensure_vram_available(self, required_mb: float = 0) -> None:
@@ -514,7 +514,7 @@ class DiffusersImageGenerator:
                     import random
                     seed = random.randint(0, 2**32 - 1)
 
-                # CPU offload pipelines need generator on CPU
+                # CPU offload pipelines (Flux2) need generator on CPU
                 gen_device = "cpu" if pipeline_class == "Flux2Pipeline" else self.device
                 generator = torch.Generator(device=gen_device).manual_seed(seed)
 
