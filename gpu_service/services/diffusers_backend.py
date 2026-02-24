@@ -256,8 +256,10 @@ class DiffusersImageGenerator:
 
                 vram_before = torch.cuda.memory_allocated(0) if torch.cuda.is_available() else 0
 
+                # Flux2Pipeline ignores `dtype` (loads float32 → OOM). Keep torch_dtype for it.
+                dtype_key = "torch_dtype" if pipeline_class == "Flux2Pipeline" else "dtype"
                 kwargs = {
-                    "torch_dtype": self._get_torch_dtype(),
+                    dtype_key: self._get_torch_dtype(),
                     "use_safetensors": True,
                     "low_cpu_mem_usage": True,
                 }
@@ -267,8 +269,8 @@ class DiffusersImageGenerator:
                 # WanPipeline requires float32 VAE loaded separately
                 if pipeline_class == "WanPipeline":
                     from diffusers import AutoencoderKLWan
-                    kwargs["torch_dtype"] = torch.bfloat16
-                    vae_kwargs = {"torch_dtype": torch.float32}
+                    kwargs[dtype_key] = torch.bfloat16
+                    vae_kwargs = {dtype_key: torch.float32}
                     if self.cache_dir:
                         vae_kwargs["cache_dir"] = str(self.cache_dir)
                     vae = AutoencoderKLWan.from_pretrained(
