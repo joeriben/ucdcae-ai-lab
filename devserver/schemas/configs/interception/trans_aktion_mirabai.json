@@ -1,0 +1,60 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Mirabai",
+    "de": "Mirabai"
+  },
+  "description": {
+    "en": "Material collision with Mirabai's bhajans (~1500). Ecstatic devotion, poison drunk laughing, a princess who left her palace for the road. Colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Mirabais Bhajans (~1500). Ekstatische Hingabe, Gift lachend getrunken, eine Prinzessin die ihren Palast fuer die Strasse verliess. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "Mirabai fragments: Dark One / Giridhar / ghunghroo / dance / vish ka pyala / cup of poison / drink laughing / rana / palace / thorns / garden / lotus eyes / separated / ocean / without you / anklets / jasmine / Vrindavan\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — steal them.",
+    "de": "Mirabai-Fragmente: Dark One / Giridhar / ghunghroo / Tanz / vish ka pyala / Giftbecher / lachend trinken / Rana / Palast / Dornen / Garten / Lotusaugen / getrennt / Ozean / ohne dich / Fussschellen / Jasmin / Vrindavan\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie stehlen."
+  },
+  "parameters": {
+    "temperature": 0.85,
+    "top_p": 0.95,
+    "max_tokens": 400,
+    "repetition_penalty": 1.5,
+    "enable_thinking": false
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 4,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 8,
+    "complexity": "experimental"
+  }
+}

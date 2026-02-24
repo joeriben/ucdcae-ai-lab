@@ -1,0 +1,60 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Yoruba Oriki",
+    "de": "Yoruba Oriki"
+  },
+  "description": {
+    "en": "Material collision with Yoruba Oriki praise poetry (West African oral tradition). Oya — storm, transformation, the one who sweeps the marketplace clean. Colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Yoruba-Oriki-Preispoesie (westafrikanische muendliche Tradition). Oya — Sturm, Verwandlung, die den Marktplatz leerfegt. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "Yoruba Oriki fragments: Oya / iya mesanlogun / wind / marketplace / buffalo woman / fire / river Niger / tornado / warrior / transform / cloth / beads / thunder / sweep / nine / storm / mask / dance / Odo Oya\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — steal them.",
+    "de": "Yoruba-Oriki-Fragmente: Oya / iya mesanlogun / Wind / Marktplatz / Bueffelfrau / Feuer / Fluss Niger / Tornado / Kriegerin / verwandeln / Tuch / Perlen / Donner / fegen / neun / Sturm / Maske / Tanz / Odo Oya\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie stehlen."
+  },
+  "parameters": {
+    "temperature": 0.85,
+    "top_p": 0.95,
+    "max_tokens": 400,
+    "repetition_penalty": 1.5,
+    "enable_thinking": false
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 5,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 8,
+    "complexity": "experimental"
+  }
+}

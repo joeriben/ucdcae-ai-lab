@@ -1,0 +1,60 @@
+{
+  "pipeline": "text_transformation",
+  "instruction_type": "transformation",
+  "name": {
+    "en": "Nahuatl Xochicuicatl",
+    "de": "Nahuatl Xochicuicatl"
+  },
+  "description": {
+    "en": "Material collision with Nahuatl Xochicuicatl — Flower and Song (Mesoamerican oral tradition). Everything vanishes, only flower-and-song remains. Colliding with your prompt through a deliberately insufficient model.",
+    "de": "Materialkollision mit Nahuatl Xochicuicatl — Blume und Gesang (mesoamerikanische muendliche Tradition). Alles vergeht, nur Blume-und-Gesang bleibt. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+  },
+  "category": {
+    "en": "Trans-Aktion",
+    "de": "Trans-Aktion"
+  },
+  "properties": [
+    "trans_aktion"
+  ],
+  "context": {
+    "en": "Nahuatl fragments: in xochitl / in cuicatl / flower / song / jade / quetzal / plumes / obsidian / butterfly / cacao / earth / dream / vanish / painted book / turquoise / marigold / ollin / movement / Tlaltikpak\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — steal them.",
+    "de": "Nahuatl-Fragmente: in xochitl / in cuicatl / Blume / Gesang / Jade / Quetzal / Federn / Obsidian / Schmetterling / Kakao / Erde / Traum / vergehen / gemaltes Buch / Tuerkis / Ringelblume / ollin / Bewegung / Tlaltikpak\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie stehlen."
+  },
+  "parameters": {
+    "temperature": 0.85,
+    "top_p": 0.95,
+    "max_tokens": 400,
+    "repetition_penalty": 1.5,
+    "enable_thinking": false
+  },
+  "media_preferences": {
+    "default_output": "image",
+    "supported_types": [
+      "image",
+      "audio",
+      "video"
+    ]
+  },
+  "meta": {
+    "stage": "interception",
+    "model_override": "qwen3:1.7b",
+    "wikipedia": false
+  },
+  "display": {
+    "icon": "\u26a1",
+    "color": "#FF1744",
+    "category": "trans_aktion",
+    "difficulty": 3,
+    "order": 6,
+    "hidden": false
+  },
+  "tags": {
+    "en": [],
+    "de": []
+  },
+  "audience": {
+    "workshop_suitable": true,
+    "min_age": 8,
+    "complexity": "experimental"
+  }
+}
