@@ -2,8 +2,8 @@
   "pipeline": "text_transformation",
   "instruction_type": "transformation",
   "name": {
-    "en": "Trans-Aktion: Rilke",
-    "de": "Trans-Aktion: Rilke"
+    "en": "Rilke",
+    "de": "Rilke"
   },
   "description": {
     "en": "Material collision with Rilke's 'Der Panther' (1902). Caged force, circular motion, images that dissolve — colliding with your prompt through a deliberately insufficient model.",

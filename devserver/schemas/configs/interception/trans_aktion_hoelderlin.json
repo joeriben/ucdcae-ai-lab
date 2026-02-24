@@ -2,8 +2,8 @@
   "pipeline": "text_transformation",
   "instruction_type": "transformation",
   "name": {
-    "en": "Trans-Aktion: Hoelderlin",
-    "de": "Trans-Aktion: Hoelderlin"
+    "en": "Hoelderlin",
+    "de": "Hoelderlin"
   },
   "description": {
     "en": "Material collision with Hoelderlin's 'Haelfte des Lebens' (1805). Fullness shattering into emptiness — colliding with your prompt through a deliberately insufficient model.",

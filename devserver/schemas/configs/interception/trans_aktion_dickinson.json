@@ -2,8 +2,8 @@
   "pipeline": "text_transformation",
   "instruction_type": "transformation",
   "name": {
-    "en": "Trans-Aktion: Dickinson",
-    "de": "Trans-Aktion: Dickinson"
+    "en": "Dickinson",
+    "de": "Dickinson"
   },
   "description": {
     "en": "Material collision with Emily Dickinson's 'A Bird came down the Walk' (~1862). Precise nature observation tipping into the uncannily beautiful — colliding with your prompt through a deliberately insufficient model.",

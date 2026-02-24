@@ -2,8 +2,8 @@
   "pipeline": "text_transformation",
   "instruction_type": "transformation",
   "name": {
-    "en": "Trans-Aktion: Basho",
-    "de": "Trans-Aktion: Basho"
+    "en": "Basho",
+    "de": "Basho"
   },
   "description": {
     "en": "Material collision with three haiku by Matsuo Basho (17th century). Maximum compression, Japanese originals alongside German translation — colliding with your prompt through a deliberately insufficient model.",

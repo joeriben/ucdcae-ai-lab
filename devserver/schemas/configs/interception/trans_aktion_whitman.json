@@ -2,8 +2,8 @@
   "pipeline": "text_transformation",
   "instruction_type": "transformation",
   "name": {
-    "en": "Trans-Aktion: Whitman",
-    "de": "Trans-Aktion: Whitman"
+    "en": "Whitman",
+    "de": "Whitman"
   },
   "description": {
     "en": "Material collision with Walt Whitman's 'Song of Myself' \u00a731 (1855). Expansive, cataloguing, bodily — colliding with your prompt through a deliberately insufficient model.",
