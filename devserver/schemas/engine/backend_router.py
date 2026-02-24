@@ -1926,7 +1926,9 @@ class BackendRouter:
                 )
 
             if not image_bytes:
-                logger.error("[DIFFUSERS] Generation failed, falling back to SwarmUI simple API")
+                logger.error("[DIFFUSERS] Generation returned empty result")
+                if chunk.get('meta', {}).get('fallback_chunk'):
+                    return await self._fallback_to_comfyui(chunk, chunk_name, prompt, parameters, "Generation returned empty result")
                 return await self._process_image_chunk_simple(chunk_name, prompt, parameters, chunk)
 
             # Return with binary image data
@@ -1955,8 +1957,10 @@ class BackendRouter:
             import traceback
             traceback.print_exc()
 
-            # Fallback to SwarmUI simple API (same path as pre-diffusers)
-            logger.info(f"[DIFFUSERS] Falling back to SwarmUI simple API due to error")
+            # Fallback: prefer chunk-declared fallback, else SwarmUI simple API
+            logger.info(f"[DIFFUSERS] Falling back due to error: {e}")
+            if chunk.get('meta', {}).get('fallback_chunk'):
+                return await self._fallback_to_comfyui(chunk, chunk_name, prompt, parameters, f"Exception: {e}")
             return await self._process_image_chunk_simple(chunk_name, prompt, parameters, chunk)
 
     async def _process_heartmula_chunk(self, chunk_name: str, prompt: str, parameters: Dict[str, Any], chunk: Dict[str, Any]) -> BackendResponse:
