@@ -2380,7 +2380,6 @@ def execute_generation_streaming(data: dict):
             prompt,
             safety_level,
             media_type,
-            'eco',
             pipeline_executor
         ))
 
