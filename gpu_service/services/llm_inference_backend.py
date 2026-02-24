@@ -108,7 +108,8 @@ class LLMInferenceBackend:
         self._model_in_use: Dict[str, int] = {}
         self._model_type: Dict[str, str] = {}  # "causal" | "vision"
         self._model_quant: Dict[str, str] = {}
-        self._load_lock = threading.Lock()
+        self._model_locks: Dict[str, threading.Lock] = {}
+        self._model_locks_lock = threading.Lock()  # protects dict access only
 
         self._register_with_coordinator()
 
@@ -133,6 +134,13 @@ class LLMInferenceBackend:
             logger.info("[LLM-INF] Registered with VRAM coordinator")
         except Exception as e:
             logger.warning(f"[LLM-INF] Failed to register with VRAM coordinator: {e}")
+
+    def _get_model_lock(self, model_id: str) -> threading.Lock:
+        """Get or create a per-model lock."""
+        with self._model_locks_lock:
+            if model_id not in self._model_locks:
+                self._model_locks[model_id] = threading.Lock()
+            return self._model_locks[model_id]
 
     # =========================================================================
     # VRAMBackend Protocol Implementation
@@ -170,11 +178,17 @@ class LLMInferenceBackend:
         return (total - allocated) / 1024**3
 
     def _load_model_sync(self, model_id: str, quantization: Optional[str] = None) -> bool:
-        """Load a model with VRAM coordination."""
-        with self._load_lock:
-            import torch
+        """Load a model with VRAM coordination and per-model locking."""
+        import torch
 
-            # Already loaded?
+        # Fast path: already loaded? (no lock needed)
+        if model_id in self._models:
+            self._model_last_used[model_id] = time.time()
+            return True
+
+        # Per-model lock: only THIS model blocks
+        with self._get_model_lock(model_id):
+            # Double-check under lock
             if model_id in self._models:
                 self._model_last_used[model_id] = time.time()
                 return True
@@ -206,16 +220,15 @@ class LLMInferenceBackend:
                 is_vision = _is_vision_model(model_id)
                 vram_before = torch.cuda.memory_allocated(0) if torch.cuda.is_available() else 0
 
-                # Build load kwargs
+                # Build load kwargs — NO device_map, explicit .to(device) instead
                 load_kwargs = {
-                    "device_map": "auto",
                     "low_cpu_mem_usage": True,
                 }
 
                 if quantization == "bf16":
-                    load_kwargs["torch_dtype"] = torch.bfloat16
+                    load_kwargs["dtype"] = torch.bfloat16
                 elif quantization == "fp16":
-                    load_kwargs["torch_dtype"] = torch.float16
+                    load_kwargs["dtype"] = torch.float16
                 elif quantization in ("int8", "int4", "nf4"):
                     from transformers import BitsAndBytesConfig
                     if quantization == "int8":
@@ -231,6 +244,7 @@ class LLMInferenceBackend:
                     from transformers import AutoModelForVision2Seq, AutoProcessor
                     processor = AutoProcessor.from_pretrained(model_id)
                     model = AutoModelForVision2Seq.from_pretrained(model_id, **load_kwargs)
+                    model = model.to(self.device)
                     model.eval()
                     tokenizer_or_processor = processor
                     model_type = "vision"
@@ -241,6 +255,7 @@ class LLMInferenceBackend:
                         tokenizer.pad_token = tokenizer.eos_token
                     # NO output_hidden_states, NO output_attentions (pure inference)
                     model = AutoModelForCausalLM.from_pretrained(model_id, **load_kwargs)
+                    model = model.to(self.device)
                     model.eval()
                     tokenizer_or_processor = tokenizer
                     model_type = "causal"
@@ -272,22 +287,27 @@ class LLMInferenceBackend:
         import torch
         if model_id not in self._models:
             return False
-        try:
-            del self._models[model_id]
-            self._model_last_used.pop(model_id, None)
-            self._model_vram_mb.pop(model_id, None)
-            self._model_in_use.pop(model_id, None)
-            self._model_type.pop(model_id, None)
-            self._model_quant.pop(model_id, None)
 
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+        with self._get_model_lock(model_id):
+            # Double-check under lock
+            if model_id not in self._models:
+                return False
+            try:
+                del self._models[model_id]
+                self._model_last_used.pop(model_id, None)
+                self._model_vram_mb.pop(model_id, None)
+                self._model_in_use.pop(model_id, None)
+                self._model_type.pop(model_id, None)
+                self._model_quant.pop(model_id, None)
 
-            logger.info(f"[LLM-INF] Unloaded {model_id}")
-            return True
-        except Exception as e:
-            logger.error(f"[LLM-INF] Error unloading {model_id}: {e}")
-            return False
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
+                logger.info(f"[LLM-INF] Unloaded {model_id}")
+                return True
+            except Exception as e:
+                logger.error(f"[LLM-INF] Error unloading {model_id}: {e}")
+                return False
 
     async def load_model(self, model_id: str, quantization: Optional[str] = None) -> bool:
         return await asyncio.to_thread(self._load_model_sync, model_id, quantization)

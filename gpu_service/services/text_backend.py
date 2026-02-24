@@ -228,16 +228,15 @@ class TextBackend:
                 if tokenizer.pad_token is None:
                     tokenizer.pad_token = tokenizer.eos_token
 
-                # Build load kwargs based on quantization
+                # Build load kwargs — NO device_map, explicit .to(device) instead
                 load_kwargs = {
-                    "device_map": "auto",
                     "low_cpu_mem_usage": True,
                 }
 
                 if quantization == "bf16":
-                    load_kwargs["torch_dtype"] = torch.bfloat16
+                    load_kwargs["dtype"] = torch.bfloat16
                 elif quantization == "fp16":
-                    load_kwargs["torch_dtype"] = torch.float16
+                    load_kwargs["dtype"] = torch.float16
                 elif quantization in ("int8", "int4", "nf4"):
                     from transformers import BitsAndBytesConfig
 
@@ -254,10 +253,11 @@ class TextBackend:
 
                 model = AutoModelForCausalLM.from_pretrained(
                     model_id,
-                    output_hidden_states=True,
-                    output_attentions=True,
                     **load_kwargs
                 )
+                model = model.to(self.device)
+                model.config.output_hidden_states = True
+                model.config.output_attentions = True
                 model.eval()
 
                 vram_after = torch.cuda.memory_allocated(0) if torch.cuda.is_available() else 0

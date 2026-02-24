@@ -277,7 +277,13 @@ class DiffusersImageGenerator:
                     kwargs["vae"] = vae
 
                 pipe = PipelineClass.from_pretrained(model_id, **kwargs)
-                pipe = pipe.to(self.device)
+
+                # Flux2: 106GB model — use CPU offload (components to GPU one at a time)
+                if pipeline_class == "Flux2Pipeline":
+                    pipe.enable_model_cpu_offload()
+                    logger.info(f"[DIFFUSERS] Using CPU offload for large model: {model_id}")
+                else:
+                    pipe = pipe.to(self.device)
 
                 if self.enable_attention_slicing:
                     pipe.enable_attention_slicing()
