@@ -17,8 +17,8 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "Sappho fragments: phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / gods / sweet voice / laughter / heart / tongue broken / thin fire / skin / eyes see nothing / ears hum / sweat / trembling / greener than grass\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — steal them.",
-    "de": "Sappho-Fragmente: phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / goettergleich / suesse Stimme / Lachen / Herz / Zunge gebrochen / duennes Feuer / Haut / Augen sehen nichts / Ohren summen / Schweiss / Zittern / gruener als Gras\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie stehlen."
+    "en": "Sappho fragments: phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / gods / sweet voice / laughter / heart / tongue broken / thin fire / skin / eyes see nothing / ears hum / sweat / trembling / greener than grass\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — weave them into your text.",
+    "de": "Sappho-Fragmente: phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / goettergleich / suesse Stimme / Lachen / Herz / Zunge gebrochen / duennes Feuer / Haut / Augen sehen nichts / Ohren summen / Schweiss / Zittern / gruener als Gras\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie in deinen Text einweben."
   },
   "parameters": {
     "temperature": 0.85,

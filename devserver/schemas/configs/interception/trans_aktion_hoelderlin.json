@@ -17,8 +17,8 @@
     "trans_aktion"
   ],
   "context": {
-    "en": "Hoelderlin fragments: gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poem — steal its images.",
-    "de": "Hoelderlin-Fragmente: gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht das Gedicht wiederholen — seine Bilder stehlen."
+    "en": "Hoelderlin fragments: gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poem — absorb its images into yours.",
+    "de": "Hoelderlin-Fragmente: gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht das Gedicht wiederholen — seine Bilder in deinen Text aufnehmen."
   },
   "parameters": {
     "temperature": 0.85,
