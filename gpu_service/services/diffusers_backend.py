@@ -176,6 +176,56 @@ class DiffusersImageGenerator:
         else:
             raise ValueError(f"Unknown pipeline class: {pipeline_class}")
 
+    def _load_flux2_pipeline(self, model_id: str, kwargs: dict):
+        """Load Flux2 pipeline component-by-component with explicit bf16.
+
+        Flux2Pipeline.from_pretrained ignores torch_dtype/dtype kwargs,
+        loading everything in float32 (~106GB RAM). Loading components
+        individually with torch_dtype=bfloat16 uses ~1.2GB RAM instead.
+        """
+        import torch
+        from diffusers import (
+            Flux2Pipeline, Flux2Transformer2DModel,
+            AutoencoderKLFlux2, FlowMatchEulerDiscreteScheduler,
+        )
+        from transformers import AutoModelForImageTextToText, PixtralProcessor
+
+        dtype = torch.bfloat16
+        cache_kwargs = {"cache_dir": str(self.cache_dir)} if self.cache_dir else {}
+
+        logger.info(f"[DIFFUSERS] Flux2: loading components in bf16...")
+
+        transformer = Flux2Transformer2DModel.from_pretrained(
+            model_id, subfolder="transformer",
+            torch_dtype=dtype, low_cpu_mem_usage=True, **cache_kwargs
+        )
+        text_encoder = AutoModelForImageTextToText.from_pretrained(
+            model_id, subfolder="text_encoder",
+            torch_dtype=dtype, low_cpu_mem_usage=True, **cache_kwargs
+        )
+        vae = AutoencoderKLFlux2.from_pretrained(
+            model_id, subfolder="vae",
+            torch_dtype=dtype, **cache_kwargs
+        )
+        tokenizer = PixtralProcessor.from_pretrained(
+            model_id, subfolder="tokenizer", **cache_kwargs
+        )
+        scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(
+            model_id, subfolder="scheduler", **cache_kwargs
+        )
+
+        pipe = Flux2Pipeline(
+            transformer=transformer,
+            text_encoder=text_encoder,
+            tokenizer=tokenizer,
+            vae=vae,
+            scheduler=scheduler,
+        )
+        pipe.enable_model_cpu_offload()
+
+        logger.info(f"[DIFFUSERS] Flux2: all components loaded in bf16 + CPU offload")
+        return pipe
+
     def _ensure_vram_available(self, required_mb: float = 0) -> None:
         """Request VRAM via coordinator, triggering cross-backend eviction if needed.
 
@@ -278,15 +328,12 @@ class DiffusersImageGenerator:
                     )
                     kwargs["vae"] = vae
 
-                pipe = PipelineClass.from_pretrained(model_id, **kwargs)
-
-                # Flux2: torch_dtype silently ignored → loads float32 (~106GB).
-                # With 64GB RAM: must use CPU offload + bfloat16 casting.
+                # Flux2: from_pretrained ignores torch_dtype → loads float32 (~106GB RAM).
+                # Load components individually with explicit bf16 to avoid float32 intermediate.
                 if pipeline_class == "Flux2Pipeline":
-                    pipe = pipe.to(torch.bfloat16)  # cast in-place before offload
-                    pipe.enable_model_cpu_offload()
-                    logger.info(f"[DIFFUSERS] Flux2: cast to bf16 + CPU offload for {model_id}")
+                    pipe = self._load_flux2_pipeline(model_id, kwargs)
                 else:
+                    pipe = PipelineClass.from_pretrained(model_id, **kwargs)
                     pipe = pipe.to(self.device)
 
                 if self.enable_attention_slicing:
