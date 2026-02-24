@@ -5,8 +5,8 @@
     "de": "Flux 2 Dev"
   },
   "description": {
-    "en": "High-quality image generation using Flux 2 Dev with dual CLIP encoding (Mistral 3 + CLIP-G)",
-    "de": "Hochwertige Bildgenerierung mit Flux 2 Dev und dualem CLIP-Encoding (Mistral 3 + CLIP-G)"
+    "en": "High-quality image generation using Flux 2 Dev with Mistral text encoder. Diffusers primary, ComfyUI fallback.",
+    "de": "Hochwertige Bildgenerierung mit Flux 2 Dev und Mistral Text-Encoder. Diffusers primär, ComfyUI Fallback."
   },
   "category": {
     "en": "Image Generation",
@@ -14,14 +14,12 @@
   },
 
   "parameters": {
-    "OUTPUT_CHUNK": "output_image_flux2",
+    "OUTPUT_CHUNK": "output_image_flux2_diffusers",
     "NEGATIVE_PROMPT": "text, watermark",
     "WIDTH": 1024,
     "HEIGHT": 1024,
     "STEPS": 20,
     "CFG": 1,
-    "SAMPLER": "euler",
-    "SCHEDULER": "normal",
     "SEED": "random"
   },
 
@@ -32,28 +30,23 @@
 
   "meta": {
     "stage": "output",
-    "backend_type": "comfyui",
     "model": "DEFAULT",
-    "model_file": "flux2-dev.safetensors",
-    "clip_models": [
-      "mistral_3_small_flux2_fp8.safetensors",
-      "clip_g.safetensors"
-    ],
-    "vae_model": "flux2-vae.safetensors",
+    "model_file": "black-forest-labs/FLUX.2-dev (HuggingFace)",
+    "backend": "diffusers",
+    "backend_type": "diffusers",
     "requires_gpu": true,
-    "gpu_vram_mb": 7000,
-    "estimated_duration_seconds": "120-180",
+    "gpu_vram_mb": 62000,
+    "estimated_duration_seconds": "10-20",
     "recommended_resolution": "1024x1024",
     "supported_resolutions": [
       "768x768",
       "1024x1024",
-      "1280x1280",
       "1024x2048",
       "2048x1024",
       "768x1344",
       "1344x768"
     ],
-    "notes": "Flux 2 Dev uses dual CLIP encoding (Mistral 3 + CLIP-G) for enhanced text understanding. Optimized with FP8 precision. First run: ~180-300s (model loading), subsequent runs: ~110-120s (cached).",
+    "notes": "Flux 2 Dev via Diffusers with enable_model_cpu_offload() (~61GB peak VRAM). Falls back to ComfyUI (FP8, ~7GB VRAM) if GPU Service unavailable.",
     "version": "1.0"
   },
 
@@ -66,8 +59,8 @@
   },
 
   "tags": {
-    "en": ["image", "flux", "flux2", "mistral", "comfyui", "fp8", "dual-clip"],
-    "de": ["bild", "flux", "flux2", "mistral", "comfyui", "fp8", "dual-clip"]
+    "en": ["image", "flux", "flux2", "diffusers", "mistral"],
+    "de": ["bild", "flux", "flux2", "diffusers", "mistral"]
   },
 
   "audience": {
