@@ -463,7 +463,9 @@ class DiffusersImageGenerator:
                     import random
                     seed = random.randint(0, 2**32 - 1)
 
-                generator = torch.Generator(device=self.device).manual_seed(seed)
+                # CPU offload pipelines need generator on CPU
+                gen_device = "cpu" if pipeline_class == "Flux2Pipeline" else self.device
+                generator = torch.Generator(device=gen_device).manual_seed(seed)
 
                 logger.info(f"[DIFFUSERS] Generating: steps={steps}, size={width}x{height}, seed={seed}")
 
@@ -485,13 +487,16 @@ class DiffusersImageGenerator:
                         # Build generation kwargs
                         gen_kwargs = {
                             "prompt": prompt,
-                            "negative_prompt": negative_prompt if negative_prompt else None,
                             "width": width,
                             "height": height,
                             "num_inference_steps": steps,
                             "guidance_scale": cfg_scale,
                             "generator": generator,
                         }
+
+                        # Flux/Flux2 don't support negative_prompt
+                        if pipeline_class not in ("FluxPipeline", "Flux2Pipeline"):
+                            gen_kwargs["negative_prompt"] = negative_prompt if negative_prompt else None
 
                         # SD3.5 triple encoder: CLIP-L (77t), CLIP-G (77t), T5-XXL (512t)
                         if hasattr(pipe, 'tokenizer_3'):
