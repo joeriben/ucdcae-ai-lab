@@ -29,6 +29,58 @@
 
 ---
 
+## ✏️ Sketch-Input als plattformweiter Eingabekanal in MediaInputBox (2026-02-26)
+
+**Kontext:** Session 210 führte SketchCanvas.vue ein — aber die Toggle-Logik (Upload vs. Sketch) war als Page-Level-Code in `image_transformation.vue` hardcoded. Sketch war damit ein Feature einer einzelnen Seite, nicht der Plattform.
+
+### Decision: allowSketch als MediaInputBox-Prop, nicht als Page-Level-Logik
+
+**Problem:** Jede Seite, die Sketch-Input wollte, musste die Toggle-Buttons, den `imageInputMode`-Ref, das CSS und die dynamische `inputType`-Zuweisung kopieren. Das verstößt gegen das Komponentenprinzip und führt bei 5+ Views mit Bild-Input zu massiver Duplikation.
+
+**Decision:** `allowSketch: boolean` Prop auf MediaInputBox. Wenn `true` und `inputType === 'image'`, rendert MediaInputBox intern einen Upload/Sketch-Toggle und wechselt zwischen `ImageUploadWidget` und `SketchCanvas`. Der externe `inputType` bleibt `'image'` — Sketch ist ein interner Modus, keine eigene Eingabekategorie.
+
+**Kunstpädagogische Begründung:** Skizzieren ist eine fundamental andere Denkbewegung als Bild-Upload. Upload = "Was habe ich?" (Material-orientiert). Sketch = "Was stelle ich mir vor?" (Imaginations-orientiert). Beide Eingabekanäle gleichberechtigt in jedem Bild-Input verfügbar zu machen, demokratisiert den Zugang zu img2img-Pipelines: Kinder ohne "passendes" Foto können dennoch visuelle Ideen formulieren. Die Gleichberechtigung auf Komponentenebene signalisiert, dass Skizzieren kein Workaround ist, sondern ein vollwertiger kreativer Akt.
+
+**Alternatives verworfen:**
+- ❌ Composable (`useSketchMode`): Unnötige Abstraktion — der State (`sketchMode`) hat keine Konsumenten außerhalb der Komponente. Composable wäre Overengineering.
+- ❌ `inputType: 'sketch'` als externer Wert beibehalten: Erzwingt Page-Level-Logik für den Toggle. Die aufrufende Seite muss wissen, dass `'sketch'` existiert, den Mode managen und an MediaInputBox übergeben. Das widerspricht dem Prinzip "Pages use components, components manage their own state".
+- ❌ Eigener `SketchInputBox`: Duplikation von MediaInputBox-Infrastruktur (Header, Loading, Actions).
+
+**Betroffene Dateien:** `src/components/MediaInputBox.vue`, `src/views/image_transformation.vue`, `src/views/multi_image_transformation.vue`, `src/views/latent_lab/crossmodal_lab.vue`
+
+---
+
+## 🔬 Surrealizer Fusion Strategy: Token-Level Extrapolation Redesign (2026-02-26)
+
+**Kontext:** Code-Audit der originalen ComfyUI `ai4artsed_t5_clip_fusion` Node offenbarte, dass T5-Tokens >77 unverändert (1×) angehängt werden. Die Diffusers-Übersetzung replizierte dieses Verhalten exakt. Bei langen Prompts (~500 T5-Tokens) überwältigten 400+ unmodifizierte Tokens die 77 extrapolierten — weniger surreale Ergebnisse als bei kurzen Prompts.
+
+### Decision 1: Drei Fusion-Strategien statt einer festen Formel
+
+**Problem:** Die einzige Formel (LERP first 77, append rest unchanged) war ein Kompromiss, der bei kurzen Prompts funktionierte, bei langen aber die Surrealität verwässerte. Es gab keine Möglichkeit, das Verhalten zu steuern.
+
+**Decision:** Drei wählbare Strategien mit `dual_alpha` als Default:
+- **`dual_alpha`**: `α_core = α×0.15` auf Tokens 1–77 (sanfte Verzerrung, CLIP-L Strukturanker), `α_ext = α` auf Tokens 78+ (volle Extrapolation). Ziel: kontingente Ähnlichkeit.
+- **`normalized`**: Uniform `α` auf alle Positionen (CLIP=0 jenseits 77 → Tokens 78+ = α×T5), dann L2-Normalisierung auf mittlere T5-Magnitude pro Token. Gleiche Richtung, kontrollierte Magnitude.
+- **`legacy`**: Originalverhalten für Vergleichbarkeit.
+
+**Begründung:** Die zwei neuen Strategien lösen unterschiedliche Probleme: `dual_alpha` optimiert für ästhetische Ergebnisse (Erkennbarkeit + Überraschung), `normalized` für mathematische Sauberkeit (gleiche Extrapolationsrichtung ohne Attention-Dominanz). Visueller A/B-Vergleich steht noch aus.
+
+**Alternatives verworfen:**
+- ❌ Einfache Invertierung (Tokens 1–77 unverändert, 78+ extrapoliert): Bei kurzen Prompts (<77 Tokens) gäbe es nichts zu extrapolieren.
+- ❌ Nur `legacy` fixen (α auf alles anwenden): Verliert den Strukturanker komplett — keine kontingente Ähnlichkeit möglich.
+
+**Betroffene Dateien:** `gpu_service/services/diffusers_backend.py`, `gpu_service/routes/diffusers_routes.py`, `devserver/my_app/services/diffusers_client.py`, `devserver/my_app/services/diffusers_backend.py`, `devserver/schemas/engine/backend_router.py`, `devserver/my_app/routes/schema_pipeline_routes.py`, `devserver/schemas/chunks/output_image_surrealizer_diffusers.json`
+
+### Decision 2: Fusion Strategy als zentrales UI-Element, nicht Advanced Setting
+
+**Problem:** Die Fusion-Strategie bestimmt fundamental, wie das Bild entsteht. Sie in "Advanced Settings" zu verstecken verbirgt die wichtigste kreative Entscheidung.
+
+**Decision:** Button-Gruppe direkt unter dem α-Slider, visuell gleichwertig. Dynamische Beschreibung unter den Buttons wechselt mit der Auswahl. Info-Texte im Erklärungsbereich organisch umgeschrieben, um alle drei Strategien im Kontext der Mechanik zu erläutern — nicht als angehängter Absatz.
+
+**Begründung:** Die Strategie ist keine technische Einstellung sondern eine ästhetische Grundentscheidung: "Will ich Strukturähnlichkeit mit Überraschung, gleichmäßige Verzerrung, oder das Originalverhalten?"
+
+---
+
 ## 🧠 LLM Inference Migration: Ollama → GPU Service (2026-02-23)
 
 **Kontext:** 3 Inference-Backends (Ollama/GGUF, GPU Service/safetensors, SwarmUI/ComfyUI) konkurrierten blind um den gleichen GPU-VRAM. Ollama und GPU Service wussten nichts voneinander — ein Safety-Modell via Ollama konnte eine Diffusers-Pipeline aus dem VRAM verdrängen, ohne dass der VRAMCoordinator es mitbekam.

@@ -1,5 +1,68 @@
 # Development Log
 
+## Session 212 - Sketch Toggle into MediaInputBox (Platform-Wide Sketch Input)
+**Date:** 2026-02-26
+**Focus:** Move sketch canvas toggle from page-level (hardcoded in `image_transformation.vue`) into `MediaInputBox` as a reusable `allowSketch` prop — enabling sketch input across all image MediaInputBoxes on the platform
+
+### Kunstpädagogischer Hintergrund
+
+Skizzieren ist nicht nur eine alternative Eingabeform, sondern eine fundamental andere Denkbewegung als Bild-Upload. Beim Zeichnen entsteht die Intention im Prozess — der Strich ist gleichzeitig Exploration und Festlegung. Kinder und Jugendliche, die kein "passendes" Foto haben, können dennoch eine visuelle Idee formulieren. Das macht img2img-Pipelines (Flux, Qwen) pädagogisch erst vollständig: nicht nur "Was habe ich?" (Upload) sondern "Was stelle ich mir vor?" (Sketch).
+
+Session 210 führte SketchCanvas als Komponente ein, verankerte die Toggle-Logik aber als Page-Level-Hack in `image_transformation.vue`. Diese Session hebt den Sketch-Toggle auf Komponentenebene — jede Seite, die `allow-sketch` an MediaInputBox übergibt, bekommt den Upload/Sketch-Wechsel geschenkt.
+
+### Implementation
+
+- **MediaInputBox.vue**: Neuer Prop `allowSketch: boolean` (default `false`). Interner Ref `sketchMode`. Wenn `allowSketch && inputType === 'image'`: Toggle-Buttons zwischen Header und Content, wechselt intern zwischen `ImageUploadWidget` und `SketchCanvas`. `'sketch'` als externer `inputType`-Wert entfernt — Sketch ist jetzt ein interner Modus.
+- **image_transformation.vue**: Gesamte externe Toggle-Logik entfernt (`imageInputMode` Ref, `<div class="image-input-column">`, Toggle-Buttons-Template, `.image-input-column`/`.input-mode-toggle`/`.mode-btn` CSS, globaler CSS-Override). Ersetzt durch einfaches `:allow-sketch="true"`.
+- **multi_image_transformation.vue**: `:allow-sketch="true"` an alle 3 aktiven Bild-MediaInputBoxes.
+- **crossmodal_lab.vue**: `:allow-sketch="true"` an beide Bild-MediaInputBoxes (mmaudio + guidance).
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `src/components/MediaInputBox.vue` | `allowSketch` prop, internal `sketchMode`, toggle template+CSS, removed `'sketch'` from inputType union |
+| `src/views/image_transformation.vue` | Removed all external sketch toggle code, simplified to `:allow-sketch="true"` |
+| `src/views/multi_image_transformation.vue` | Added `:allow-sketch="true"` to 3 image boxes |
+| `src/views/latent_lab/crossmodal_lab.vue` | Added `:allow-sketch="true"` to 2 image boxes |
+
+## Session 211 - Surrealizer Fusion Strategy Redesign
+**Date:** 2026-02-26
+**Focus:** Fix fundamental misunderstanding in Surrealizer T5-CLIP fusion — T5 tokens beyond 77 were appended unchanged, diluting surreal effect on long prompts
+
+### Background
+
+Code audit of the original ComfyUI `ai4artsed_t5_clip_fusion` node revealed that T5 tokens beyond position 77 are appended **unchanged** to the fused embedding. The Diffusers translation faithfully replicated this behavior. Previous sessions documented these unmodified tokens as a "semantic anchor" — but the original design intent was to extrapolate **all** T5 vectors, not just the first 77. With short prompts (<75 tokens) the effect is invisible because all tokens fall within the LERP zone. With long prompts (~500 T5 tokens), 400+ unmodified tokens at 1× magnitude overwhelm 77 extrapolated tokens at 25× — diluting the hallucination effect dramatically.
+
+### Analysis: Attention Economics in MMDiT
+
+The SD3.5 MMDiT gives attention to all text tokens via joint self-attention. Token magnitude directly influences softmax attention weights. Three strategies were designed:
+
+1. **`dual_alpha`** (new default): Core α (α×0.15) on first 77 tokens preserves structural recognizability via CLIP-L; full α on tokens 78+ creates aesthetic surprise. Designed for "kontingente Ähnlichkeit" — the image is recognizable but the execution surprises.
+2. **`normalized`**: Uniform α on all positions (CLIP=0 beyond 77, so tokens 78+ get α×T5), then L2-normalize each token embedding to mean T5 magnitude. Same direction as dual_alpha but with controlled magnitude — no tokens dominate attention.
+3. **`legacy`**: Original behavior preserved for comparison. LERP first 77, append rest unchanged.
+
+### Implementation
+
+Full pipeline from frontend to GPU service (10 files initially, refined in follow-up commit):
+- GPU service: `diffusers_backend.py` strategy-aware `_fuse_prompt`, `diffusers_routes.py` passthrough
+- DevServer: `diffusers_client.py`, `diffusers_backend.py` (in-process fallback), `backend_router.py`, `schema_pipeline_routes.py`
+- Frontend: `surrealizer.vue` — Fusion Strategy as central button-group selector (not hidden in Advanced Settings), seed control as text input (not number spinner) in Advanced Settings
+- i18n: Info text rewritten to organically weave all three strategies into the explanation
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `gpu_service/services/diffusers_backend.py` | 3-strategy `_fuse_prompt` in `generate_image_with_fusion()` |
+| `gpu_service/routes/diffusers_routes.py` | Pass `fusion_strategy` parameter |
+| `devserver/my_app/services/diffusers_client.py` | Add `fusion_strategy` to HTTP client |
+| `devserver/my_app/services/diffusers_backend.py` | Mirror 3 strategies in in-process fallback |
+| `devserver/schemas/engine/backend_router.py` | Read `fusion_strategy` from params, default `dual_alpha` |
+| `devserver/my_app/routes/schema_pipeline_routes.py` | Extract `fusion_strategy` from request, pass to custom_params |
+| `devserver/schemas/chunks/output_image_surrealizer_diffusers.json` | Add `fusion_strategy` input mapping, default `dual_alpha` |
+| `src/views/surrealizer.vue` | Strategy button group, seed text input, session persistence |
+| `src/i18n/en.ts` | Rewritten info/purpose/tech texts, 10 new keys |
+| `src/i18n/WORK_ORDERS.md` | Translation work order for all new/modified keys |
+
 ## Session 210 - Sketch Canvas for Image Transformation
 **Date:** 2026-02-25
 **Focus:** Let kids draw a freehand sketch in the browser that feeds into img2img pipelines

@@ -26,19 +26,39 @@ The Hallucinator exploits the fact that SD3.5 uses two fundamentally different t
 - **CLIP-L** (77 tokens, 768-dim): Trained on image-text pairs. "Thinks" visually.
 - **T5-XXL** (512 tokens, 4096-dim): Trained on pure text. "Thinks" linguistically.
 
-Both encode the same prompt, but produce entirely different vector representations. The alpha slider controls a LERP formula applied to the **first 77 token positions**:
+Both encode the same prompt, but produce entirely different vector representations. The alpha slider controls extrapolation intensity. **How** the extrapolation is distributed across the token sequence depends on the **Fusion Strategy** (Session 211):
 
+#### Fusion Strategies (Session 211)
+
+The core formula `(1 - α) · CLIP-L + α · T5` applies to the first 77 positions where both encoders have data. The critical question is: what happens to T5 tokens beyond position 77, where CLIP-L has no data (implicitly 0)?
+
+**`dual_alpha`** (default since Session 211):
 ```
-fused[0:77] = (1 - α) · CLIP-L + α · T5     ← extrapolation zone
-fused[77:]  = T5 (unchanged)                   ← semantic anchor
+fused[0:77]  = (1 - α·0.15) · CLIP-L + (α·0.15) · T5   ← gentle distortion (structural anchor)
+fused[77:]   = α · T5                                     ← full extrapolation (aesthetic surprise)
 ```
+Designed for **kontingente Ähnlichkeit**: the first 77 tokens preserve structural recognizability via CLIP-L's visual grounding, while the extended T5 tokens are fully extrapolated into unexplored vector space. The image looks related to the prompt but the execution surprises.
+
+**`normalized`**:
+```
+fused[0:77]  = (1 - α) · CLIP-L + α · T5    ← full LERP
+fused[77:]   = α · T5                         ← same formula (CLIP=0)
+→ then: each token L2-normalized to mean T5 magnitude
+```
+Same extrapolation direction as `dual_alpha` but with controlled magnitude — L2 normalization prevents extreme tokens from dominating attention in the MMDiT. More uniform distortion across the image.
+
+**`legacy`** (original behavior, preserved for comparison):
+```
+fused[0:77]  = (1 - α) · CLIP-L + α · T5    ← extrapolation zone
+fused[77:]   = T5 (unchanged, 1×)             ← semantic anchor
+```
+Original ComfyUI behavior. Works well with short prompts (<77 tokens) where all tokens fall in the LERP zone. With long prompts, unmodified T5 tokens at 1× magnitude dilute the hallucination effect — at α=25, the extrapolated tokens are at 25× while the rest stays at 1×.
 
 **Why this creates hallucinations (not just "surreal" images):**
 - At α=0: Pure CLIP-L → normal image
 - At α=1: Pure T5 → still fairly normal (different but coherent)
 - At α=20: `(1-20)·CLIP-L + 20·T5 = -19·CLIP-L + 20·T5`
   The embedding is pushed **19× past T5's representation**, into a region of the 4096-dimensional vector space that the model has **never encountered during training**. The model must interpret these out-of-distribution vectors, producing genuine AI hallucinations.
-- The remaining T5 tokens (78-512) are appended **unchanged**, acting as a semantic anchor that keeps the image thematically connected to the prompt even as the visual representation becomes hallucinatory.
 
 **Alpha ranges (empirical):**
 | Range | Effect |
@@ -180,42 +200,47 @@ This sign-inversion effect in 81.25% of dimensions (3328 out of 4096) causes the
 
 #### Backend 1: Diffusers (Primary — Session 162)
 
-**File:** `devserver/my_app/services/diffusers_backend.py`
-**Method:** `DiffusersImageGenerator.generate_image_with_fusion()`
+**File:** `gpu_service/services/diffusers_backend.py` (primary), `devserver/my_app/services/diffusers_backend.py` (in-process fallback)
+**Method:** `DiffusersImageGenerator.generate_image_with_fusion(fusion_strategy=...)`
 
 Uses individual SD3 pipeline text encoders directly (bypasses `encode_prompt()`):
 
 ```python
-def _fuse_prompt(text: str):
-    # 1. CLIP-L only (77 tokens × 768d) — NO CLIP-G anywhere
-    clip_l_embeds, clip_l_pooled = pipe._get_clip_prompt_embeds(text, clip_model_index=0)
-    # 2. T5-XXL (512 tokens × 4096d, padded to max_sequence_length)
-    t5_embeds = pipe._get_t5_prompt_embeds(text, max_sequence_length=512)
-
-    # 3. Pad CLIP-L to T5 dimension: [CLIP-L₇₆₈ | zeros₃₃₂₈] → (1, 77, 4096)
-    clip_padded = F.pad(clip_l_embeds, (0, 4096 - clip_l_embeds.shape[-1]))
-
-    # 4. Pooled: CLIP-L real + CLIP-G zeros (matches CLIPLoader(clip_l) behavior)
+def _fuse_prompt(clip_text: str, t5_text: str):
+    # Encoding (shared across all strategies):
+    clip_l_embeds, clip_l_pooled = pipe._get_clip_prompt_embeds(clip_text, clip_model_index=0)
+    clip_padded = F.pad(clip_l_embeds, (0, 4096 - clip_l_embeds.shape[-1]))  # (1, 77, 4096)
     pooled = F.pad(clip_l_pooled, (0, 1280))   # (1, 2048): 768d real + 1280d zeros
+    t5_embeds = pipe._get_t5_prompt_embeds(t5_text, max_sequence_length=512)
 
-    # 5. LERP first 77 tokens (THE CORE FORMULA)
-    interp_len = min(77, clip_padded.shape[1])
-    fused_part = (1.0 - alpha) * clip_padded[:, :interp_len, :] + alpha * t5_embeds[:, :interp_len, :]
+    if fusion_strategy == "dual_alpha":
+        alpha_core = alpha_factor * 0.15  # gentle on core
+        fused_core = (1 - alpha_core) * clip_padded + alpha_core * t5[:77]
+        fused_ext = alpha_factor * t5[77:]  # full extrapolation
+        fused = cat([fused_core, fused_ext])
 
-    # 6. Append remaining T5 tokens unchanged (semantic anchor)
-    t5_remainder = t5_embeds[:, interp_len:, :]
-    fused_embeds = torch.cat([fused_part, t5_remainder], dim=1)  # (1, 512, 4096)
+    elif fusion_strategy == "normalized":
+        clip_full = F.pad(clip_padded, (0, 0, 0, t5_len - 77))  # zeros beyond 77
+        fused = (1 - alpha_factor) * clip_full + alpha_factor * t5_embeds
+        ref_norm = t5_embeds.norm(dim=-1, keepdim=True).mean()
+        fused = fused * (ref_norm / fused.norm(dim=-1, keepdim=True).clamp(min=1e-8))
 
-    return fused_embeds, pooled
+    else:  # legacy
+        fused_part = (1 - alpha_factor) * clip_padded + alpha_factor * t5[:77]
+        fused = cat([fused_part, t5[77:]])  # append unchanged
+
+    return fused, pooled
 ```
 
 **Key design decisions (Diffusers backend):**
 
 1. **CLIP-L only — no CLIP-G anywhere:** Matches the original ComfyUI workflow which loads only `clip_l.safetensors`. CLIP-G is absent from both fused tokens AND pooled output. Real CLIP-G pooled would give the DiT visual anchoring that fights extrapolation.
-2. **Output shape (1, 512, 4096) instead of standard (1, 589, 4096):** The SD3 transformer uses flexible attention — any sequence length works. 512 = 77 fused + 435 T5 anchor tokens.
+2. **Output shape (1, 512, 4096) instead of standard (1, 589, 4096):** The SD3 transformer uses flexible attention — any sequence length works. 512 = 77 fused + 435 extended tokens.
 3. **Private method `_get_clip_prompt_embeds`:** Stable in diffusers v0.36.0, protected by `hasattr` guard.
-4. **Negative prompt fused with same alpha:** Matches ComfyUI workflow (both fusion nodes receive the same alpha). All 4 embedding tensors passed to pipeline, fully bypassing `encode_prompt()`.
+4. **Negative prompt fused with same alpha and strategy:** Matches ComfyUI workflow (both fusion nodes receive the same alpha). All 4 embedding tensors passed to pipeline, fully bypassing `encode_prompt()`.
 5. **Why not `encode_prompt()` with different prompt strings?** Because `encode_prompt()` returns **joint embeddings** (CLIP-L + CLIP-G + T5 concatenated). Blending two joint embeddings destroys the CLIP signal instead of extrapolating between encoder spaces. See "Failed approach" below.
+6. **Three strategies, one formula:** All strategies share the same encoding and pooled output. Only the fusion math differs. The `fusion_strategy` parameter flows: Vue → legacy endpoint → pipeline executor (custom_placeholders) → backend_router → GPU service. Default is `dual_alpha` everywhere (backend_router fallback, chunk config, Vue ref).
+7. **dual_alpha core factor (0.15):** Empirical choice — at α=25 this gives core_α≈3.75, enough to gently shift toward T5 without destroying CLIP-L's visual anchor. The 0.15 multiplier is hardcoded, not user-configurable, to keep the UI simple (one slider, one strategy selector).
 
 **Failed approach (Session 162, pre-fix):**
 ```python
@@ -309,9 +334,13 @@ if (promptChanged || alphaChanged) {
 - **Output config (Legacy):** `devserver/schemas/configs/output/surrealization_legacy.json`
 - **Chunk (Diffusers):** `devserver/schemas/chunks/output_image_surrealizer_diffusers.json`
 - **Chunk (Legacy):** `devserver/schemas/chunks/legacy_surrealization.json`
-- **Backend:** `devserver/my_app/services/diffusers_backend.py` (generate_image_with_fusion)
+- **GPU Service backend:** `gpu_service/services/diffusers_backend.py` (generate_image_with_fusion, 3 strategies)
+- **GPU Service route:** `gpu_service/routes/diffusers_routes.py` (/api/diffusers/generate/fusion)
+- **DevServer client:** `devserver/my_app/services/diffusers_client.py` (HTTP wrapper)
+- **DevServer fallback:** `devserver/my_app/services/diffusers_backend.py` (in-process, mirrors GPU service)
+- **Backend router:** `devserver/schemas/engine/backend_router.py` (fusion_strategy dispatch)
 - **Frontend:** `public/ai4artsed-frontend/src/views/surrealizer.vue`
-- **ComfyUI custom node (reference):** `docs/reference/fyi_comfyui-customnodes_ai4artsed_comfyui/ai4artsed_t5_clip_fusion.py`
+- **ComfyUI custom node (reference):** `~/ai/SwarmUI/dlbackend/ComfyUI/custom_nodes/ai4artsed_comfyui/ai4artsed_t5_clip_fusion.py`
 
 ---
 
