@@ -14,7 +14,7 @@ Public API:
 Usage:
     from execution_history import ExecutionTracker
 
-    tracker = ExecutionTracker('dada', 'eco', 'kids')
+    tracker = ExecutionTracker('dada', 'eco', 'kids')  # NOTE: 'eco' deprecated (Session 65)
     tracker.log_pipeline_start(input_text="Test", metadata={})
     tracker.log_user_input_text("Test")
     # ... more logging ...

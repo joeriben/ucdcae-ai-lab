@@ -1,6 +1,10 @@
 """
 Model Selection Service: Intelligent model switching for eco/fast modes
 Includes fallback logic for all LLM operations
+
+DEPRECATED: eco/fast execution modes removed in Session 65.
+Model selection is now centralized in devserver/config.py (STAGE1_MODEL, STAGE2_MODEL, etc.).
+This module is dead code — kept for reference only, pending removal.
 """
 import re
 import logging

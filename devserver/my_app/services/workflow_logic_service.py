@@ -750,7 +750,7 @@ class WorkflowLogicService:
             workflow_name: Name of the workflow
             prompt: Prompt text
             aspect_ratio: Aspect ratio
-            mode: Execution mode ('eco' or 'fast')
+            mode: DEPRECATED — eco/fast removed in Session 65, unused
             seed_mode: Seed control mode ('random', 'standard', or 'fixed')
             custom_seed: Custom seed value for 'fixed' mode
             safety_level: Safety level ('research', 'youth', or 'kids')
@@ -779,7 +779,7 @@ class WorkflowLogicService:
         
         status_updates = []
         
-        # Apply mode switching
+        # DEPRECATED: eco/fast mode switching removed in Session 65. Dead code, pending removal.
         if mode == 'eco':
             workflow, mode_updates = self.switch_to_eco_mode(workflow)
             status_updates.extend(mode_updates)

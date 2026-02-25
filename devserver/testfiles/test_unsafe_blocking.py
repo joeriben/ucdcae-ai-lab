@@ -37,7 +37,7 @@ async def test_unsafe_blocking():
             'dada',  # Full pipeline with Pre-Interception
             test['input'],
             test['input'],
-            'eco'
+            'eco'  # DEPRECATED: eco/fast removed in Session 65
         )
 
         print(f"Status: {result.status}")

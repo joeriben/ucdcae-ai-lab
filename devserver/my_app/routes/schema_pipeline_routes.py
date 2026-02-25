@@ -3256,7 +3256,6 @@ async def execute_generation_stage4(
                 prompt,
                 safety_level,
                 media_type,
-                'eco',
                 pipeline_executor
             )
 
@@ -3425,7 +3424,6 @@ def legacy_workflow():
         is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
             prompt,
             safety_level,
-            'eco',
             pipeline_executor
         ))
 

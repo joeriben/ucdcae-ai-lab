@@ -36,7 +36,7 @@ class ExecutionTracker:
     Stateful execution tracker - collects items during pipeline execution
 
     Usage:
-        tracker = ExecutionTracker('dada', 'eco', 'kids')
+        tracker = ExecutionTracker('dada', 'eco', 'kids')  # NOTE: 'eco' deprecated (Session 65)
         tracker.log_pipeline_start(input_text="Test", metadata={})
         tracker.log_user_input_text("Test input")
         # ... more logging calls ...

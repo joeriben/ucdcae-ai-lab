@@ -29,7 +29,7 @@ async def test_llamaguard_direct():
             'pre_interception/safety_llamaguard',
             input_text,
             input_text,
-            'eco'
+            'eco'  # DEPRECATED: eco/fast removed in Session 65
         )
 
         print(f"Status: {result.status}")

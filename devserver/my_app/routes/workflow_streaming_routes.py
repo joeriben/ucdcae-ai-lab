@@ -36,7 +36,7 @@ def execute_workflow_stream():
             workflow_name = data.get('workflow')
             original_prompt = data.get('prompt', '').strip()
             aspect_ratio = data.get('aspectRatio', '1:1')
-            mode = data.get('mode', 'eco')
+            mode = data.get('mode', 'eco')  # DEPRECATED: eco/fast removed in Session 65, unused
             seed_mode = data.get('seedMode', 'random')
             custom_seed = data.get('customSeed', None)
             safety_level = data.get('safetyLevel', 'research')
