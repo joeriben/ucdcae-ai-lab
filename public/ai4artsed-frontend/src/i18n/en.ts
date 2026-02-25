@@ -147,7 +147,8 @@ export const en = {
       export: 'Research Data',
       config: 'Configuration',
       demos: 'Minigame Demo',
-      matrix: 'Model Matrix'
+      matrix: 'Model Matrix',
+      status: 'Backend Status'
     },
     loading: 'Loading settings...',
     presets: {
@@ -254,6 +255,37 @@ export const en = {
       applying: 'Applying...',
       success: 'Settings saved and applied',
       presetApplied: 'Applied preset: {preset}'
+    },
+    backendStatus: {
+      loading: 'Checking backend status...',
+      refresh: 'Refresh',
+      refreshing: 'Refreshing...',
+      localInfrastructure: 'Local Infrastructure',
+      cloudApis: 'Cloud APIs',
+      outputConfigs: 'Output Configs by Backend',
+      reachable: 'Reachable',
+      unreachable: 'Unreachable',
+      available: 'Available',
+      unavailable: 'Unavailable',
+      configured: 'Configured',
+      notConfigured: 'Not Configured',
+      gpuService: 'GPU Service',
+      subBackend: 'Sub-Backend',
+      status: 'Status',
+      comfyui: 'ComfyUI / SwarmUI',
+      ollama: 'Ollama',
+      gpuHardware: 'GPU Hardware',
+      notDetected: 'Not detected',
+      showModels: 'Show models',
+      hideModels: 'Hide models',
+      provider: 'Provider',
+      keyStatus: 'API Key',
+      dsgvoLabel: 'DSGVO',
+      region: 'Region',
+      dsgvoCompliant: 'Compliant',
+      dsgvoNotCompliant: 'Not Compliant',
+      configsAvailable: '{available} of {total} configs available',
+      hidden: 'hidden'
     }
   },
   pipeline: {

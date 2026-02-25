@@ -21,6 +21,42 @@ Tags:
   - (MODIFIED) = English text changed, all 5 translations are stale and must be re-done
 -->
 
+### WO-2026-02-25-backend-status-dashboard
+- **Session**: N/A
+- **Scope**: en.ts
+- **Changed keys** (new):
+  - `settings.tabs.status` (NEW): "Backend Status"
+  - `settings.backendStatus.loading` (NEW): "Checking backend status..."
+  - `settings.backendStatus.refresh` (NEW): "Refresh"
+  - `settings.backendStatus.refreshing` (NEW): "Refreshing..."
+  - `settings.backendStatus.localInfrastructure` (NEW): "Local Infrastructure"
+  - `settings.backendStatus.cloudApis` (NEW): "Cloud APIs"
+  - `settings.backendStatus.outputConfigs` (NEW): "Output Configs by Backend"
+  - `settings.backendStatus.reachable` (NEW): "Reachable"
+  - `settings.backendStatus.unreachable` (NEW): "Unreachable"
+  - `settings.backendStatus.available` (NEW): "Available"
+  - `settings.backendStatus.unavailable` (NEW): "Unavailable"
+  - `settings.backendStatus.configured` (NEW): "Configured"
+  - `settings.backendStatus.notConfigured` (NEW): "Not Configured"
+  - `settings.backendStatus.gpuService` (NEW): "GPU Service"
+  - `settings.backendStatus.subBackend` (NEW): "Sub-Backend"
+  - `settings.backendStatus.status` (NEW): "Status"
+  - `settings.backendStatus.comfyui` (NEW): "ComfyUI / SwarmUI"
+  - `settings.backendStatus.ollama` (NEW): "Ollama"
+  - `settings.backendStatus.gpuHardware` (NEW): "GPU Hardware"
+  - `settings.backendStatus.notDetected` (NEW): "Not detected"
+  - `settings.backendStatus.showModels` (NEW): "Show models"
+  - `settings.backendStatus.hideModels` (NEW): "Hide models"
+  - `settings.backendStatus.provider` (NEW): "Provider"
+  - `settings.backendStatus.keyStatus` (NEW): "API Key"
+  - `settings.backendStatus.dsgvoLabel` (NEW): "DSGVO"
+  - `settings.backendStatus.region` (NEW): "Region"
+  - `settings.backendStatus.dsgvoCompliant` (NEW): "Compliant"
+  - `settings.backendStatus.dsgvoNotCompliant` (NEW): "Not Compliant"
+  - `settings.backendStatus.configsAvailable` (NEW): "{available} of {total} configs available"
+  - `settings.backendStatus.hidden` (NEW): "hidden"
+- **Context**: New "Backend Status" tab in Settings page showing infrastructure health dashboard. All keys are technical/admin-facing. Translate status labels naturally (e.g. "Erreichbar"/"Nicht erreichbar" in German, etc.). Keep technical terms like "GPU Service", "ComfyUI", "Ollama", "DSGVO", "API Key" untranslated. The `{available}` and `{total}` are interpolation placeholders — keep them as-is.
+
 ### WO-2026-02-24-trans-aktion-poetry-configs
 - **Session**: 208
 - **Scope**: 5 JSON files in `devserver/schemas/configs/interception/`: `trans_aktion_rilke.json`, `trans_aktion_hoelderlin.json`, `trans_aktion_basho.json`, `trans_aktion_dickinson.json`, `trans_aktion_whitman.json`

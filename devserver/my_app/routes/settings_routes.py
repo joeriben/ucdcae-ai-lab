@@ -1424,6 +1424,204 @@ def reload_settings():
         return jsonify({"error": str(e)}), 500
 
 
+@settings_bp.route('/backend-status', methods=['GET'])
+def get_backend_status():
+    """
+    Aggregated backend status for the dashboard tab.
+
+    Returns status of all backends: GPU Service sub-backends, ComfyUI, Ollama,
+    cloud API key status, GPU hardware, and output configs grouped by backend_type.
+
+    Query parameters:
+        force_refresh: Bypass all caches (default: false)
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    import asyncio
+
+    force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
+
+    # --- GPU Hardware ---
+    gpu_hardware = detect_gpu_vram()
+
+    # --- GPU Service (port 17803) ---
+    gpu_service = {"reachable": False, "url": config.GPU_SERVICE_URL, "sub_backends": {}, "gpu_info": None}
+
+    # Check GPU service health + all sub-backend availability in parallel
+    def _check_gpu_health():
+        try:
+            resp = requests.get(f"{config.GPU_SERVICE_URL}/api/health", timeout=5)
+            if resp.ok:
+                return resp.json()
+        except Exception:
+            pass
+        return None
+
+    def _check_sub_backend(name, path):
+        try:
+            resp = requests.get(f"{config.GPU_SERVICE_URL}{path}", timeout=3)
+            if resp.ok:
+                return name, resp.json()
+        except Exception:
+            pass
+        return name, {"available": False}
+
+    def _check_text_models():
+        """Text backend has no /available endpoint — check via /api/text/models."""
+        try:
+            resp = requests.get(f"{config.GPU_SERVICE_URL}/api/text/models", timeout=3)
+            if resp.ok:
+                data = resp.json()
+                presets = data.get("presets", {})
+                model_names = list(presets.keys()) if presets else []
+                return "text", {"available": True, "models": model_names}
+        except Exception:
+            pass
+        return "text", {"available": False, "models": []}
+
+    sub_backend_checks = [
+        ("diffusers", "/api/diffusers/available"),
+        ("heartmula", "/api/heartmula/available"),
+        ("stable_audio", "/api/stable_audio/available"),
+        ("cross_aesthetic", "/api/cross_aesthetic/available"),
+        ("mmaudio", "/api/cross_aesthetic/mmaudio/available"),
+        ("llm_inference", "/api/llm/available"),
+    ]
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {}
+        futures["health"] = executor.submit(_check_gpu_health)
+        for name, path in sub_backend_checks:
+            futures[name] = executor.submit(_check_sub_backend, name, path)
+        futures["text"] = executor.submit(_check_text_models)
+
+        # Collect results (10s timeout prevents hanging)
+        try:
+            health_data = futures["health"].result(timeout=10)
+        except Exception:
+            health_data = None
+        if health_data:
+            gpu_service["reachable"] = True
+            gpu_service["gpu_info"] = health_data.get("gpu")
+            gpu_service["vram_coordinator"] = health_data.get("vram_coordinator")
+
+        for name, _path in sub_backend_checks:
+            try:
+                result_name, result_data = futures[name].result(timeout=10)
+            except Exception:
+                result_name, result_data = name, {"available": False}
+            gpu_service["sub_backends"][result_name] = result_data
+
+        try:
+            text_name, text_data = futures["text"].result(timeout=10)
+        except Exception:
+            text_name, text_data = "text", {"available": False, "models": []}
+        gpu_service["sub_backends"]["text"] = text_data
+
+    # --- ComfyUI + Config Availability (single event loop) ---
+    comfyui_status = {"reachable": False, "url": f"http://127.0.0.1:{config.COMFYUI_PORT}", "models": {}}
+    config_availability = {}
+    try:
+        from my_app.services.model_availability_service import ModelAvailabilityService
+        service = ModelAvailabilityService()
+        loop = asyncio.new_event_loop()
+        try:
+            if force_refresh:
+                service.invalidate_caches()
+            models = loop.run_until_complete(service.get_comfyui_models(force_refresh=force_refresh))
+            if models:
+                comfyui_status["reachable"] = True
+                comfyui_status["models"] = models
+            config_availability = loop.run_until_complete(service.check_all_configs())
+        finally:
+            loop.close()
+    except Exception as e:
+        logger.warning(f"[BACKEND-STATUS] Availability service check failed: {e}")
+
+    # --- Ollama ---
+    ollama_status = {"reachable": False, "url": config.OLLAMA_API_BASE_URL, "models": []}
+    try:
+        resp = requests.get(f"{config.OLLAMA_API_BASE_URL}/api/tags", timeout=5)
+        if resp.ok:
+            ollama_status["reachable"] = True
+            ollama_models = resp.json().get("models", [])
+            for model in ollama_models:
+                name = model.get("name", "")
+                size_bytes = model.get("size", 0)
+                size_gb = size_bytes / (1024 ** 3)
+                size_str = f"{size_gb:.1f} GB" if size_gb >= 1 else f"{size_bytes / (1024 ** 2):.0f} MB"
+                ollama_status["models"].append({"name": name, "size": size_str})
+            ollama_status["models"].sort(key=lambda x: x["name"])
+    except Exception as e:
+        logger.warning(f"[BACKEND-STATUS] Ollama check failed: {e}")
+
+    # --- Cloud APIs ---
+    aws_env_script = Path(__file__).parent.parent.parent / "setup_aws_env.sh"
+    cloud_apis = {
+        "openrouter":  {"key_configured": OPENROUTER_KEY_FILE.exists(), "dsgvo_compliant": False, "region": "US"},
+        "openai":      {"key_configured": OPENAI_KEY_FILE.exists(),     "dsgvo_compliant": False, "region": "US"},
+        "anthropic":   {"key_configured": ANTHROPIC_KEY_FILE.exists(),  "dsgvo_compliant": False, "region": "US"},
+        "mistral":     {"key_configured": MISTRAL_KEY_FILE.exists(),    "dsgvo_compliant": True,  "region": "EU"},
+        "aws_bedrock": {"key_configured": aws_env_script.exists(),      "dsgvo_compliant": True,  "region": "EU"},
+    }
+
+    # --- Output Configs by Backend ---
+    configs_dir = Path(__file__).parent.parent.parent / "schemas" / "configs" / "output"
+    by_backend = {}
+    total_configs = 0
+    available_count = 0
+
+    if configs_dir.exists():
+        for config_file in sorted(configs_dir.glob("*.json")):
+            try:
+                with open(config_file) as f:
+                    cfg = json.load(f)
+
+                config_id = config_file.stem
+                meta = cfg.get("meta", {})
+                backend_type = meta.get("backend_type", "comfyui")
+                name_obj = cfg.get("name", {})
+                display_name = name_obj.get("en", config_id)
+                is_available = config_availability.get(config_id, False)
+                hidden = cfg.get("display", {}).get("hidden", False)
+                media_type = cfg.get("media_preferences", {}).get("default_output", "unknown")
+
+                if backend_type not in by_backend:
+                    by_backend[backend_type] = []
+
+                by_backend[backend_type].append({
+                    "id": config_id,
+                    "name": display_name,
+                    "available": is_available,
+                    "hidden": hidden,
+                    "media_type": media_type,
+                })
+
+                total_configs += 1
+                if is_available:
+                    available_count += 1
+
+            except Exception as e:
+                logger.warning(f"[BACKEND-STATUS] Error reading config {config_file.name}: {e}")
+
+    return jsonify({
+        "local_infrastructure": {
+            "gpu_service": gpu_service,
+            "comfyui": comfyui_status,
+            "ollama": ollama_status,
+            "gpu_hardware": gpu_hardware,
+        },
+        "cloud_apis": cloud_apis,
+        "output_configs": {
+            "by_backend": by_backend,
+            "summary": {
+                "total": total_configs,
+                "available": available_count,
+                "unavailable": total_configs - available_count,
+            }
+        }
+    }), 200
+
+
 @settings_bp.route('/ollama-models', methods=['GET'])
 def get_ollama_models():
     """

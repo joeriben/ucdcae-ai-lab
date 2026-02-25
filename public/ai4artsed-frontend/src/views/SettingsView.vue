@@ -31,12 +31,23 @@
         >
           {{ $t('settings.tabs.export') }}
         </button>
+        <button
+          :class="['tab-btn', { active: activeTab === 'status' }]"
+          @click="activeTab = 'status'"
+        >
+          {{ $t('settings.tabs.status') }}
+        </button>
       </div>
     </div>
 
     <!-- Session Export Tab -->
     <div v-if="activeTab === 'export'">
       <SessionExportView />
+    </div>
+
+    <!-- Backend Status Tab -->
+    <div v-if="activeTab === 'status'">
+      <BackendStatusTab />
     </div>
 
     <!-- Configuration Tab -->
@@ -382,6 +393,7 @@
 import SessionExportView from '../components/SessionExportView.vue'
 import SettingsAuthModal from '../components/SettingsAuthModal.vue'
 import ModelMatrixTab from '../components/ModelMatrixTab.vue'
+import BackendStatusTab from '../components/BackendStatusTab.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
