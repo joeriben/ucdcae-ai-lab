@@ -110,6 +110,13 @@
       @image-uploaded="handleImageUpload"
       @image-removed="$emit('image-removed')"
     />
+
+    <!-- Content: Sketch Input -->
+    <SketchCanvas
+      v-else-if="inputType === 'sketch'"
+      @image-uploaded="handleImageUpload"
+      @image-removed="$emit('image-removed')"
+    />
   </div>
 </template>
 
@@ -117,6 +124,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ImageUploadWidget from '@/components/ImageUploadWidget.vue'
+import SketchCanvas from '@/components/SketchCanvas.vue'
 import { useSafetyEventStore } from '@/stores/safetyEvent'
 
 const { t } = useI18n()
@@ -151,7 +159,7 @@ interface Props {
   tooltip?: string
   placeholder?: string
   value: string
-  inputType?: 'text' | 'image'
+  inputType?: 'text' | 'image' | 'sketch'
   rows?: number
   resizeType?: 'standard' | 'auto' | 'none'
   isEmpty?: boolean

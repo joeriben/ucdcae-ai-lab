@@ -348,6 +348,17 @@ export const en = {
     infoOriginal: 'Original:',
     infoSize: 'Size:'
   },
+  sketchCanvas: {
+    drawHere: 'Draw your sketch here',
+    pen: 'Pen',
+    eraser: 'Eraser',
+    undo: 'Undo',
+    clear: 'Clear',
+    done: 'Done',
+    brushSmall: 'Small',
+    brushMedium: 'Medium',
+    brushLarge: 'Large'
+  },
   mediaInput: {
     choosePreset: 'Choose Perspective',
     translateToEnglish: 'Translate to English',
@@ -579,7 +590,9 @@ export const en = {
   imageTransform: {
     imageLabel: 'Your Image',
     contextLabel: 'Describe what you want to change in the image',
-    contextPlaceholder: 'e.g. Transform it into an oil painting... Make it more colorful... Add a sunset...'
+    contextPlaceholder: 'e.g. Transform it into an oil painting... Make it more colorful... Add a sunset...',
+    uploadMode: 'Upload',
+    sketchMode: 'Sketch'
   },
   textTransform: {
     inputLabel: 'Your Idea = WHAT?',

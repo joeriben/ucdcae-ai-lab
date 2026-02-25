@@ -21,6 +21,23 @@ Tags:
   - (MODIFIED) = English text changed, all 5 translations are stale and must be re-done
 -->
 
+### WO-2026-02-25-sketch-canvas
+- **Session**: N/A
+- **Scope**: en.ts
+- **Changed keys** (new):
+  - `sketchCanvas.drawHere` (NEW): "Draw your sketch here"
+  - `sketchCanvas.pen` (NEW): "Pen"
+  - `sketchCanvas.eraser` (NEW): "Eraser"
+  - `sketchCanvas.undo` (NEW): "Undo"
+  - `sketchCanvas.clear` (NEW): "Clear"
+  - `sketchCanvas.done` (NEW): "Done"
+  - `sketchCanvas.brushSmall` (NEW): "Small"
+  - `sketchCanvas.brushMedium` (NEW): "Medium"
+  - `sketchCanvas.brushLarge` (NEW): "Large"
+  - `imageTransform.uploadMode` (NEW): "Upload"
+  - `imageTransform.sketchMode` (NEW): "Sketch"
+- **Context**: New sketch drawing canvas feature for image_transformation page. Kids can draw a freehand sketch that gets uploaded and used as input for img2img transformation. Toolbar labels (pen, eraser, undo, clear, done) and brush size labels. The upload/sketch mode toggle labels appear above the image input area.
+
 ### WO-2026-02-25-backend-status-dashboard
 - **Session**: N/A
 - **Scope**: en.ts

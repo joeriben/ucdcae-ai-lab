@@ -5,20 +5,47 @@
 
       <!-- Section 1: Image Upload + Context (Side by Side) -->
       <section class="input-context-section">
-        <!-- Image Upload Bubble (LEFT) -->
-        <MediaInputBox
-          icon="💡"
-          :label="$t('imageTransform.imageLabel')"
-          :value="uploadedImage ?? ''"
-          @update:value="(val: string) => uploadedImage = val || undefined"
-          input-type="image"
-          :initial-image="uploadedImage"
-          @image-uploaded="handleImageUpload"
-          @image-removed="handleImageRemove"
-          @copy="copyUploadedImage"
-          @paste="pasteUploadedImage"
-          @clear="clearImage"
-        />
+        <!-- Image Upload/Sketch Bubble (LEFT) -->
+        <div class="image-input-column">
+          <!-- Upload / Sketch toggle -->
+          <div class="input-mode-toggle">
+            <button
+              class="mode-btn"
+              :class="{ active: imageInputMode === 'upload' }"
+              @click="imageInputMode = 'upload'"
+              :title="$t('imageTransform.uploadMode')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+                <path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/>
+              </svg>
+              {{ $t('imageTransform.uploadMode') }}
+            </button>
+            <button
+              class="mode-btn"
+              :class="{ active: imageInputMode === 'sketch' }"
+              @click="imageInputMode = 'sketch'"
+              :title="$t('imageTransform.sketchMode')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+              </svg>
+              {{ $t('imageTransform.sketchMode') }}
+            </button>
+          </div>
+          <MediaInputBox
+            icon="💡"
+            :label="$t('imageTransform.imageLabel')"
+            :value="uploadedImage ?? ''"
+            @update:value="(val: string) => uploadedImage = val || undefined"
+            :input-type="imageInputMode === 'sketch' ? 'sketch' : 'image'"
+            :initial-image="uploadedImage"
+            @image-uploaded="handleImageUpload"
+            @image-removed="handleImageRemove"
+            @copy="copyUploadedImage"
+            @paste="pasteUploadedImage"
+            @clear="clearImage"
+          />
+        </div>
 
         <!-- Context Bubble (RIGHT) -->
         <MediaInputBox
@@ -212,6 +239,9 @@ import type { PageContext, FocusHint } from '@/composables/usePageContext'
 
 // Global clipboard (shared across all views)
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
+
+// Image input mode (upload file vs draw sketch)
+const imageInputMode = ref<'upload' | 'sketch'>('upload')
 
 // Image upload
 const uploadedImage = ref<string | undefined>(undefined)  // Base64 preview URL or server URL
@@ -1142,9 +1172,68 @@ watch(() => favoritesStore.pendingRestoreData, (restoreData) => {
   max-width: 480px;
 }
 
+/* Image input column (wraps toggle + MediaInputBox) */
+.image-input-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 0 1 480px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.image-input-column :deep(.media-input-box) {
+  flex: 1 1 auto;
+  max-width: none;
+}
+
+/* Upload / Sketch Toggle */
+.input-mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  align-self: flex-start;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-btn.active {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.mode-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 @media (max-width: 768px) {
   .input-context-section {
     flex-direction: column;
+  }
+
+  .image-input-column {
+    max-width: none;
   }
 }
 
@@ -1713,9 +1802,14 @@ watch(() => favoritesStore.pendingRestoreData, (restoreData) => {
 
 <style>
 /* GLOBAL unscoped - force MediaInputBox width */
-.image-transformation-view .input-context-section .media-input-box {
+.image-transformation-view .input-context-section > .media-input-box {
   flex: 0 1 480px !important;
   width: 100% !important;
   max-width: 480px !important;
+}
+
+.image-transformation-view .input-context-section .image-input-column .media-input-box {
+  flex: 1 1 auto !important;
+  max-width: none !important;
 }
 </style>
