@@ -464,6 +464,13 @@ class CanvasWorkflowExecutor:
         system_prompt = custom_system or preset_config['systemPrompt']
         user_prompt_template = preset_config['userPromptTemplate']
 
+        # Token limit instruction
+        token_limit = node.get('randomPromptTokenLimit', 75)
+        if token_limit <= 75:
+            system_prompt += "\n\nCRITICAL: Your output MUST NOT exceed 50 words. Be concise — comma-separated visual keywords, no full sentences."
+        else:
+            system_prompt += "\n\nYour output should be a detailed, verbose paragraph of 150-300 words. Provide rich visual details about colors, lighting, textures, composition, atmosphere."
+
         # Handle photo preset film type
         if preset == 'photo':
             if film_type == 'random':

@@ -21,6 +21,13 @@ Tags:
   - (MODIFIED) = English text changed, all 5 translations are stale and must be re-done
 -->
 
+### WO-2026-02-25-random-prompt-token-limit
+- **Session**: N/A
+- **Scope**: en.ts
+- **Changed keys** (new):
+  - `canvas.stage.randomPrompt.tokenLimit` (NEW): "Prompt Length"
+- **Context**: New dropdown in Random Prompt canvas node letting users choose between short (≤75 tokens, for CLIP-L models) and long (≤500 tokens, for T5 models) prompt generation. The label appears above a select dropdown.
+
 ### WO-2026-02-25-sketch-canvas
 - **Session**: N/A
 - **Scope**: en.ts

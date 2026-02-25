@@ -129,6 +129,10 @@ function handleUpdateNodeRandomPromptFilmType(nodeId: string, filmType: string) 
   canvasStore.updateNode(nodeId, { randomPromptFilmType: filmType as PhotoFilmType })
 }
 
+function handleUpdateNodeRandomPromptTokenLimit(nodeId: string, limit: number) {
+  canvasStore.updateNode(nodeId, { randomPromptTokenLimit: limit as 75 | 500 })
+}
+
 // Session 145: Model Adaption node handler
 function handleUpdateNodeModelAdaptionPreset(nodeId: string, preset: string) {
   canvasStore.updateNode(nodeId, { modelAdaptionPreset: preset as ModelAdaptionPreset })
@@ -491,6 +495,7 @@ onUnmounted(() => {
           @update-node-random-prompt-preset="handleUpdateNodeRandomPromptPreset"
           @update-node-random-prompt-model="handleUpdateNodeRandomPromptModel"
           @update-node-random-prompt-film-type="handleUpdateNodeRandomPromptFilmType"
+          @update-node-random-prompt-token-limit="handleUpdateNodeRandomPromptTokenLimit"
           @update-node-model-adaption-preset="handleUpdateNodeModelAdaptionPreset"
           @update-node-interception-preset="handleUpdateNodeInterceptionPreset"
           @update-node-comparison-llm="handleUpdateNodeComparisonLlm"

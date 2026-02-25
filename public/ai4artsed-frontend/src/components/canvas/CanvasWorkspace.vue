@@ -83,6 +83,7 @@ const emit = defineEmits<{
   'update-node-random-prompt-preset': [nodeId: string, preset: string]
   'update-node-random-prompt-model': [nodeId: string, model: string]
   'update-node-random-prompt-film-type': [nodeId: string, filmType: string]
+  'update-node-random-prompt-token-limit': [nodeId: string, limit: number]
   // Session 145: Model Adaption event
   'update-node-model-adaption-preset': [nodeId: string, preset: string]
   // Session 146: Interception Preset event
@@ -447,6 +448,7 @@ onUnmounted(() => {
       @update-random-prompt-preset="emit('update-node-random-prompt-preset', node.id, $event)"
       @update-random-prompt-model="emit('update-node-random-prompt-model', node.id, $event)"
       @update-random-prompt-film-type="emit('update-node-random-prompt-film-type', node.id, $event)"
+      @update-random-prompt-token-limit="emit('update-node-random-prompt-token-limit', node.id, $event)"
       @update-model-adaption-preset="emit('update-node-model-adaption-preset', node.id, $event)"
       @update-interception-preset="(preset, context) => emit('update-node-interception-preset', node.id, preset, context)"
       @update-comparison-llm="emit('update-node-comparison-llm', node.id, $event)"

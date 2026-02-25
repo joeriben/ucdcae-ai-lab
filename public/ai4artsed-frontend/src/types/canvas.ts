@@ -548,6 +548,8 @@ export interface CanvasNode {
   randomPromptModel?: string
   /** Film type (only for 'photo' preset) */
   randomPromptFilmType?: PhotoFilmType
+  /** Token limit for generated prompts (75 = CLIP-L, 500 = T5) */
+  randomPromptTokenLimit?: 75 | 500
 
   // === Model Adaption node config (Session 145) ===
   /** Adaption preset (CLIP, T5, or none) */

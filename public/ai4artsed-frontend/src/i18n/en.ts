@@ -482,6 +482,9 @@ export const en = {
         customPromptLabel: 'Analysis Prompt',
         customPromptPlaceholder: 'Describe how the image should be analyzed...'
       },
+      randomPrompt: {
+        tokenLimit: 'Prompt Length'
+      },
       display: {
         imageAlt: 'Preview',
         emptyText: 'Preview (after execution)'

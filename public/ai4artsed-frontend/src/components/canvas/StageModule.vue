@@ -64,6 +64,7 @@ const emit = defineEmits<{
   'update-random-prompt-preset': [preset: string]
   'update-random-prompt-model': [model: string]
   'update-random-prompt-film-type': [filmType: string]
+  'update-random-prompt-token-limit': [limit: number]
   // Session 145: Model Adaption event
   'update-model-adaption-preset': [preset: string]
   // Session 146: Interception Preset event
@@ -307,6 +308,11 @@ function onRandomPromptModelChange(event: Event) {
 function onRandomPromptFilmTypeChange(event: Event) {
   const select = event.target as HTMLSelectElement
   emit('update-random-prompt-film-type', select.value)
+}
+
+function onRandomPromptTokenLimitChange(event: Event) {
+  const select = event.target as HTMLSelectElement
+  emit('update-random-prompt-token-limit', parseInt(select.value))
 }
 
 // Session 145: Model Adaption node handler
@@ -687,6 +693,20 @@ const nodeHeight = computed(() => {
             >
               {{ model.name }}
             </option>
+          </select>
+        </div>
+
+        <!-- Token Limit -->
+        <div class="field-group">
+          <label class="field-label">{{ $t('canvas.stage.randomPrompt.tokenLimit') }}</label>
+          <select
+            class="llm-select"
+            :value="node.randomPromptTokenLimit || 75"
+            @change="onRandomPromptTokenLimitChange"
+            @mousedown.stop
+          >
+            <option :value="75">Short (&le;75 tokens)</option>
+            <option :value="500">Long (&le;500 tokens)</option>
           </select>
         </div>
 

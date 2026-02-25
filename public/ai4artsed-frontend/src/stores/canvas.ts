@@ -303,6 +303,7 @@ export const useCanvasStore = defineStore('canvas', () => {
         if (type === 'random_prompt') {
           node.randomPromptModel = defaultModel.id
           node.randomPromptPreset = 'clean_image' // Default preset
+          node.randomPromptTokenLimit = 75 // Default: short (CLIP-L)
         } else if (type === 'comparison_evaluator') {
           node.comparisonLlmModel = defaultModel.id
         } else {
