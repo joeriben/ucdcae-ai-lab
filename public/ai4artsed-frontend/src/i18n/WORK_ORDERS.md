@@ -24,17 +24,21 @@ Tags:
 ### WO-2026-02-26-surrealizer-fusion-strategy
 - **Session**: N/A
 - **Scope**: en.ts
-- **Changed keys** (new):
+- **Changed keys** (new or modified):
+  - `surrealizer.infoDescription` (MODIFIED): Now mentions Fusion Strategy as part of the core explanation
+  - `surrealizer.purposeTitle` (MODIFIED): "The Slider" → "Fusion Strategy & Slider"
+  - `surrealizer.purposeText` (MODIFIED): Rewritten to organically explain all three strategies within the slider context
+  - `surrealizer.techText` (MODIFIED): Rewritten to explain how the three strategies differ technically (token treatment beyond position 77)
   - `surrealizer.fusionStrategyLabel` (NEW): "Fusion Strategy"
-  - `surrealizer.fusionDualAlpha` (NEW): "Dual Alpha"
-  - `surrealizer.fusionNormalized` (NEW): "Normalized"
-  - `surrealizer.fusionLegacy` (NEW): "Legacy"
-  - `surrealizer.fusionHint_dual_alpha` (NEW): "Gentle distortion on core tokens..."
-  - `surrealizer.fusionHint_normalized` (NEW): "Full extrapolation on all tokens..."
-  - `surrealizer.fusionHint_legacy` (NEW): "Original ComfyUI behavior..."
+  - `surrealizer.fusion_dual_alpha` (NEW): "Dual Alpha"
+  - `surrealizer.fusion_normalized` (NEW): "Normalized"
+  - `surrealizer.fusion_legacy` (NEW): "Legacy"
+  - `surrealizer.fusionHint_dual_alpha` (NEW): Strategy description shown below selector
+  - `surrealizer.fusionHint_normalized` (NEW): Strategy description shown below selector
+  - `surrealizer.fusionHint_legacy` (NEW): Strategy description shown below selector
   - `surrealizer.seedLabel` (NEW): "Seed"
-  - `surrealizer.seedHint` (NEW): "-1 = random. Fixed seed enables A/B comparison across strategies."
-- **Context**: New dropdown in Surrealizer advanced settings. Selects the T5-CLIP fusion strategy. The hint texts change dynamically based on selection. "Dual Alpha" = structural anchor + aesthetic surprise. "Normalized" = uniform direction, controlled magnitude. "Legacy" = original ComfyUI (less surreal with long prompts). Seed control (-1 = random) enables reproducible A/B testing.
+  - `surrealizer.seedHint` (NEW): "-1 = random..."
+- **Context**: Fusion Strategy is now a CENTRAL control (button group, not hidden in Advanced Settings). The three strategies control how T5-CLIP extrapolation is distributed across token positions. The info box explanation text has been rewritten to naturally integrate all three strategies rather than appending them. Seed control (text input, -1 = random) is in Advanced Settings for A/B testing.
 
 ### WO-2026-02-25-random-prompt-token-limit
 - **Session**: N/A

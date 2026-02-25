@@ -88,19 +88,30 @@
           </div>
         </div>
 
+        <!-- Fusion Strategy (central control) -->
+        <div class="section-card">
+          <div class="card-header">
+            <span class="card-icon">🔬</span>
+            <span class="card-label">{{ t('surrealizer.fusionStrategyLabel') }}</span>
+          </div>
+          <div class="strategy-selector">
+            <button
+              v-for="s in strategies"
+              :key="s.value"
+              class="strategy-button"
+              :class="{ active: fusionStrategy === s.value }"
+              @click="fusionStrategy = s.value"
+            >
+              {{ t('surrealizer.fusion_' + s.value) }}
+            </button>
+          </div>
+          <div class="strategy-description">{{ t('surrealizer.fusionHint_' + fusionStrategy) }}</div>
+        </div>
+
         <!-- Advanced Settings (collapsible) -->
         <details class="advanced-settings">
           <summary>{{ t('surrealizer.advancedLabel') }}</summary>
           <div class="settings-grid">
-            <label>
-              {{ t('surrealizer.fusionStrategyLabel') }}
-              <select v-model="fusionStrategy" class="setting-input">
-                <option value="dual_alpha">{{ t('surrealizer.fusionDualAlpha') }}</option>
-                <option value="normalized">{{ t('surrealizer.fusionNormalized') }}</option>
-                <option value="legacy">{{ t('surrealizer.fusionLegacy') }}</option>
-              </select>
-              <span class="setting-hint">{{ t('surrealizer.fusionHint_' + fusionStrategy) }}</span>
-            </label>
             <label>
               {{ t('surrealizer.negativeLabel') }}
               <input v-model="negativePrompt" type="text" class="setting-input" />
@@ -111,7 +122,7 @@
             </label>
             <label>
               {{ t('surrealizer.seedLabel') }}
-              <input v-model.number="seedInput" type="number" min="-1" class="setting-input setting-small" />
+              <input v-model="seedInputText" type="text" inputmode="numeric" class="setting-input setting-small" placeholder="-1" />
               <span class="setting-hint">{{ t('surrealizer.seedHint') }}</span>
             </label>
           </div>
@@ -226,6 +237,11 @@ const isFavorited = computed(() => currentRunId.value ? favoritesStore.isFavorit
 const inputText = ref('')
 const alphaFaktor = ref<number>(0)  // Slider (-75 to +75), default 0 = normal/balanced
 const fusionStrategy = ref<string>('dual_alpha')  // 'legacy', 'dual_alpha', 'normalized'
+const strategies = [
+  { value: 'dual_alpha' },
+  { value: 'normalized' },
+  { value: 'legacy' },
+] as const
 const isExecuting = ref(false)
 const outputs = ref<WorkflowOutput[]>([])
 const fullscreenImage = ref<string | null>(null)
@@ -242,7 +258,11 @@ const currentSeed = ref<number | null>(null)
 // Advanced settings
 const negativePrompt = ref('watermark')
 const cfgScale = ref(5.5)
-const seedInput = ref<number>(-1)  // -1 = random, any other value = fixed seed
+const seedInputText = ref('-1')  // Text-based to avoid number spinner
+const seedInput = computed(() => {
+  const n = parseInt(seedInputText.value)
+  return isNaN(n) ? -1 : n
+})
 // T5 prompt expansion
 const expandPrompt = ref(false)
 const expandedT5Text = ref('')
@@ -268,18 +288,18 @@ onMounted(() => {
   if (s('lat_lab_ef_cfg')) cfgScale.value = parseFloat(s('lat_lab_ef_cfg')!) || 5.5
   if (s('lat_lab_ef_expand')) expandPrompt.value = s('lat_lab_ef_expand') === 'true'
   if (s('lat_lab_ef_fusion')) fusionStrategy.value = s('lat_lab_ef_fusion')!
-  if (s('lat_lab_ef_seed')) seedInput.value = parseInt(s('lat_lab_ef_seed')!) ?? -1
+  if (s('lat_lab_ef_seed')) seedInputText.value = s('lat_lab_ef_seed')!
 })
 
 // Session persistence — save on change
 watch(inputText, v => sessionStorage.setItem('lat_lab_ef_prompt', v))
-watch([alphaFaktor, negativePrompt, cfgScale, expandPrompt, fusionStrategy, seedInput], () => {
+watch([alphaFaktor, negativePrompt, cfgScale, expandPrompt, fusionStrategy, seedInputText], () => {
   sessionStorage.setItem('lat_lab_ef_alpha', String(alphaFaktor.value))
   sessionStorage.setItem('lat_lab_ef_negative', negativePrompt.value)
   sessionStorage.setItem('lat_lab_ef_cfg', String(cfgScale.value))
   sessionStorage.setItem('lat_lab_ef_expand', String(expandPrompt.value))
   sessionStorage.setItem('lat_lab_ef_fusion', fusionStrategy.value)
-  sessionStorage.setItem('lat_lab_ef_seed', String(seedInput.value))
+  sessionStorage.setItem('lat_lab_ef_seed', seedInputText.value)
 })
 
 // Page Context for Träshy (Session 133)
@@ -1036,6 +1056,47 @@ watch(() => favoritesStore.pendingRestoreData, (restoreData) => {
   color: rgba(255, 255, 255, 0.4);
   margin-top: 0.25rem;
   line-height: 1.4;
+}
+
+/* ============================================================================
+   Strategy Selector
+   ============================================================================ */
+
+.strategy-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.strategy-button {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.strategy-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.strategy-button.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: rgba(59, 130, 246, 0.95);
+  font-weight: 600;
+}
+
+.strategy-description {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
 }
 
 /* ============================================================================
