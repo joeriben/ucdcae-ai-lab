@@ -2942,6 +2942,37 @@ async def execute_stage4_generation_only(
                 'seed': result_seed
             }
 
+        elif output_value == 'comfyui_direct_generated':
+            # ComfyUI Direct (WebSocket) — media bytes already in metadata
+            media_files_data = output_result.metadata.get('media_files', [])
+            outputs_meta = output_result.metadata.get('outputs_metadata', [])
+            for idx, file_data in enumerate(media_files_data):
+                file_meta = outputs_meta[idx] if idx < len(outputs_meta) else {}
+                original_filename = file_meta.get('filename', '')
+                file_format = original_filename.split('.')[-1] if '.' in original_filename else 'png'
+                saved_filename = recorder.save_entity(
+                    entity_type=f'output_{media_type}',
+                    content=file_data,
+                    metadata={
+                        'config': output_config,
+                        'seed': result_seed,
+                        'format': file_format,
+                        'backend': 'comfyui_direct',
+                        'node_id': file_meta.get('node_id', 'unknown'),
+                        'file_index': idx,
+                        'total_files': len(media_files_data)
+                    }
+                )
+            media_entities = [e for e in recorder.metadata.get('entities', []) if e.get('type') == f'output_{media_type}']
+            media_index = len(media_entities) - 1 if media_entities else 0
+            media_output = {
+                'media_type': media_type,
+                'url': f'/api/media/{media_type}/{run_id}/{media_index}',
+                'run_id': run_id,
+                'index': media_index,
+                'seed': result_seed
+            }
+
         elif output_value == 'diffusers_generated':
             # Session 150: Diffusers backend - image data is base64 encoded
             image_data_b64 = output_result.metadata.get('image_data')
@@ -4788,6 +4819,31 @@ def interception_pipeline():
                                         config=output_config_name,
                                         seed=seed
                                     ))
+                                elif not media_stored and output_value == 'comfyui_direct_generated':
+                                    # ComfyUI Direct (WebSocket) — media bytes in metadata
+                                    logger.info(f"[MEDIA-STORAGE-DEBUG] ✓ Matched: comfyui_direct_generated")
+                                    media_files_data = output_result.metadata.get('media_files', [])
+                                    outputs_meta = output_result.metadata.get('outputs_metadata', [])
+                                    for idx, file_data in enumerate(media_files_data):
+                                        file_meta = outputs_meta[idx] if idx < len(outputs_meta) else {}
+                                        original_filename = file_meta.get('filename', '')
+                                        file_format = original_filename.split('.')[-1] if '.' in original_filename else 'png'
+                                        saved_filename = recorder.save_entity(
+                                            entity_type=f'output_{media_type}',
+                                            content=file_data,
+                                            metadata={
+                                                'config': output_config_name,
+                                                'backend': 'comfyui_direct',
+                                                'seed': seed,
+                                                'format': file_format,
+                                                'node_id': file_meta.get('node_id', 'unknown'),
+                                                'file_index': idx,
+                                                'total_files': len(media_files_data)
+                                            }
+                                        )
+                                    if media_files_data:
+                                        media_stored = True
+                                        logger.info(f"[RECORDER] ComfyUI direct: saved {len(media_files_data)} file(s)")
                                 elif not media_stored and output_value == 'diffusers_generated':
                                     # Session 150: Diffusers backend - image data is base64 encoded
                                     logger.info(f"[MEDIA-STORAGE-DEBUG] ✓ Matched: diffusers_generated")
@@ -4983,9 +5039,37 @@ def interception_pipeline():
                                         if 'workflow_json' in output_result.metadata:
                                             del output_result.metadata['workflow_json']
                                     else:
-                                        # Standard workflow: single file from filesystem
+                                        # Standard workflow: media from filesystem or direct bytes
                                         filesystem_path = output_result.metadata.get('filesystem_path')
-                                        if filesystem_path:
+                                        wf_media_files = output_result.metadata.get('media_files', [])
+
+                                        if wf_media_files:
+                                            # ComfyUI Direct: media bytes already available
+                                            wf_outputs_meta = output_result.metadata.get('outputs_metadata', [])
+                                            for idx, file_data in enumerate(wf_media_files):
+                                                file_meta = wf_outputs_meta[idx] if idx < len(wf_outputs_meta) else {}
+                                                original_fn = file_meta.get('filename', '')
+                                                file_fmt = original_fn.split('.')[-1] if '.' in original_fn else 'png'
+                                                saved_filename = recorder.save_entity(
+                                                    entity_type=f'output_{media_type}',
+                                                    content=file_data,
+                                                    metadata={
+                                                        'config': output_config_name,
+                                                        'backend': 'comfyui_direct',
+                                                        'seed': seed,
+                                                        'format': file_fmt,
+                                                        'node_id': file_meta.get('node_id', 'unknown'),
+                                                        'file_index': idx,
+                                                        'total_files': len(wf_media_files)
+                                                    }
+                                                )
+                                            # Clean binary data from metadata
+                                            if 'media_files' in output_result.metadata:
+                                                del output_result.metadata['media_files']
+                                            if 'outputs_metadata' in output_result.metadata:
+                                                del output_result.metadata['outputs_metadata']
+                                            logger.info(f"[RECORDER] Saved {len(wf_media_files)} file(s) from ComfyUI direct")
+                                        elif filesystem_path:
                                             try:
                                                 with open(filesystem_path, 'rb') as f:
                                                     file_data = f.read()
@@ -5005,7 +5089,7 @@ def interception_pipeline():
                                                 logger.error(f"[RECORDER] Failed to save {media_type} from filesystem: {e}")
                                                 saved_filename = None
                                         else:
-                                            logger.warning(f"[RECORDER] No filesystem_path in metadata for workflow_generated")
+                                            logger.warning(f"[RECORDER] No filesystem_path or media_files in metadata for workflow_generated")
                                             saved_filename = None
                                 elif not media_stored and (output_value.startswith('http://') or output_value.startswith('https://')):
                                     logger.info(f"[MEDIA-STORAGE-DEBUG] ✓ Matched: http/https URL")

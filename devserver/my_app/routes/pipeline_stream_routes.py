@@ -9,6 +9,7 @@ import requests
 from flask import Blueprint, Response
 from pathlib import Path
 
+from config import COMFYUI_DIRECT
 from my_app.services.comfyui_service import comfyui_service
 from my_app.services.pipeline_recorder import get_recorder
 
@@ -23,6 +24,14 @@ def generate_sse_event(event_type: str, data: dict):
     event = f"event: {event_type}\n"
     event += f"data: {json.dumps(data)}\n\n"
     return event
+
+
+def _get_comfyui_base_url() -> str:
+    """Get ComfyUI base URL from the appropriate client."""
+    if COMFYUI_DIRECT:
+        from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+        return get_comfyui_ws_client().base_url
+    return comfyui_service.base_url
 
 
 @pipeline_stream_bp.route('/api/pipeline/<run_id>/stream')
@@ -70,7 +79,6 @@ def stream_pipeline_progress(run_id: str):
 
             # Get prompt_id from recorder metadata
             try:
-                # Read from metadata.json
                 metadata_path = recorder.run_folder / 'metadata.json'
                 if metadata_path.exists():
                     with open(metadata_path, 'r') as f:
@@ -84,7 +92,6 @@ def stream_pipeline_progress(run_id: str):
                             })
                             return
 
-                        # Get the most recent prompt_id
                         prompt_id = prompt_ids[-1]['prompt_id']
                 else:
                     logger.warning(f"[STREAM] No metadata found for run {run_id}")
@@ -103,6 +110,7 @@ def stream_pipeline_progress(run_id: str):
                 return
 
             # Poll ComfyUI for progress updates
+            base_url = _get_comfyui_base_url()
             max_poll_time = 300  # 5 minutes max
             poll_interval = 1.0  # Poll every second
             start_time = time.time()
@@ -117,94 +125,89 @@ def stream_pipeline_progress(run_id: str):
                     break
 
                 try:
-                    # Get history from ComfyUI
-                    history = comfyui_service.get_history(prompt_id)
+                    # Get history from ComfyUI (direct HTTP, works for both modes)
+                    response = requests.get(
+                        f"{base_url}/history/{prompt_id}",
+                        timeout=10
+                    )
 
-                    if history and prompt_id in history:
-                        prompt_data = history[prompt_id]
-                        status = prompt_data.get('status', {})
-                        status_str = status.get('status_str', 'pending')
+                    if response.status_code == 200:
+                        history = response.json()
 
-                        # Check if completed
-                        if status_str == 'success':
-                            # Get final outputs
-                            outputs = prompt_data.get('outputs', {})
+                        if prompt_id in history:
+                            prompt_data = history[prompt_id]
+                            status = prompt_data.get('status', {})
+                            status_str = status.get('status_str', 'pending')
 
-                            # Find image output node (usually node 19 for SaveImage)
-                            final_image = None
-                            for node_id, node_output in outputs.items():
-                                if 'images' in node_output and len(node_output['images']) > 0:
-                                    image_info = node_output['images'][0]
-                                    # Download final image using ComfyUI /view endpoint
-                                    try:
-                                        params = {
-                                            'filename': image_info['filename'],
-                                            'subfolder': image_info.get('subfolder', ''),
-                                            'type': image_info.get('type', 'output')
-                                        }
+                            if status_str == 'success':
+                                outputs = prompt_data.get('outputs', {})
 
-                                        response = requests.get(
-                                            f"{comfyui_service.base_url}/view",
-                                            params=params,
-                                            timeout=10
-                                        )
+                                # Download final image
+                                final_image = None
+                                for node_id, node_output in outputs.items():
+                                    if 'images' in node_output and len(node_output['images']) > 0:
+                                        image_info = node_output['images'][0]
+                                        try:
+                                            params = {
+                                                'filename': image_info['filename'],
+                                                'subfolder': image_info.get('subfolder', ''),
+                                                'type': image_info.get('type', 'output')
+                                            }
 
-                                        if response.status_code == 200:
-                                            image_data = response.content
-                                            # Convert to base64 for SSE transmission
-                                            final_image = base64.b64encode(image_data).decode('utf-8')
-                                            logger.info(f"[STREAM] Downloaded final image: {len(image_data)} bytes")
-                                            break
-                                        else:
-                                            logger.error(f"[STREAM] Failed to download image: HTTP {response.status_code}")
-                                    except Exception as e:
-                                        logger.error(f"[STREAM] Error downloading final image: {e}")
+                                            img_response = requests.get(
+                                                f"{base_url}/view",
+                                                params=params,
+                                                timeout=10
+                                            )
 
-                            yield generate_sse_event('complete', {
-                                'progress': 100,
-                                'status': 'completed',
-                                'final_image': f'data:image/png;base64,{final_image}' if final_image else None
-                            })
-                            break
+                                            if img_response.status_code == 200:
+                                                image_data = img_response.content
+                                                final_image = base64.b64encode(image_data).decode('utf-8')
+                                                logger.info(f"[STREAM] Downloaded final image: {len(image_data)} bytes")
+                                                break
+                                            else:
+                                                logger.error(f"[STREAM] Failed to download image: HTTP {img_response.status_code}")
+                                        except Exception as e:
+                                            logger.error(f"[STREAM] Error downloading final image: {e}")
 
-                        elif status_str == 'error':
-                            yield generate_sse_event('error', {
-                                'message': 'Generation failed',
-                                'details': status
-                            })
-                            break
+                                yield generate_sse_event('complete', {
+                                    'progress': 100,
+                                    'status': 'completed',
+                                    'final_image': f'data:image/png;base64,{final_image}' if final_image else None
+                                })
+                                break
+
+                            elif status_str == 'error':
+                                yield generate_sse_event('error', {
+                                    'message': 'Generation failed',
+                                    'details': status
+                                })
+                                break
+
+                            else:
+                                # Still executing — estimate progress
+                                elapsed = time.time() - start_time
+                                estimated_total = 30
+
+                                progress = min(int((elapsed / estimated_total) * 90), 90)
+
+                                if progress > last_progress:
+                                    yield generate_sse_event('progress', {
+                                        'progress': progress,
+                                        'status': 'generating',
+                                        'elapsed': elapsed
+                                    })
+                                    last_progress = progress
 
                         else:
-                            # Still executing - estimate progress
-                            # ComfyUI doesn't provide granular progress, so we estimate
-                            # based on time elapsed and typical generation time
-                            elapsed = time.time() - start_time
-                            estimated_total = 30  # Assume ~30 seconds for typical image generation
-
-                            # Progress estimation: 0-90% based on time, 90-100% reserved for completion
-                            progress = min(int((elapsed / estimated_total) * 90), 90)
-
-                            # Only send update if progress changed
-                            if progress > last_progress:
-                                yield generate_sse_event('progress', {
-                                    'progress': progress,
-                                    'status': 'generating',
-                                    'elapsed': elapsed
-                                })
-                                last_progress = progress
-
-                    else:
-                        # History not available yet - send queued status
-                        yield generate_sse_event('progress', {
-                            'progress': 0,
-                            'status': 'queued'
-                        })
+                            yield generate_sse_event('progress', {
+                                'progress': 0,
+                                'status': 'queued'
+                            })
 
                 except Exception as e:
                     logger.error(f"[STREAM] Error polling ComfyUI: {e}")
-                    # Continue polling, don't break on transient errors
 
-                # Sleep before next poll
                 time.sleep(poll_interval)
 
         except GeneratorExit:

@@ -403,9 +403,14 @@ class LivePipelineRecorder:
             Filename of saved entity, or None if failed
         """
         try:
-            from my_app.services.comfyui_client import get_comfyui_client
-
-            client = get_comfyui_client()
+            # Use WS client in COMFYUI_DIRECT mode, legacy client otherwise
+            from config import COMFYUI_DIRECT
+            if COMFYUI_DIRECT:
+                from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+                client = get_comfyui_ws_client()
+            else:
+                from my_app.services.comfyui_client import get_comfyui_client
+                client = get_comfyui_client()
 
             # Check ComfyUI health before waiting
             is_healthy = await client.health_check()

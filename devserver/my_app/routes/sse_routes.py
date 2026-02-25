@@ -9,9 +9,29 @@ from flask import Blueprint, Response, request, session
 from collections import defaultdict
 from threading import Lock
 
+from config import COMFYUI_DIRECT
 from my_app.services.comfyui_service import comfyui_service
 
 logger = logging.getLogger(__name__)
+
+
+def _get_queue_status() -> dict:
+    """Get ComfyUI queue status from the appropriate client."""
+    if COMFYUI_DIRECT:
+        # Use async WS client via synchronous bridge
+        import asyncio
+        from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+        client = get_comfyui_ws_client()
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Already in async context — use sync fallback
+                return comfyui_service.get_queue_status()
+            return loop.run_until_complete(client.get_queue_status())
+        except RuntimeError:
+            # No event loop — create one
+            return asyncio.run(client.get_queue_status())
+    return comfyui_service.get_queue_status()
 
 # Create blueprint
 sse_bp = Blueprint('sse', __name__)
@@ -79,7 +99,7 @@ def sse_connect():
         try:
             # Send initial connection event with queue status
             try:
-                queue_status = comfyui_service.get_queue_status()
+                queue_status = _get_queue_status()
             except Exception as e:
                 logger.error(f"Error getting initial queue status: {e}")
                 queue_status = {"total": 0, "queue_running": 0, "queue_pending": 0}
@@ -104,7 +124,7 @@ def sse_connect():
                     
                     # Get queue status with error handling
                     try:
-                        queue_status = comfyui_service.get_queue_status()
+                        queue_status = _get_queue_status()
                         yield generate_sse_event('queue_update', {
                             'queue_status': queue_status,
                             'timestamp': current_time
@@ -201,8 +221,8 @@ def get_queue_status_endpoint():
     user_id = session['user_id']
     track_user_activity(user_id)
     
-    queue_status = comfyui_service.get_queue_status()
-    
+    queue_status = _get_queue_status()
+
     return json.dumps({
         **queue_status,
         'timestamp': time.time()

@@ -10,7 +10,7 @@ from pathlib import Path
 import json
 
 from my_app.services.pipeline_recorder import load_recorder
-from config import JSON_STORAGE_DIR, COMFYUI_BASE_PATH, LORA_TRIGGERS
+from config import JSON_STORAGE_DIR, COMFYUI_BASE_PATH, LORA_TRIGGERS, COMFYUI_DIRECT
 
 logger = logging.getLogger(__name__)
 
@@ -157,9 +157,18 @@ class BackendRouter:
         self.backends: Dict[BackendType, Any] = {}
         self._initialized = False
 
-        # Initialize SwarmUI Manager for auto-recovery
-        from my_app.services.swarmui_manager import get_swarmui_manager
-        self.swarmui_manager = get_swarmui_manager()
+        # Initialize manager for auto-recovery (ComfyUI direct or SwarmUI legacy)
+        if COMFYUI_DIRECT:
+            from my_app.services.comfyui_manager import get_comfyui_manager
+            self.comfyui_manager = get_comfyui_manager()
+            # Alias for backward compatibility in methods that reference swarmui_manager
+            self.swarmui_manager = self.comfyui_manager
+            logger.info("[ROUTER] Using COMFYUI_DIRECT mode (WebSocket client)")
+        else:
+            from my_app.services.swarmui_manager import get_swarmui_manager
+            self.swarmui_manager = get_swarmui_manager()
+            self.comfyui_manager = self.swarmui_manager
+            logger.info("[ROUTER] Using legacy SwarmUI mode")
     
     def initialize(self, ollama_service=None, workflow_logic_service=None, comfyui_service=None):
         """Router mit Legacy-Services initialisieren"""
@@ -663,7 +672,7 @@ class BackendRouter:
         return None
 
     async def _process_image_chunk_simple(self, chunk_name: str, prompt: str, parameters: Dict[str, Any], chunk: Dict[str, Any]) -> BackendResponse:
-        """Process image chunks using SwarmUI's /API/GenerateText2Image endpoint"""
+        """Process image chunks — routes to ComfyUI direct (WS) or SwarmUI legacy based on config."""
         try:
             # Extract parameters from input_mappings
             import sys
@@ -675,36 +684,27 @@ class BackendRouter:
             input_mappings = chunk['input_mappings']
             input_data = {'prompt': prompt, **parameters}
 
-            # Build SwarmUI API parameters (IMAGE-ONLY)
             import random
 
             # Get model from checkpoint mapping
             model = parameters.get('checkpoint') or input_mappings.get('checkpoint', {}).get('default', 'sd3.5_large')
-            # If model has .safetensors extension, keep the full path, otherwise use as-is
             if not model.endswith('.safetensors'):
                 model = f"{model}.safetensors"
 
-            # Get prompt (positive)
             positive_prompt = input_data.get('prompt', prompt)
-
-            # Get negative prompt
             negative_prompt = input_data.get('negative_prompt') or input_mappings.get('negative_prompt', {}).get('default', '')
 
-            # Get dimensions (only for image chunks - audio/video don't need dimensions)
             media_type = chunk.get('media_type', 'image')
             if media_type == 'image':
                 width = int(input_data.get('width') or input_mappings.get('width', {}).get('default', 1024))
                 height = int(input_data.get('height') or input_mappings.get('height', {}).get('default', 1024))
             else:
-                # Audio/video chunks don't need dimensions - skip parsing
                 width = None
                 height = None
 
-            # Get generation parameters
             steps = int(input_data.get('steps') or input_mappings.get('steps', {}).get('default', 25))
             cfg_scale = float(input_data.get('cfg') or input_mappings.get('cfg', {}).get('default', 7.0))
 
-            # Get seed (generate random if needed)
             seed = input_data.get('seed') or input_mappings.get('seed', {}).get('default', 'random')
             if seed == 'random' or seed == -1:
                 seed = random.randint(0, 2**32 - 1)
@@ -712,7 +712,63 @@ class BackendRouter:
             else:
                 seed = int(seed)
 
-            # 3. Ensure SwarmUI is available
+            # ── COMFYUI_DIRECT: If chunk has a workflow, use submit_and_track ──
+            if COMFYUI_DIRECT and chunk.get('workflow'):
+                return await self._process_workflow_chunk(chunk_name, prompt, parameters, chunk)
+
+            # ── COMFYUI_DIRECT: Simple image (no workflow) ──
+            if COMFYUI_DIRECT:
+                from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+
+                logger.info("[COMFYUI-DIRECT] Ensuring ComfyUI is available...")
+                if not await self.comfyui_manager.ensure_comfyui_available():
+                    return BackendResponse(success=False, content="", error="ComfyUI not available")
+
+                client = get_comfyui_ws_client()
+                if not await client.health_check():
+                    return BackendResponse(success=False, content="", error="ComfyUI not reachable")
+
+                # Build minimal workflow JSON for simple text2image
+                workflow = self._build_simple_t2i_workflow(
+                    prompt=positive_prompt,
+                    negative_prompt=negative_prompt,
+                    model=model,
+                    width=width or 1024,
+                    height=height or 1024,
+                    steps=steps,
+                    cfg_scale=cfg_scale,
+                    seed=seed,
+                )
+
+                logger.info(f"[COMFYUI-DIRECT] Generating image: model={model}, steps={steps}, size={width}x{height}")
+
+                result = await client.submit_and_track(workflow, timeout=parameters.get('timeout', 300))
+
+                if not result.media_files:
+                    return BackendResponse(success=False, content="", error="ComfyUI generated no output")
+
+                return BackendResponse(
+                    success=True,
+                    content="comfyui_direct_generated",
+                    metadata={
+                        'chunk_name': chunk_name,
+                        'media_type': media_type,
+                        'prompt_id': result.prompt_id,
+                        'media_files': [f.data for f in result.media_files],
+                        'outputs_metadata': [{'filename': f.filename, 'type': f.media_type, 'node_id': f.node_id} for f in result.media_files],
+                        'comfyui_direct': True,
+                        'seed': seed,
+                        'model': model,
+                        'parameters': {
+                            'width': width,
+                            'height': height,
+                            'steps': steps,
+                            'cfg_scale': cfg_scale
+                        }
+                    }
+                )
+
+            # ── LEGACY: SwarmUI path ──
             logger.info("[SWARMUI-TEXT2IMAGE] Ensuring SwarmUI is available...")
             if not await self.swarmui_manager.ensure_swarmui_available():
                 logger.error("[SWARMUI-TEXT2IMAGE] Failed to start SwarmUI")
@@ -722,7 +778,6 @@ class BackendRouter:
                     error="SwarmUI server not available (failed to auto-start)"
                 )
 
-            # 4. Get SwarmUI client
             from my_app.services.swarmui_client import get_swarmui_client
 
             client = get_swarmui_client()
@@ -736,7 +791,6 @@ class BackendRouter:
                     error="SwarmUI server not available"
                 )
 
-            # 4. Generate image using SwarmUI API
             logger.info(f"[SWARMUI] Generating image with model={model}, steps={steps}, size={width}x{height}")
             image_paths = await client.generate_image(
                 prompt=positive_prompt,
@@ -756,9 +810,7 @@ class BackendRouter:
                     error="SwarmUI failed to generate image"
                 )
 
-            # 5. Return image paths directly (no polling needed!)
-            logger.info(f"[SWARMUI] ✓ Generated {len(image_paths)} image(s)")
-            logger.info(f"[SWARMUI-DEBUG] image_paths value: {image_paths}")
+            logger.info(f"[SWARMUI] Generated {len(image_paths)} image(s)")
 
             return BackendResponse(
                 success=True,
@@ -789,8 +841,79 @@ class BackendRouter:
                 error=f"Output-Chunk processing error: {str(e)}"
             )
 
+    @staticmethod
+    def _build_simple_t2i_workflow(
+        prompt: str, negative_prompt: str, model: str,
+        width: int, height: int, steps: int, cfg_scale: float, seed: int,
+    ) -> Dict[str, Any]:
+        """Build a minimal ComfyUI workflow JSON for simple text-to-image generation.
+
+        This replaces SwarmUI's /API/GenerateText2Image which internally builds
+        the same kind of workflow.
+        """
+        return {
+            "1": {
+                "class_type": "CheckpointLoaderSimple",
+                "inputs": {"ckpt_name": model},
+            },
+            "2": {
+                "class_type": "CLIPTextEncode",
+                "inputs": {
+                    "text": prompt,
+                    "clip": ["1", 1],
+                },
+            },
+            "3": {
+                "class_type": "CLIPTextEncode",
+                "inputs": {
+                    "text": negative_prompt,
+                    "clip": ["1", 1],
+                },
+            },
+            "4": {
+                "class_type": "EmptyLatentImage",
+                "inputs": {
+                    "width": width,
+                    "height": height,
+                    "batch_size": 1,
+                },
+            },
+            "5": {
+                "class_type": "KSampler",
+                "inputs": {
+                    "model": ["1", 0],
+                    "positive": ["2", 0],
+                    "negative": ["3", 0],
+                    "latent_image": ["4", 0],
+                    "seed": seed,
+                    "steps": steps,
+                    "cfg": cfg_scale,
+                    "sampler_name": "euler",
+                    "scheduler": "normal",
+                    "denoise": 1.0,
+                },
+            },
+            "6": {
+                "class_type": "VAEDecode",
+                "inputs": {
+                    "samples": ["5", 0],
+                    "vae": ["1", 2],
+                },
+            },
+            "7": {
+                "class_type": "SaveImage",
+                "inputs": {
+                    "images": ["6", 0],
+                    "filename_prefix": "ai4artsed",
+                },
+            },
+        }
+
     async def _process_workflow_chunk(self, chunk_name: str, prompt: str, parameters: Dict[str, Any], chunk: Dict[str, Any]) -> BackendResponse:
-        """Process audio/video chunks using custom ComfyUI workflows via SwarmUI"""
+        """Process audio/video/image chunks using custom ComfyUI workflows.
+
+        Routes to ComfyUI direct (WebSocket) or SwarmUI legacy based on COMFYUI_DIRECT config.
+        """
         try:
             # 1. Load workflow from chunk
             workflow = chunk.get('workflow')
@@ -814,14 +937,11 @@ class BackendRouter:
             input_mappings = chunk.get('input_mappings', {})
             input_data = {'prompt': prompt, **parameters}
 
-            # Check if first mapping has 'node_id' to determine format
             first_mapping = next(iter(input_mappings.values()), {})
             if 'node_id' in first_mapping:
-                # Node-based format: use existing _apply_input_mappings()
                 logger.info(f"[WORKFLOW-CHUNK] Using node-based mappings")
                 workflow, generated_seed = self._apply_input_mappings(workflow, input_mappings, input_data)
             else:
-                # Template-based format: do JSON string replacement
                 logger.info(f"[WORKFLOW-CHUNK] Using template-based mappings")
                 workflow_str = json.dumps(workflow)
                 generated_seed = None
@@ -831,28 +951,68 @@ class BackendRouter:
                     if value is None:
                         value = mapping.get('default', '')
 
-                    # Special handling for "random" seed
                     if value == "random" and key == "seed":
                         import random
                         value = random.randint(0, 2**32 - 1)
                         generated_seed = value
                         logger.info(f"Generated random seed: {generated_seed}")
 
-                    # Replace template placeholders like {{PROMPT}}
                     placeholder = mapping.get('template', f'{{{{{key.upper()}}}}}')
                     workflow_str = workflow_str.replace(placeholder, str(value))
                     logger.debug(f"Replaced '{placeholder}' with '{str(value)[:50]}...'")
 
                 workflow = json.loads(workflow_str)
 
-            # 3. Get SwarmUI client
+            # ── COMFYUI_DIRECT: WebSocket submit + track ──
+            if COMFYUI_DIRECT:
+                from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+
+                logger.info("[COMFYUI-DIRECT] Ensuring ComfyUI is available...")
+                if not await self.comfyui_manager.ensure_comfyui_available():
+                    return BackendResponse(success=False, content="", error="ComfyUI not available")
+
+                client = get_comfyui_ws_client()
+                if not await client.health_check():
+                    return BackendResponse(success=False, content="", error="ComfyUI not reachable")
+
+                logger.info(f"[COMFYUI-DIRECT] Submitting {media_type} workflow")
+                timeout = parameters.get('timeout', 600)
+
+                result = await client.submit_and_track(workflow, timeout=timeout)
+
+                if not result.media_files:
+                    return BackendResponse(
+                        success=False, content="",
+                        error=f"No {media_type} files in workflow output"
+                    )
+
+                logger.info(f"[COMFYUI-DIRECT] Workflow complete: {len(result.media_files)} file(s) in {result.execution_time:.1f}s")
+
+                return BackendResponse(
+                    success=True,
+                    content="workflow_generated",
+                    metadata={
+                        'chunk_name': chunk_name,
+                        'media_type': media_type,
+                        'prompt_id': result.prompt_id,
+                        'comfyui_direct': True,
+                        'media_files': [f.data for f in result.media_files],
+                        'outputs_metadata': [
+                            {'filename': f.filename, 'type': f.media_type,
+                             'subfolder': f.subfolder, 'node_id': f.node_id}
+                            for f in result.media_files
+                        ],
+                        'seed': generated_seed,
+                        'workflow_completed': True,
+                    }
+                )
+
+            # ── LEGACY: SwarmUI path ──
             import sys
-            from pathlib import Path
             devserver_path = Path(__file__).parent.parent.parent
             if str(devserver_path) not in sys.path:
                 sys.path.insert(0, str(devserver_path))
 
-            # 3.5. Ensure SwarmUI is available
             logger.info("[SWARMUI-WORKFLOW] Ensuring SwarmUI is available...")
             if not await self.swarmui_manager.ensure_swarmui_available():
                 logger.error("[SWARMUI-WORKFLOW] Failed to start SwarmUI")
@@ -875,7 +1035,6 @@ class BackendRouter:
                     error="SwarmUI server not available"
                 )
 
-            # 4. Submit workflow via unified swarmui_client
             logger.info(f"[WORKFLOW-CHUNK] Submitting {media_type} workflow to SwarmUI")
             prompt_id = await client.submit_workflow(workflow)
 
@@ -888,8 +1047,7 @@ class BackendRouter:
 
             logger.info(f"[WORKFLOW-CHUNK] Workflow submitted: {prompt_id}")
 
-            # 5. Wait for completion (increased timeout for heavy models like Flux2)
-            timeout = parameters.get('timeout', 600)  # 10 minutes default (Flux2 needs ~8min)
+            timeout = parameters.get('timeout', 600)
             history = await client.wait_for_completion(prompt_id, timeout=timeout)
 
             if not history:
@@ -901,9 +1059,7 @@ class BackendRouter:
 
             logger.info(f"[WORKFLOW-CHUNK] Workflow completed: {prompt_id}")
 
-            # 6. Extract media files from known ComfyUI output directory
-            # NOTE: ComfyUI history parsing is unreliable for non-image media
-            # Use direct filesystem listing instead
+            # Legacy: Extract media files from filesystem (the glob hack)
             import os
             import glob
 
@@ -921,7 +1077,6 @@ class BackendRouter:
                 output_dir = f'{COMFYUI_BASE_PATH}/output/audio'
                 file_extension = 'mp3'
 
-            # Get most recent file from output directory
             filesystem_path = None
             if os.path.exists(output_dir):
                 files = glob.glob(f"{output_dir}/*.{file_extension}")
@@ -938,8 +1093,6 @@ class BackendRouter:
                     error=f"No {media_type} files found in workflow output"
                 )
 
-            # 7. Return filesystem path for direct copy (no downloading needed)
-            # The endpoint handler will copy this file directly to exports/json/{run_id}/
             return BackendResponse(
                 success=True,
                 content="workflow_generated",
@@ -965,30 +1118,16 @@ class BackendRouter:
             )
 
     async def _process_legacy_workflow(self, chunk: Dict[str, Any], prompt: str, parameters: Dict[str, Any]) -> BackendResponse:
-        """Process legacy workflow: Complete workflow passthrough with title-based prompt injection
+        """Process legacy workflow: Complete workflow passthrough with title-based prompt injection.
 
-        Now supports routing via SwarmUI Proxy (Port 7801) based on config settings.
-
-        Args:
-            chunk: Legacy workflow chunk with complete ComfyUI workflow
-            prompt: User prompt (translated and safe from Stage 3)
-            parameters: Additional parameters
-
-        Returns:
-            BackendResponse with workflow_generated marker and filesystem paths
+        Routes to ComfyUI direct (WebSocket) or SwarmUI legacy based on COMFYUI_DIRECT config.
         """
         try:
-            from my_app.services.legacy_workflow_service import get_legacy_workflow_service
-            
-            # Ensure correct service initialization
-            service = get_legacy_workflow_service()
-            logger.info(f"[LEGACY-WORKFLOW] Using service base URL: {service.base_url}")
-
             chunk_name = chunk.get('name', 'unknown')
             media_type = chunk.get('media_type', 'image')
 
             logger.info(f"[LEGACY-WORKFLOW] Processing legacy workflow: {chunk_name}")
-            logger.info(f"[DEBUG-PROMPT] Received prompt parameter: '{prompt[:200]}...'" if prompt else f"[DEBUG-PROMPT] ⚠️ Prompt parameter is EMPTY or None: {repr(prompt)}")
+            logger.info(f"[DEBUG-PROMPT] Received prompt parameter: '{prompt[:200]}...'" if prompt else f"[DEBUG-PROMPT] Prompt is EMPTY or None: {repr(prompt)}")
             logger.info(f"[DEBUG-PROMPT] Received parameters: {list(parameters.keys())}")
 
             # Get workflow from chunk
@@ -1016,17 +1155,12 @@ class BackendRouter:
                 logger.info(f"[LEGACY-WORKFLOW] Applied encoder_type: {encoder_type}")
 
             # Legacy: Apply seed randomization from input_mappings (DEPRECATED - handled by _apply_input_mappings above)
-            # Keeping this block for backwards compatibility, but it should no longer execute
             if False and input_mappings and 'seed' in input_mappings:
                 import random
                 seed_mapping = input_mappings['seed']
                 seed_value = parameters.get('seed', seed_mapping.get('default', 'random'))
-
                 if seed_value == 'random' or seed_value == -1:
                     seed_value = random.randint(0, 2**32 - 1)
-                    logger.info(f"[LEGACY-WORKFLOW] Generated random seed: {seed_value}")
-
-                # Inject seed into workflow
                 seed_node_id = seed_mapping.get('node_id')
                 seed_field = seed_mapping.get('field', 'inputs.noise_seed')
                 if seed_node_id and seed_node_id in workflow:
@@ -1043,7 +1177,6 @@ class BackendRouter:
 
                 logger.info(f"[LEGACY-WORKFLOW] Injecting alpha_factor={alpha_value}")
 
-                # Inject alpha into workflow
                 alpha_node_id = alpha_mapping.get('node_id')
                 alpha_field = alpha_mapping.get('field', 'inputs.value')
                 if alpha_node_id and alpha_node_id in workflow:
@@ -1052,7 +1185,7 @@ class BackendRouter:
                     for part in field_parts[:-1]:
                         target = target.setdefault(part, {})
                     target[field_parts[-1]] = alpha_value
-                    logger.info(f"[ALPHA-INJECT] ✓ Injected alpha={alpha_value} into node {alpha_node_id}.{alpha_field}")
+                    logger.info(f"[ALPHA-INJECT] Injected alpha={alpha_value} into node {alpha_node_id}.{alpha_field}")
 
             # Handle combination_type for split_and_combine workflows (array of mappings)
             if input_mappings and 'combination_type' in input_mappings and 'combination_type' in parameters:
@@ -1061,145 +1194,94 @@ class BackendRouter:
 
                 logger.info(f"[LEGACY-WORKFLOW] Injecting combination_type={combination_value}")
 
-                # Support both single mapping (dict) and multiple mappings (list)
                 if isinstance(combination_mappings, dict):
                     combination_mappings = [combination_mappings]
 
                 for mapping in combination_mappings:
                     node_id = mapping.get('node_id')
-                    field = mapping.get('field', 'inputs.interpolation_method')
+                    field_path = mapping.get('field', 'inputs.interpolation_method')
 
                     if node_id and node_id in workflow:
-                        field_parts = field.split('.')
+                        field_parts = field_path.split('.')
                         target = workflow[node_id]
                         for part in field_parts[:-1]:
                             target = target.setdefault(part, {})
                         target[field_parts[-1]] = combination_value
-                        logger.info(f"[COMBINATION-INJECT] ✓ Injected combination_type={combination_value} into node {node_id}.{field}")
+                        logger.info(f"[COMBINATION-INJECT] Injected combination_type={combination_value} into node {node_id}.{field_path}")
 
-            # Handle input_image for img2img workflows
-            if input_mappings and 'input_image' in input_mappings and 'input_image' in parameters:
-                import aiohttp
-                from pathlib import Path
+            # Handle image uploads (single + multi)
+            await self._handle_legacy_image_uploads(workflow, input_mappings, parameters)
 
-                image_mapping = input_mappings['input_image']
-                # Resolve media URL to filesystem path if needed
-                source_path = _resolve_media_url_to_path(parameters['input_image'])
-                source_file = Path(source_path)
-
-                # Ensure SwarmUI is available before upload
-                logger.info("[LEGACY-WORKFLOW] Ensuring SwarmUI available for image upload...")
-                if not await self.swarmui_manager.ensure_swarmui_available():
-                    logger.error("[LEGACY-WORKFLOW] SwarmUI not available, image upload will fail")
-
-                # Upload image via ComfyUI API
-                comfyui_url = "http://127.0.0.1:7821"  # SwarmUI integrated ComfyUI
-                upload_url = f"{comfyui_url}/upload/image"
-
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        with open(source_path, 'rb') as f:
-                            form = aiohttp.FormData()
-                            form.add_field('image', f, filename=source_file.name, content_type='image/png')
-                            form.add_field('overwrite', 'true')
-
-                            async with session.post(upload_url, data=form) as response:
-                                if response.status == 200:
-                                    result = await response.json()
-                                    uploaded_filename = result.get('name', source_file.name)
-                                    logger.info(f"[LEGACY-WORKFLOW] Uploaded image to ComfyUI: {uploaded_filename}")
-
-                                    # Inject filename into workflow
-                                    image_node_id = image_mapping.get('node_id')
-                                    image_field = image_mapping.get('field', 'inputs.image')
-                                    if image_node_id and image_node_id in workflow:
-                                        field_parts = image_field.split('.')
-                                        target = workflow[image_node_id]
-                                        for part in field_parts[:-1]:
-                                            target = target.setdefault(part, {})
-                                        target[field_parts[-1]] = uploaded_filename
-                                        logger.info(f"[LEGACY-WORKFLOW] Injected image into node {image_node_id}: {uploaded_filename}")
-                                else:
-                                    logger.error(f"[LEGACY-WORKFLOW] Failed to upload image: HTTP {response.status}")
-                except Exception as e:
-                    logger.error(f"[LEGACY-WORKFLOW] Error uploading image: {e}")
-                    import traceback
-                    traceback.print_exc()
-
-            # Handle multi-image uploads (input_image1, input_image2, input_image3)
-            # Check if any multi-image mappings exist
+            # Handle multi-image uploads
             multi_image_keys = ['input_image1', 'input_image2', 'input_image3']
             has_multi_image = any(key in input_mappings for key in multi_image_keys)
 
             if input_mappings and has_multi_image:
-                import aiohttp
-                from pathlib import Path
-
-                # Ensure SwarmUI is available before multi-image upload
-                logger.info("[LEGACY-WORKFLOW] Ensuring SwarmUI available for multi-image upload...")
-                await self.swarmui_manager.ensure_swarmui_available()
-
-                comfyui_url = "http://127.0.0.1:7821"  # SwarmUI integrated ComfyUI
-                upload_url = f"{comfyui_url}/upload/image"
-
-                for image_key in multi_image_keys:
-                    # Skip if mapping doesn't exist or parameter is empty
-                    if image_key not in input_mappings:
-                        continue
-                    if image_key not in parameters or not parameters[image_key]:
-                        logger.info(f"[LEGACY-WORKFLOW] {image_key} is empty (optional), skipping")
-                        continue
-
-                    image_mapping = input_mappings[image_key]
-                    source_path = _resolve_media_url_to_path(parameters[image_key])
-                    source_file = Path(source_path)
-
-                    try:
-                        async with aiohttp.ClientSession() as session:
-                            with open(source_path, 'rb') as f:
-                                form = aiohttp.FormData()
-                                form.add_field('image', f, filename=source_file.name, content_type='image/png')
-                                form.add_field('overwrite', 'true')
-
-                                async with session.post(upload_url, data=form) as response:
-                                    if response.status == 200:
-                                        result = await response.json()
-                                        uploaded_filename = result.get('name', source_file.name)
-                                        logger.info(f"[LEGACY-WORKFLOW] Uploaded {image_key} to ComfyUI: {uploaded_filename}")
-
-                                        # Inject filename into workflow
-                                        image_node_id = image_mapping.get('node_id')
-                                        image_field = image_mapping.get('field', 'inputs.image')
-                                        if image_node_id and image_node_id in workflow:
-                                            field_parts = image_field.split('.')
-                                            target = workflow[image_node_id]
-                                            for part in field_parts[:-1]:
-                                                target = target.setdefault(part, {})
-                                            target[field_parts[-1]] = uploaded_filename
-                                            logger.info(f"[LEGACY-WORKFLOW] Injected {image_key} into node {image_node_id}: {uploaded_filename}")
-                                    else:
-                                        logger.error(f"[LEGACY-WORKFLOW] Failed to upload {image_key}: HTTP {response.status}")
-                    except Exception as e:
-                        logger.error(f"[LEGACY-WORKFLOW] Error uploading {image_key}: {e}")
-                        import traceback
-                        traceback.print_exc()
+                await self._handle_legacy_multi_image_uploads(
+                    workflow, input_mappings, parameters, multi_image_keys
+                )
 
             # Adapt workflow dynamically for multi-image (remove unused nodes)
             if has_multi_image:
                 workflow = _adapt_workflow_for_multi_image(workflow, parameters)
 
-            # Execute via service (submit → poll → download)
-            # Legacy service handles prompt injection via title-based search
+            # ── COMFYUI_DIRECT: Use WS client for execution ──
+            if COMFYUI_DIRECT:
+                from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+                from my_app.services.legacy_workflow_service import LegacyWorkflowService
+
+                # Still use LegacyWorkflowService for prompt injection logic
+                legacy_svc = LegacyWorkflowService.__new__(LegacyWorkflowService)
+                workflow, injection_success = legacy_svc._inject_prompt(workflow, prompt, chunk)
+                if not injection_success:
+                    logger.warning("[LEGACY-WORKFLOW] Prompt injection failed, continuing anyway")
+
+                # Replace LLM model names
+                workflow = legacy_svc._replace_llm_models(workflow)
+
+                logger.info("[COMFYUI-DIRECT] Ensuring ComfyUI is available...")
+                if not await self.comfyui_manager.ensure_comfyui_available():
+                    return BackendResponse(success=False, content="", error="ComfyUI not available")
+
+                client = get_comfyui_ws_client()
+                timeout = parameters.get('timeout', 300)
+
+                result = await client.submit_and_track(workflow, timeout=timeout)
+
+                logger.info(f"[LEGACY-WORKFLOW] Completed: {len(result.media_files)} file(s)")
+
+                return BackendResponse(
+                    success=True,
+                    content="workflow_generated",
+                    metadata={
+                        'chunk_name': chunk_name,
+                        'media_type': media_type,
+                        'prompt_id': result.prompt_id,
+                        'legacy_workflow': True,
+                        'comfyui_direct': True,
+                        'media_files': [f.data for f in result.media_files],
+                        'outputs_metadata': [
+                            {'node_id': f.node_id, 'type': f.media_type,
+                             'filename': f.filename, 'subfolder': f.subfolder}
+                            for f in result.media_files
+                        ],
+                    }
+                )
+
+            # ── LEGACY: SwarmUI path ──
+            from my_app.services.legacy_workflow_service import get_legacy_workflow_service
+
             service = get_legacy_workflow_service()
+            logger.info(f"[LEGACY-WORKFLOW] Using service base URL: {service.base_url}")
+
             result = await service.execute_workflow(
                 workflow=workflow,
                 prompt=prompt,
                 chunk_config=chunk
             )
 
-            logger.info(f"[LEGACY-WORKFLOW] ✓ Completed: {len(result['media_files'])} file(s) downloaded")
+            logger.info(f"[LEGACY-WORKFLOW] Completed: {len(result['media_files'])} file(s) downloaded")
 
-            # Return with media files as binary data
             return BackendResponse(
                 success=True,
                 content="workflow_generated",
@@ -1208,7 +1290,7 @@ class BackendRouter:
                     'media_type': media_type,
                     'prompt_id': result['prompt_id'],
                     'legacy_workflow': True,
-                    'media_files': result['media_files'],  # Binary data!
+                    'media_files': result['media_files'],
                     'outputs_metadata': result['outputs_metadata'],
                     'workflow_json': result['workflow_json']
                 }
@@ -1223,6 +1305,153 @@ class BackendRouter:
                 content="",
                 error=f"Legacy workflow error: {str(e)}"
             )
+
+    async def _handle_legacy_image_uploads(
+        self, workflow: Dict[str, Any], input_mappings: Dict[str, Any], parameters: Dict[str, Any]
+    ):
+        """Handle single input_image upload for img2img workflows."""
+        if not (input_mappings and 'input_image' in input_mappings and 'input_image' in parameters):
+            return
+
+        image_mapping = input_mappings['input_image']
+        source_path = _resolve_media_url_to_path(parameters['input_image'])
+        source_file = Path(source_path)
+
+        if COMFYUI_DIRECT:
+            from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+
+            logger.info("[LEGACY-WORKFLOW] Uploading image via ComfyUI WS client...")
+            if not await self.comfyui_manager.ensure_comfyui_available():
+                logger.error("[LEGACY-WORKFLOW] ComfyUI not available for image upload")
+                return
+
+            client = get_comfyui_ws_client()
+            with open(source_path, 'rb') as f:
+                image_data = f.read()
+
+            uploaded_filename = await client.upload_image(image_data, source_file.name)
+        else:
+            import aiohttp
+
+            logger.info("[LEGACY-WORKFLOW] Ensuring SwarmUI available for image upload...")
+            if not await self.swarmui_manager.ensure_swarmui_available():
+                logger.error("[LEGACY-WORKFLOW] SwarmUI not available, image upload will fail")
+                return
+
+            comfyui_url = "http://127.0.0.1:7821"
+            upload_url = f"{comfyui_url}/upload/image"
+            uploaded_filename = None
+
+            try:
+                async with aiohttp.ClientSession() as session:
+                    with open(source_path, 'rb') as f:
+                        form = aiohttp.FormData()
+                        form.add_field('image', f, filename=source_file.name, content_type='image/png')
+                        form.add_field('overwrite', 'true')
+
+                        async with session.post(upload_url, data=form) as response:
+                            if response.status == 200:
+                                result = await response.json()
+                                uploaded_filename = result.get('name', source_file.name)
+                            else:
+                                logger.error(f"[LEGACY-WORKFLOW] Failed to upload image: HTTP {response.status}")
+            except Exception as e:
+                logger.error(f"[LEGACY-WORKFLOW] Error uploading image: {e}")
+
+        if uploaded_filename:
+            logger.info(f"[LEGACY-WORKFLOW] Uploaded image: {uploaded_filename}")
+            image_node_id = image_mapping.get('node_id')
+            image_field = image_mapping.get('field', 'inputs.image')
+            if image_node_id and image_node_id in workflow:
+                field_parts = image_field.split('.')
+                target = workflow[image_node_id]
+                for part in field_parts[:-1]:
+                    target = target.setdefault(part, {})
+                target[field_parts[-1]] = uploaded_filename
+
+    async def _handle_legacy_multi_image_uploads(
+        self, workflow: Dict[str, Any], input_mappings: Dict[str, Any],
+        parameters: Dict[str, Any], multi_image_keys: List[str]
+    ):
+        """Handle multi-image uploads (input_image1/2/3)."""
+        if COMFYUI_DIRECT:
+            from my_app.services.comfyui_ws_client import get_comfyui_ws_client
+
+            logger.info("[LEGACY-WORKFLOW] Multi-image upload via ComfyUI WS client...")
+            if not await self.comfyui_manager.ensure_comfyui_available():
+                return
+
+            client = get_comfyui_ws_client()
+
+            for image_key in multi_image_keys:
+                if image_key not in input_mappings or image_key not in parameters or not parameters[image_key]:
+                    continue
+
+                image_mapping = input_mappings[image_key]
+                source_path = _resolve_media_url_to_path(parameters[image_key])
+                source_file = Path(source_path)
+
+                try:
+                    with open(source_path, 'rb') as f:
+                        image_data = f.read()
+                    uploaded_filename = await client.upload_image(image_data, source_file.name)
+                    if uploaded_filename:
+                        image_node_id = image_mapping.get('node_id')
+                        image_field = image_mapping.get('field', 'inputs.image')
+                        if image_node_id and image_node_id in workflow:
+                            field_parts = image_field.split('.')
+                            target = workflow[image_node_id]
+                            for part in field_parts[:-1]:
+                                target = target.setdefault(part, {})
+                            target[field_parts[-1]] = uploaded_filename
+                            logger.info(f"[LEGACY-WORKFLOW] Injected {image_key}: {uploaded_filename}")
+                except Exception as e:
+                    logger.error(f"[LEGACY-WORKFLOW] Error uploading {image_key}: {e}")
+        else:
+            import aiohttp
+
+            logger.info("[LEGACY-WORKFLOW] Ensuring SwarmUI available for multi-image upload...")
+            await self.swarmui_manager.ensure_swarmui_available()
+
+            comfyui_url = "http://127.0.0.1:7821"
+            upload_url = f"{comfyui_url}/upload/image"
+
+            for image_key in multi_image_keys:
+                if image_key not in input_mappings or image_key not in parameters or not parameters[image_key]:
+                    logger.info(f"[LEGACY-WORKFLOW] {image_key} is empty (optional), skipping")
+                    continue
+
+                image_mapping = input_mappings[image_key]
+                source_path = _resolve_media_url_to_path(parameters[image_key])
+                source_file = Path(source_path)
+
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        with open(source_path, 'rb') as f:
+                            form = aiohttp.FormData()
+                            form.add_field('image', f, filename=source_file.name, content_type='image/png')
+                            form.add_field('overwrite', 'true')
+
+                            async with session.post(upload_url, data=form) as response:
+                                if response.status == 200:
+                                    result = await response.json()
+                                    uploaded_filename = result.get('name', source_file.name)
+                                    logger.info(f"[LEGACY-WORKFLOW] Uploaded {image_key}: {uploaded_filename}")
+
+                                    image_node_id = image_mapping.get('node_id')
+                                    image_field = image_mapping.get('field', 'inputs.image')
+                                    if image_node_id and image_node_id in workflow:
+                                        field_parts = image_field.split('.')
+                                        target = workflow[image_node_id]
+                                        for part in field_parts[:-1]:
+                                            target = target.setdefault(part, {})
+                                        target[field_parts[-1]] = uploaded_filename
+                                else:
+                                    logger.error(f"[LEGACY-WORKFLOW] Failed to upload {image_key}: HTTP {response.status}")
+                except Exception as e:
+                    logger.error(f"[LEGACY-WORKFLOW] Error uploading {image_key}: {e}")
+                    import traceback
+                    traceback.print_exc()
 
     def _inject_legacy_prompt(self, workflow: Dict[str, Any], prompt: str, config: Dict[str, Any]) -> Tuple[Dict[str, Any], bool]:
         """Inject prompt into legacy workflow using title-based node search

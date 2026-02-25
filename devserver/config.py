@@ -296,21 +296,35 @@ EXTERNAL_LLM_PROVIDER = os.environ.get("EXTERNAL_LLM_PROVIDER", "none")
 # True = DSGVO-compliant (no cloud services), False = Cloud services allowed
 DSGVO_CONFORMITY = os.environ.get("DSGVO_CONFORMITY", "true").lower() == "true"
 COMFYUI_PREFIX = "comfyui"
-COMFYUI_PORT = "7821"  # SwarmUI integrated ComfyUI (RTX 5090 compatible)
-SWARMUI_API_PORT = "7801"  # SwarmUI REST API (proper image generation endpoint)
-
-# SwarmUI Orchestration Configuration
-# "Single Front Door" Architecture (Port 7801 for everything)
-USE_SWARMUI_ORCHESTRATION = True  # Default: Route all workflows via SwarmUI
-ALLOW_DIRECT_COMFYUI = False      # Emergency only: Allow direct access to Port 7821
+COMFYUI_PORT = "7821"  # ComfyUI backend port (direct or via SwarmUI)
+SWARMUI_API_PORT = "7801"  # SwarmUI REST API (legacy, used when COMFYUI_DIRECT=False)
 
 # ============================================================================
-# SWARMUI AUTO-RECOVERY CONFIGURATION
+# COMFYUI CONNECTION MODE
 # ============================================================================
-# Controls automatic startup of SwarmUI when needed
-SWARMUI_AUTO_START = os.environ.get("SWARMUI_AUTO_START", "true").lower() == "true"
-SWARMUI_STARTUP_TIMEOUT = int(os.environ.get("SWARMUI_STARTUP_TIMEOUT", "120"))  # seconds
-SWARMUI_HEALTH_CHECK_INTERVAL = float(os.environ.get("SWARMUI_HEALTH_CHECK_INTERVAL", "2.0"))  # seconds
+# True  = Direct WebSocket connection to ComfyUI (no SwarmUI middleware)
+#         Real progress tracking, denoising previews, no filesystem hacks
+# False = Legacy SwarmUI proxy mode (Port 7801, polling, glob-based output)
+#
+# Toggle via env var for safe transition: COMFYUI_DIRECT=true in dev startup
+COMFYUI_DIRECT = os.environ.get("COMFYUI_DIRECT", "false").lower() == "true"
+
+# Legacy SwarmUI flags (only used when COMFYUI_DIRECT=False)
+USE_SWARMUI_ORCHESTRATION = True  # Route all workflows via SwarmUI
+ALLOW_DIRECT_COMFYUI = False      # Emergency only: direct port 7821
+
+# ============================================================================
+# COMFYUI AUTO-RECOVERY CONFIGURATION
+# ============================================================================
+# Controls automatic startup of ComfyUI/SwarmUI when needed
+COMFYUI_AUTO_START = os.environ.get("COMFYUI_AUTO_START", "true").lower() == "true"
+COMFYUI_STARTUP_TIMEOUT = int(os.environ.get("COMFYUI_STARTUP_TIMEOUT", "120"))  # seconds
+COMFYUI_HEALTH_CHECK_INTERVAL = float(os.environ.get("COMFYUI_HEALTH_CHECK_INTERVAL", "2.0"))  # seconds
+
+# Legacy aliases (for backward compatibility with SwarmUIManager during transition)
+SWARMUI_AUTO_START = COMFYUI_AUTO_START
+SWARMUI_STARTUP_TIMEOUT = COMFYUI_STARTUP_TIMEOUT
+SWARMUI_HEALTH_CHECK_INTERVAL = COMFYUI_HEALTH_CHECK_INTERVAL
 
 
 # ============================================================================
