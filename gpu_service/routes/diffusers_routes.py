@@ -89,6 +89,7 @@ def generate():
         cfg_scale=float(data.get('cfg_scale', 4.5)),
         seed=int(data.get('seed', -1)),
         pipeline_class=data.get('pipeline_class', 'StableDiffusion3Pipeline'),
+        loras=data.get('loras'),
     ))
 
     if image_bytes is None:
@@ -122,6 +123,7 @@ def generate_fusion():
         steps=int(data.get('steps', 25)),
         cfg_scale=float(data.get('cfg_scale', 4.5)),
         seed=int(data.get('seed', -1)),
+        loras=data.get('loras'),
     ))
 
     if image_bytes is None:

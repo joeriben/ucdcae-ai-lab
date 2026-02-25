@@ -592,7 +592,15 @@ class BackendRouter:
                     logger.info(f"[ROUTER] Using workflow API for '{chunk_name}' (requires_workflow=true)")
                     return await self._process_workflow_chunk(chunk_name, text_prompt, parameters, chunk)
                 elif has_loras:
-                    logger.info(f"[ROUTER] Using workflow API for '{chunk_name}' (LoRA injection)")
+                    # Prefer Diffusers for LoRA when enabled (native load_lora_weights)
+                    from config import DIFFUSERS_ENABLED
+                    if DIFFUSERS_ENABLED:
+                        diffusers_chunk = self._get_diffusers_compatible_chunk(chunk_name, chunk)
+                        if diffusers_chunk:
+                            logger.info(f"[ROUTER] Using Diffusers backend for '{chunk_name}' (LoRA + DIFFUSERS_ENABLED)")
+                            return await self._process_diffusers_chunk(chunk_name, text_prompt, parameters, diffusers_chunk)
+                    # Fallback: ComfyUI workflow with LoRA injection
+                    logger.info(f"[ROUTER] Using workflow API for '{chunk_name}' (LoRA injection, ComfyUI fallback)")
                     return await self._process_workflow_chunk(chunk_name, text_prompt, parameters, chunk)
                 else:
                     # Session 150: Prefer Diffusers when enabled (faster, simpler)
@@ -1786,6 +1794,11 @@ class BackendRouter:
             else:
                 seed = int(seed)
 
+            # LoRA extraction
+            loras = parameters.get('loras') or []
+            if loras:
+                logger.info(f"[DIFFUSERS] Applying {len(loras)} LoRA(s): {[l['name'] for l in loras]}")
+
             # Generate image via Diffusers
             logger.info(f"[DIFFUSERS] Generating image: model={model_id}, steps={steps}, size={width}x{height}")
 
@@ -1910,7 +1923,8 @@ class BackendRouter:
                     height=height,
                     steps=steps,
                     cfg_scale=cfg_scale,
-                    seed=seed
+                    seed=seed,
+                    loras=loras if loras else None,
                 )
             else:
                 image_bytes = await backend.generate_image(
@@ -1923,6 +1937,7 @@ class BackendRouter:
                     cfg_scale=cfg_scale,
                     seed=seed,
                     pipeline_class=pipeline_class,
+                    loras=loras if loras else None,
                 )
 
             if not image_bytes:

@@ -31,6 +31,7 @@ DIFFUSERS_TENSORRT_MODELS = {
     "sd35_large": "stabilityai/stable-diffusion-3.5-large-tensorrt",
     "sd35_medium": "stabilityai/stable-diffusion-3.5-medium-tensorrt",
 }
+LORA_DIR = Path(os.environ.get("LORA_DIR", str(_AI_TOOLS_BASE / "SwarmUI" / "Models" / "loras")))
 
 # --- HeartMuLa ---
 HEARTMULA_ENABLED = os.environ.get("HEARTMULA_ENABLED", "true").lower() == "true"

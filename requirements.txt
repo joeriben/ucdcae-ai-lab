@@ -55,6 +55,7 @@ lxml>=5.1.0          # XML processing and parsing
 # Diffusers Backend (Image Generation)
 # ============================================================================
 diffusers>=0.32.0    # HuggingFace Diffusers (SD3.5, Flux2, Stable Audio)
+peft>=0.12.0         # Parameter-Efficient Fine-Tuning (LoRA support for Diffusers)
 scipy>=1.12.0        # WAV audio file I/O (Stable Audio backend)
 transformers>=4.45.0 # HuggingFace Transformers (text encoders)
 accelerate>=0.34.0   # HuggingFace Accelerate (device management)

@@ -101,6 +101,7 @@ class DiffusersClient:
         seed: int = -1,
         callback: Optional[Callable[[int, int, Any], None]] = None,
         pipeline_class: str = "StableDiffusion3Pipeline",
+        loras: Optional[list] = None,
         **kwargs
     ) -> Optional[bytes]:
         """Generate an image. Returns PNG bytes or None.
@@ -108,7 +109,7 @@ class DiffusersClient:
         callback parameter is accepted but ignored (cannot serialize over HTTP).
         """
         import asyncio
-        result = await asyncio.to_thread(self._post, '/api/diffusers/generate', {
+        payload = {
             'prompt': prompt,
             'model_id': model_id,
             'negative_prompt': negative_prompt,
@@ -118,7 +119,10 @@ class DiffusersClient:
             'cfg_scale': cfg_scale,
             'seed': seed,
             'pipeline_class': pipeline_class,
-        })
+        }
+        if loras:
+            payload['loras'] = loras
+        result = await asyncio.to_thread(self._post, '/api/diffusers/generate', payload)
 
         if result is None or not result.get('success'):
             return None
@@ -176,11 +180,12 @@ class DiffusersClient:
         steps: int = 25,
         cfg_scale: float = 4.5,
         seed: int = -1,
-        callback: Optional[Callable[[int, int, Any], None]] = None
+        callback: Optional[Callable[[int, int, Any], None]] = None,
+        loras: Optional[list] = None,
     ) -> Optional[bytes]:
         """T5-CLIP fusion generation. Returns PNG bytes or None."""
         import asyncio
-        result = await asyncio.to_thread(self._post, '/api/diffusers/generate/fusion', {
+        payload = {
             'prompt': prompt,
             't5_prompt': t5_prompt,
             'alpha_factor': alpha_factor,
@@ -191,7 +196,10 @@ class DiffusersClient:
             'steps': steps,
             'cfg_scale': cfg_scale,
             'seed': seed,
-        })
+        }
+        if loras:
+            payload['loras'] = loras
+        result = await asyncio.to_thread(self._post, '/api/diffusers/generate/fusion', payload)
 
         if result is None or not result.get('success'):
             return None

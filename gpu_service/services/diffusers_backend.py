@@ -463,6 +463,37 @@ class DiffusersImageGenerator:
             logger.error(f"[DIFFUSERS] Error unloading model: {e}")
             return False
 
+    def _apply_loras(self, pipe, loras: list):
+        """Load LoRA weights onto pipeline for current generation."""
+        from config import LORA_DIR
+
+        adapter_names = []
+        adapter_weights = []
+        for i, lora in enumerate(loras):
+            lora_path = LORA_DIR / lora['name']
+            if not lora_path.exists():
+                logger.error(f"[DIFFUSERS-LORA] LoRA file not found: {lora_path}")
+                continue
+            adapter_name = f"lora_{i}"
+            pipe.load_lora_weights(
+                str(LORA_DIR), weight_name=lora['name'], adapter_name=adapter_name
+            )
+            adapter_names.append(adapter_name)
+            adapter_weights.append(lora.get('strength', 1.0))
+            logger.info(f"[DIFFUSERS-LORA] Loaded: {lora['name']} (strength={lora.get('strength', 1.0)})")
+
+        if adapter_names:
+            pipe.set_adapters(adapter_names, adapter_weights)
+            logger.info(f"[DIFFUSERS-LORA] Active adapters: {adapter_names}")
+
+    def _remove_loras(self, pipe):
+        """Unload all LoRA weights from pipeline."""
+        try:
+            pipe.unload_lora_weights()
+            logger.info("[DIFFUSERS-LORA] Unloaded LoRA weights")
+        except Exception as e:
+            logger.warning(f"[DIFFUSERS-LORA] Error unloading LoRAs: {e}")
+
     async def generate_image(
         self,
         prompt: str,
@@ -475,6 +506,7 @@ class DiffusersImageGenerator:
         seed: int = -1,
         callback: Optional[Callable[[int, int, Any], None]] = None,
         pipeline_class: str = "StableDiffusion3Pipeline",
+        loras: Optional[list] = None,
         **kwargs
     ) -> Optional[bytes]:
         """
@@ -491,6 +523,7 @@ class DiffusersImageGenerator:
             seed: Random seed (-1 for random)
             callback: Step callback for progress (step, total_steps, latents)
             pipeline_class: Pipeline class string (e.g. "Flux2Pipeline")
+            loras: Optional list of LoRA dicts [{name, strength}]
             **kwargs: Additional pipeline arguments
 
         Returns:
@@ -534,6 +567,8 @@ class DiffusersImageGenerator:
                 # Run inference in thread to avoid blocking event loop
                 def _generate():
                     _generation_progress.update({"step": 0, "total_steps": steps, "active": True})
+                    if loras:
+                        self._apply_loras(pipe, loras)
                     try:
                         # Build generation kwargs
                         gen_kwargs = {
@@ -573,6 +608,8 @@ class DiffusersImageGenerator:
                         result = pipe(**gen_kwargs)
                         return result.images[0]
                     finally:
+                        if loras:
+                            self._remove_loras(pipe)
                         _generation_progress["active"] = False
 
                 image = await asyncio.to_thread(_generate)
@@ -720,7 +757,8 @@ class DiffusersImageGenerator:
         steps: int = 25,
         cfg_scale: float = 4.5,
         seed: int = -1,
-        callback: Optional[Callable[[int, int, Any], None]] = None
+        callback: Optional[Callable[[int, int, Any], None]] = None,
+        loras: Optional[list] = None,
     ) -> Optional[bytes]:
         """
         Generate an image using T5-CLIP token-level fusion (Surrealizer)
@@ -835,6 +873,8 @@ class DiffusersImageGenerator:
 
                 def _generate():
                     _generation_progress.update({"step": 0, "total_steps": steps, "active": True})
+                    if loras:
+                        self._apply_loras(pipe, loras)
                     try:
                         # Effective T5 prompt: expanded if provided, else original
                         effective_t5_prompt = t5_prompt if t5_prompt else prompt
@@ -882,6 +922,8 @@ class DiffusersImageGenerator:
                         result = pipe(**gen_kwargs)
                         return result.images[0]
                     finally:
+                        if loras:
+                            self._remove_loras(pipe)
                         _generation_progress["active"] = False
 
                 image = await asyncio.to_thread(_generate)
