@@ -17,7 +17,7 @@
       "description": "Text prompt — encoded separately by CLIP-L (77 tokens, visual) and T5-XXL (512 tokens, linguistic)"
     },
     "alpha_factor": {
-      "default": 0,
+      "default": 25,
       "description": "Extrapolation factor: 0=pure CLIP-L (normal), 1=pure T5, 15-35=surreal sweet spot (extrapolation past T5). Negative α: CLIP-L amplified, T5 negated — upper 3328 dimensions (CLIP-L zero-padding) get inverted T5 vectors, cross-attention patterns flip. Formula: (1-α)*CLIP-L + α*T5 on first 77 tokens."
     },
     "seed": {
