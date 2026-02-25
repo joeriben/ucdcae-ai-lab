@@ -1355,6 +1355,55 @@ function showImageFullscreen(imageUrl) {
 - **image_transformation.vue:** ~293 lines reduced (150 HTML + 200 CSS, added action methods)
 - **Total:** ~300 lines of duplicate code eliminated
 
+#### MediaInputBox Component
+
+**Status:** ✅ Implemented (Session 99+), Sketch support added (Session 210), refactored to component-level (Session 212)
+**Location:** `/public/ai4artsed-frontend/src/components/MediaInputBox.vue`
+
+**Purpose:** Unified input component for all pipeline inputs — text, image upload, and sketch drawing. Used across all pipeline views for consistent input handling, safety checks, SSE streaming, and translation.
+
+**Input Modes:**
+
+1. **Text** (`inputType="text"`): Textarea with auto-resize, blur/paste safety checks, Union Jack translate button, SSE streaming support
+2. **Image** (`inputType="image"`): `ImageUploadWidget` for file upload. When `allowSketch` is `true`, an internal toggle lets users switch between upload and sketch mode.
+3. **Sketch** (internal, via `allowSketch`): `SketchCanvas` for freehand drawing — pen/eraser, 3 brush sizes, undo, exports PNG to same upload API. Same `image-uploaded`/`image-removed` event contract as upload.
+
+**Props Interface (key props):**
+
+```typescript
+interface Props {
+  icon: string                    // Header icon (emoji or SVG keyword)
+  label: string                   // Header label (i18n)
+  value: string                   // v-model:value for text, preview URL for image
+  inputType?: 'text' | 'image'   // Input mode (default: 'text')
+  allowSketch?: boolean           // Show upload/sketch toggle for image inputs (default: false)
+  initialImage?: string           // Pre-loaded image URL for ImageUploadWidget
+  showTranslate?: boolean         // Show Union Jack translate button (default: true)
+  showPresetButton?: boolean      // Show interception preset button (default: false)
+  enableStreaming?: boolean        // Enable SSE streaming (default: false)
+  streamUrl?: string              // SSE endpoint URL
+  streamParams?: Record<string, string | boolean>
+  // ... plus isEmpty, isRequired, isFilled, isLoading, showCopy, showPaste, showClear, etc.
+}
+```
+
+**Sketch Toggle Architecture (Session 212):**
+
+Before Session 212, `'sketch'` was a third value of the external `inputType` prop — pages had to manage the upload/sketch toggle themselves. This was refactored:
+- `inputType` union is now `'text' | 'image'` only
+- `allowSketch: boolean` prop controls whether the toggle appears
+- Internal `sketchMode: ref(false)` manages the state
+- Pages just pass `:allow-sketch="true"` — zero toggle logic needed
+
+**Pedagogical rationale:** Sketch is not an alternative input *type* but an alternative input *modality* within image input. Upload = "Was habe ich?" (material-oriented). Sketch = "Was stelle ich mir vor?" (imagination-oriented). Both equally valid for img2img pipelines.
+
+**Views Using MediaInputBox:**
+- `image_transformation.vue` — 1 image (with sketch), 1 text context
+- `multi_image_transformation.vue` — 3 images (all with sketch), 1 text context
+- `crossmodal_lab.vue` — 2 images (both with sketch), multiple text prompts
+- `text_transformation.vue` — text input + text context
+- `surrealizer.vue`, `music_generation.vue`, and others — text inputs
+
 **Scalability:** Future views (video_transformation, audio_transformation, etc.) can reuse this component without any code duplication.
 
 ---

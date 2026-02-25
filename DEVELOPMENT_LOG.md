@@ -66,6 +66,7 @@ Full pipeline from frontend to GPU service (10 files initially, refined in follo
 ## Session 210 - Sketch Canvas for Image Transformation
 **Date:** 2026-02-25
 **Focus:** Let kids draw a freehand sketch in the browser that feeds into img2img pipelines
+**Note:** Toggle logic refactored into MediaInputBox in Session 212 — page-level toggle code removed, replaced by `allowSketch` prop
 
 ### Implementation
 

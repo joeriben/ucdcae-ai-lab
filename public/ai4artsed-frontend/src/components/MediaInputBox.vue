@@ -103,20 +103,46 @@
       :class="['bubble-textarea', resizeClass, { disabled: disabled }]"
     ></textarea>
 
-    <!-- Content: Image Input -->
-    <ImageUploadWidget
-      v-else-if="inputType === 'image'"
-      :initial-image="initialImage"
-      @image-uploaded="handleImageUpload"
-      @image-removed="$emit('image-removed')"
-    />
+    <!-- Content: Image Input (with optional sketch toggle) -->
+    <template v-else-if="inputType === 'image'">
+      <!-- Upload / Sketch toggle (only when allowSketch is true) -->
+      <div v-if="allowSketch" class="input-mode-toggle">
+        <button
+          class="mode-btn"
+          :class="{ active: !sketchMode }"
+          @click="sketchMode = false"
+          :title="t('imageTransform.uploadMode')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+            <path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/>
+          </svg>
+          {{ t('imageTransform.uploadMode') }}
+        </button>
+        <button
+          class="mode-btn"
+          :class="{ active: sketchMode }"
+          @click="sketchMode = true"
+          :title="t('imageTransform.sketchMode')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18" fill="currentColor">
+            <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+          </svg>
+          {{ t('imageTransform.sketchMode') }}
+        </button>
+      </div>
 
-    <!-- Content: Sketch Input -->
-    <SketchCanvas
-      v-else-if="inputType === 'sketch'"
-      @image-uploaded="handleImageUpload"
-      @image-removed="$emit('image-removed')"
-    />
+      <SketchCanvas
+        v-if="sketchMode"
+        @image-uploaded="handleImageUpload"
+        @image-removed="$emit('image-removed')"
+      />
+      <ImageUploadWidget
+        v-else
+        :initial-image="initialImage"
+        @image-uploaded="handleImageUpload"
+        @image-removed="$emit('image-removed')"
+      />
+    </template>
   </div>
 </template>
 
@@ -149,6 +175,9 @@ const isCheckingSafety = ref(false)
 // Translation state
 const isTranslating = ref(false)
 
+// Sketch mode (internal toggle when allowSketch + inputType=image)
+const sketchMode = ref(false)
+
 // Queue state
 const queueStatus = ref<'idle' | 'waiting' | 'acquired'>('idle')
 const queueMessage = ref('')
@@ -159,7 +188,7 @@ interface Props {
   tooltip?: string
   placeholder?: string
   value: string
-  inputType?: 'text' | 'image' | 'sketch'
+  inputType?: 'text' | 'image'
   rows?: number
   resizeType?: 'standard' | 'auto' | 'none'
   isEmpty?: boolean
@@ -175,6 +204,7 @@ interface Props {
   initialImage?: string
   disabled?: boolean
   showPresetButton?: boolean
+  allowSketch?: boolean
   // Streaming props
   enableStreaming?: boolean
   streamUrl?: string
@@ -198,7 +228,8 @@ const props = withDefaults(defineProps<Props>(), {
   initialImage: undefined,
   disabled: false,
   showPresetButton: false,
-  tooltip: undefined
+  tooltip: undefined,
+  allowSketch: false
 })
 
 const emit = defineEmits<{
@@ -733,6 +764,47 @@ onUnmounted(() => {
 .no-resize-textarea {
   resize: none;
   min-height: clamp(80px, 10vh, 100px);
+}
+
+/* Upload / Sketch Toggle */
+.input-mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-btn.active {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.mode-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Loading Overlay */
