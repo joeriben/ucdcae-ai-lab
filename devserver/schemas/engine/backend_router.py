@@ -1914,7 +1914,7 @@ class BackendRouter:
             # Auto-generate alpha for fusion configs when not explicitly provided (e.g. Canvas)
             if alpha_factor is None and diffusers_config.get('fusion_mode') == 't5_clip_alpha':
                 import random as _rng
-                alpha_factor = _rng.randint(10, 25)
+                alpha_factor = _rng.randint(20, 30)
                 logger.info(f"[DIFFUSERS] Auto-generated alpha_factor: {alpha_factor} (fusion_mode requires it)")
             if alpha_factor is not None and diffusers_config.get('fusion_mode') == 't5_clip_alpha':
                 logger.info(f"[DIFFUSERS] Fusion mode: t5_clip_alpha, alpha={alpha_factor}, t5_expanded={t5_prompt is not None}")
