@@ -1917,7 +1917,8 @@ class BackendRouter:
                 alpha_factor = _rng.randint(20, 30)
                 logger.info(f"[DIFFUSERS] Auto-generated alpha_factor: {alpha_factor} (fusion_mode requires it)")
             if alpha_factor is not None and diffusers_config.get('fusion_mode') == 't5_clip_alpha':
-                logger.info(f"[DIFFUSERS] Fusion mode: t5_clip_alpha, alpha={alpha_factor}, t5_expanded={t5_prompt is not None}")
+                fusion_strategy = parameters.get('fusion_strategy', 'dual_alpha')
+                logger.info(f"[DIFFUSERS] Fusion mode: t5_clip_alpha, strategy={fusion_strategy}, alpha={alpha_factor}, t5_expanded={t5_prompt is not None}")
                 image_bytes = await backend.generate_image_with_fusion(
                     prompt=prompt,
                     t5_prompt=t5_prompt,
@@ -1930,6 +1931,7 @@ class BackendRouter:
                     cfg_scale=cfg_scale,
                     seed=seed,
                     loras=loras if loras else None,
+                    fusion_strategy=fusion_strategy,
                 )
             else:
                 image_bytes = await backend.generate_image(

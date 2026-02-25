@@ -434,30 +434,15 @@ class DiffusersImageGenerator:
         steps: int = 25,
         cfg_scale: float = 4.5,
         seed: int = -1,
-        callback: Optional[Callable[[int, int, Any], None]] = None
+        callback: Optional[Callable[[int, int, Any], None]] = None,
+        loras: Optional[list] = None,
+        fusion_strategy: str = "legacy",
     ) -> Optional[bytes]:
         """
         Generate an image using T5-CLIP token-level fusion (Surrealizer)
 
-        Replicates the ComfyUI ai4artsed_t5_clip_fusion node behavior:
-        - CLIP-L and T5-XXL encode the prompt independently
-        - First 77 tokens are LERP'd: (1-alpha)*CLIP-L + alpha*T5
-        - Remaining T5 tokens (78+) are appended unchanged as semantic anchor
-        - Alpha enables extrapolation: at alpha=20, embeddings are pushed
-          19x past T5 in the CLIP→T5 direction, creating surreal distortion
-
-        Args:
-            prompt: Text prompt (used for CLIP-L encoding)
-            t5_prompt: Optional expanded prompt for T5 encoding (None = use prompt)
-            alpha_factor: -75 to +75 (raw from UI slider)
-                0 = pure CLIP-L, 1 = pure T5, 15-35 = surreal sweet spot
-            model_id: SD3.5 model to use
-            negative_prompt: Negative prompt (fused with same alpha)
-            width/height: Image dimensions
-            steps: Inference steps
-            cfg_scale: CFG scale
-            seed: Random seed (-1 for random)
-            callback: Step callback for progress
+        Fusion strategies: "legacy", "dual_alpha", "normalized"
+        (see gpu_service version for full documentation)
 
         Returns:
             PNG image bytes, or None on failure
@@ -488,62 +473,55 @@ class DiffusersImageGenerator:
 
                 generator = torch.Generator(device=self.device).manual_seed(seed)
 
-                logger.info(f"[DIFFUSERS-FUSION] Generating: alpha={alpha_factor}, steps={steps}, size={width}x{height}, seed={seed}, t5_expanded={t5_prompt is not None}")
+                logger.info(f"[DIFFUSERS-FUSION] Generating: strategy={fusion_strategy}, alpha={alpha_factor}, steps={steps}, size={width}x{height}, seed={seed}, t5_expanded={t5_prompt is not None}")
 
                 def _fuse_prompt(clip_text: str, t5_text: str):
-                    """Exact replica of the ComfyUI Surrealizer CLIP flow.
-
-                    Original ComfyUI data flow:
-                    1. CLIPLoader(clip_l.safetensors, type=sd3) → SD3ClipModel(clip_l only)
-                       → encode → [1, 77, 4096] (768d CLIP-L real + 3328d zeros)
-                       → pooled: [1, 2048] (768d CLIP-L + 1280d zeros)
-                    2. CLIPLoader(t5xxl_enconly.safetensors, type=sd3) → SD3ClipModel(t5 only)
-                       → encode → [1, T5_len, 4096] (all 4096d real)
-                       → pooled: zeros [1, 2048]
-                    3. ai4artsed_t5_clip_fusion: LERP first 77 tokens, append T5 remainder
-                       → result pooled = clip_pooled (768d real + 1280d ZEROS)
-
-                    CRITICAL: The original workflow loads ONLY clip_l — no CLIP-G.
-                    CLIP-G is intentionally absent from both embedding AND pooled.
-                    This is what enables the extrapolation effect: 768d real data
-                    in a 4096d space creates the asymmetry the surrealization needs.
+                    """T5-CLIP fusion with selectable strategy.
+                    (In-process fallback — mirrors gpu_service implementation)
                     """
                     device = pipe._execution_device
 
-                    # --- CLIP-L only (matches CLIPLoader + clip_l.safetensors) ---
+                    # --- CLIP-L only (no CLIP-G) ---
                     clip_l_embeds, clip_l_pooled = pipe._get_clip_prompt_embeds(
                         prompt=clip_text, device=device, num_images_per_prompt=1, clip_model_index=0
                     )
-                    # clip_l_embeds: [1, 77, 768], clip_l_pooled: [1, 768]
-
-                    # Pad CLIP-L to 4096d — matches SD3ClipModel with clip_g=None:
-                    # lg_out = F.pad(lg_out, (0, 4096 - lg_out.shape[-1]))
                     clip_padded = F.pad(clip_l_embeds, (0, 4096 - clip_l_embeds.shape[-1]))
-                    # [1, 77, 4096]: first 768d real CLIP-L, rest zeros (NO CLIP-G)
-
-                    # Pooled: CLIP-L real + CLIP-G zeros — matches SD3ClipModel with clip_g=None:
-                    # pooled = torch.cat((l_pooled, g_pooled), dim=-1) where g_pooled = zeros
                     pooled = F.pad(clip_l_pooled, (0, 1280))
-                    # [1, 2048]: first 768d real CLIP-L, last 1280d zeros
 
-                    # --- T5 encoding (matches CLIPLoader + t5xxl_enconly.safetensors) ---
+                    # --- T5 encoding ---
                     t5_embeds = pipe._get_t5_prompt_embeds(
                         prompt=t5_text, num_images_per_prompt=1, max_sequence_length=512, device=device
                     )
-                    # [1, 512, 4096]: all 4096d real T5 data
 
-                    # --- Fusion (exact replica of ai4artsed_t5_clip_fusion.fuse()) ---
                     interp_len = min(77, clip_padded.shape[1])
+                    t5_len = t5_embeds.shape[1]
 
-                    clip_interp = clip_padded[:, :interp_len, :]
-                    t5_interp = t5_embeds[:, :interp_len, :]
-                    t5_remainder = t5_embeds[:, interp_len:, :]
+                    if fusion_strategy == "dual_alpha":
+                        alpha_core = alpha_factor * 0.15
+                        alpha_ext = alpha_factor
+                        clip_interp = clip_padded[:, :interp_len, :]
+                        t5_interp = t5_embeds[:, :interp_len, :]
+                        t5_remainder = t5_embeds[:, interp_len:, :]
+                        fused_core = (1.0 - alpha_core) * clip_interp + alpha_core * t5_interp
+                        fused_ext = alpha_ext * t5_remainder
+                        fused_embeds = torch.cat([fused_core, fused_ext], dim=1)
 
-                    # LERP: fused = (1-α)*CLIP + α*T5
-                    fused_part = (1.0 - alpha_factor) * clip_interp + alpha_factor * t5_interp
+                    elif fusion_strategy == "normalized":
+                        if t5_len > interp_len:
+                            clip_full = F.pad(clip_padded, (0, 0, 0, t5_len - interp_len))
+                        else:
+                            clip_full = clip_padded[:, :t5_len, :]
+                        fused_embeds = (1.0 - alpha_factor) * clip_full + alpha_factor * t5_embeds
+                        ref_norm = t5_embeds.norm(dim=-1, keepdim=True).mean()
+                        fused_norms = fused_embeds.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                        fused_embeds = fused_embeds * (ref_norm / fused_norms)
 
-                    # Concatenate fused tokens + T5 remainder (semantic anchor)
-                    fused_embeds = torch.cat([fused_part, t5_remainder], dim=1)
+                    else:  # legacy
+                        clip_interp = clip_padded[:, :interp_len, :]
+                        t5_interp = t5_embeds[:, :interp_len, :]
+                        t5_remainder = t5_embeds[:, interp_len:, :]
+                        fused_part = (1.0 - alpha_factor) * clip_interp + alpha_factor * t5_interp
+                        fused_embeds = torch.cat([fused_part, t5_remainder], dim=1)
 
                     return fused_embeds, pooled
 
@@ -559,9 +537,7 @@ class DiffusersImageGenerator:
                     neg_embeds, neg_pooled = _fuse_prompt(neg_text, neg_text)
 
                     logger.info(
-                        f"[DIFFUSERS-FUSION] Token-level fusion: alpha={alpha_factor}, "
-                        f"LERP first {min(77, pos_embeds.shape[1])} tokens, "
-                        f"appending {max(0, pos_embeds.shape[1] - 77)} T5 anchor tokens, "
+                        f"[DIFFUSERS-FUSION] strategy={fusion_strategy}, alpha={alpha_factor}, "
                         f"shape={pos_embeds.shape}"
                     )
 

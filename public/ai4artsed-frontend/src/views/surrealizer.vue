@@ -93,12 +93,26 @@
           <summary>{{ t('surrealizer.advancedLabel') }}</summary>
           <div class="settings-grid">
             <label>
+              {{ t('surrealizer.fusionStrategyLabel') }}
+              <select v-model="fusionStrategy" class="setting-input">
+                <option value="dual_alpha">{{ t('surrealizer.fusionDualAlpha') }}</option>
+                <option value="normalized">{{ t('surrealizer.fusionNormalized') }}</option>
+                <option value="legacy">{{ t('surrealizer.fusionLegacy') }}</option>
+              </select>
+              <span class="setting-hint">{{ t('surrealizer.fusionHint_' + fusionStrategy) }}</span>
+            </label>
+            <label>
               {{ t('surrealizer.negativeLabel') }}
               <input v-model="negativePrompt" type="text" class="setting-input" />
             </label>
             <label>
               {{ t('surrealizer.cfgLabel') }}
               <input v-model.number="cfgScale" type="number" min="1" max="15" step="0.1" class="setting-input setting-small" />
+            </label>
+            <label>
+              {{ t('surrealizer.seedLabel') }}
+              <input v-model.number="seedInput" type="number" min="-1" class="setting-input setting-small" />
+              <span class="setting-hint">{{ t('surrealizer.seedHint') }}</span>
             </label>
           </div>
         </details>
@@ -211,6 +225,7 @@ const isFavorited = computed(() => currentRunId.value ? favoritesStore.isFavorit
 
 const inputText = ref('')
 const alphaFaktor = ref<number>(0)  // Slider (-75 to +75), default 0 = normal/balanced
+const fusionStrategy = ref<string>('dual_alpha')  // 'legacy', 'dual_alpha', 'normalized'
 const isExecuting = ref(false)
 const outputs = ref<WorkflowOutput[]>([])
 const fullscreenImage = ref<string | null>(null)
@@ -227,6 +242,7 @@ const currentSeed = ref<number | null>(null)
 // Advanced settings
 const negativePrompt = ref('watermark')
 const cfgScale = ref(5.5)
+const seedInput = ref<number>(-1)  // -1 = random, any other value = fixed seed
 // T5 prompt expansion
 const expandPrompt = ref(false)
 const expandedT5Text = ref('')
@@ -251,15 +267,19 @@ onMounted(() => {
   if (s('lat_lab_ef_negative')) negativePrompt.value = s('lat_lab_ef_negative')!
   if (s('lat_lab_ef_cfg')) cfgScale.value = parseFloat(s('lat_lab_ef_cfg')!) || 5.5
   if (s('lat_lab_ef_expand')) expandPrompt.value = s('lat_lab_ef_expand') === 'true'
+  if (s('lat_lab_ef_fusion')) fusionStrategy.value = s('lat_lab_ef_fusion')!
+  if (s('lat_lab_ef_seed')) seedInput.value = parseInt(s('lat_lab_ef_seed')!) ?? -1
 })
 
 // Session persistence — save on change
 watch(inputText, v => sessionStorage.setItem('lat_lab_ef_prompt', v))
-watch([alphaFaktor, negativePrompt, cfgScale, expandPrompt], () => {
+watch([alphaFaktor, negativePrompt, cfgScale, expandPrompt, fusionStrategy, seedInput], () => {
   sessionStorage.setItem('lat_lab_ef_alpha', String(alphaFaktor.value))
   sessionStorage.setItem('lat_lab_ef_negative', negativePrompt.value)
   sessionStorage.setItem('lat_lab_ef_cfg', String(cfgScale.value))
   sessionStorage.setItem('lat_lab_ef_expand', String(expandPrompt.value))
+  sessionStorage.setItem('lat_lab_ef_fusion', fusionStrategy.value)
+  sessionStorage.setItem('lat_lab_ef_seed', String(seedInput.value))
 })
 
 // Page Context for Träshy (Session 133)
@@ -352,23 +372,26 @@ async function executeWorkflow() {
   }, updateInterval)
 
   try {
-    // Seed logic: keep seed when parameters change, new seed when nothing changed
-    const promptChanged = inputText.value !== previousPrompt.value
-    const alphaChanged = alphaFaktor.value !== previousAlpha.value
-    const cfgChanged = cfgScale.value !== previousCfg.value
-    const negativeChanged = negativePrompt.value !== previousNegative.value
-
-    if (currentSeed.value === null) {
-      // First run
-      currentSeed.value = Math.floor(Math.random() * 2147483647)
-      console.log('[Seed Logic] First run → seed:', currentSeed.value)
-    } else if (promptChanged || alphaChanged || cfgChanged || negativeChanged) {
-      // Any parameter changed → keep seed for comparability
-      console.log('[Seed Logic] Parameter changed → keeping seed:', currentSeed.value)
+    // Seed logic: fixed seed from user OR auto-seed (keep on param change, new on repeat)
+    if (seedInput.value >= 0) {
+      // User specified a fixed seed
+      currentSeed.value = seedInput.value
+      console.log('[Seed Logic] Fixed seed from user:', currentSeed.value)
     } else {
-      // Nothing changed → user wants a new variation
-      currentSeed.value = Math.floor(Math.random() * 2147483647)
-      console.log('[Seed Logic] No changes → new seed:', currentSeed.value)
+      const promptChanged = inputText.value !== previousPrompt.value
+      const alphaChanged = alphaFaktor.value !== previousAlpha.value
+      const cfgChanged = cfgScale.value !== previousCfg.value
+      const negativeChanged = negativePrompt.value !== previousNegative.value
+
+      if (currentSeed.value === null) {
+        currentSeed.value = Math.floor(Math.random() * 2147483647)
+        console.log('[Seed Logic] First run → seed:', currentSeed.value)
+      } else if (promptChanged || alphaChanged || cfgChanged || negativeChanged) {
+        console.log('[Seed Logic] Parameter changed → keeping seed:', currentSeed.value)
+      } else {
+        currentSeed.value = Math.floor(Math.random() * 2147483647)
+        console.log('[Seed Logic] No changes → new seed:', currentSeed.value)
+      }
     }
     previousPrompt.value = inputText.value
     previousAlpha.value = alphaFaktor.value
@@ -384,7 +407,8 @@ async function executeWorkflow() {
       seed: currentSeed.value,
       expand_prompt: needsExpansion,
       negative_prompt: negativePrompt.value,
-      cfg: cfgScale.value
+      cfg: cfgScale.value,
+      fusion_strategy: fusionStrategy.value
     })
 
     if (response.data.status === 'success') {
@@ -416,6 +440,7 @@ async function executeWorkflow() {
             prompt: inputText.value, alpha_factor: mappedAlpha.value,
             seed: currentSeed.value, expand_prompt: expandPrompt.value,
             negative_prompt: negativePrompt.value, cfg: cfgScale.value,
+            fusion_strategy: fusionStrategy.value,
           },
           results: { run_id: runId, t5_expansion: expandedT5Text.value || null },
         })
@@ -744,6 +769,7 @@ watch(() => favoritesStore.pendingRestoreData, (restoreData) => {
   if (state.alpha_factor !== undefined) alphaFaktor.value = Number(state.alpha_factor)
   if (state.negative_prompt !== undefined) negativePrompt.value = String(state.negative_prompt)
   if (state.cfg !== undefined) cfgScale.value = Number(state.cfg)
+  if (state.fusion_strategy !== undefined) fusionStrategy.value = String(state.fusion_strategy)
 
   favoritesStore.setRestoreData(null)
 }, { immediate: true })
@@ -1001,6 +1027,14 @@ watch(() => favoritesStore.pendingRestoreData, (restoreData) => {
   color: rgba(255, 255, 255, 0.45);
   margin-top: 0.25rem;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  line-height: 1.4;
+}
+
+.setting-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.25rem;
   line-height: 1.4;
 }
 

@@ -21,6 +21,21 @@ Tags:
   - (MODIFIED) = English text changed, all 5 translations are stale and must be re-done
 -->
 
+### WO-2026-02-26-surrealizer-fusion-strategy
+- **Session**: N/A
+- **Scope**: en.ts
+- **Changed keys** (new):
+  - `surrealizer.fusionStrategyLabel` (NEW): "Fusion Strategy"
+  - `surrealizer.fusionDualAlpha` (NEW): "Dual Alpha"
+  - `surrealizer.fusionNormalized` (NEW): "Normalized"
+  - `surrealizer.fusionLegacy` (NEW): "Legacy"
+  - `surrealizer.fusionHint_dual_alpha` (NEW): "Gentle distortion on core tokens..."
+  - `surrealizer.fusionHint_normalized` (NEW): "Full extrapolation on all tokens..."
+  - `surrealizer.fusionHint_legacy` (NEW): "Original ComfyUI behavior..."
+  - `surrealizer.seedLabel` (NEW): "Seed"
+  - `surrealizer.seedHint` (NEW): "-1 = random. Fixed seed enables A/B comparison across strategies."
+- **Context**: New dropdown in Surrealizer advanced settings. Selects the T5-CLIP fusion strategy. The hint texts change dynamically based on selection. "Dual Alpha" = structural anchor + aesthetic surprise. "Normalized" = uniform direction, controlled magnitude. "Legacy" = original ComfyUI (less surreal with long prompts). Seed control (-1 = random) enables reproducible A/B testing.
+
 ### WO-2026-02-25-random-prompt-token-limit
 - **Session**: N/A
 - **Scope**: en.ts

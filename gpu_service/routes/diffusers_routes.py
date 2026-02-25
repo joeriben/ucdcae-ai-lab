@@ -124,6 +124,7 @@ def generate_fusion():
         cfg_scale=float(data.get('cfg_scale', 4.5)),
         seed=int(data.get('seed', -1)),
         loras=data.get('loras'),
+        fusion_strategy=data.get('fusion_strategy', 'legacy'),
     ))
 
     if image_bytes is None:

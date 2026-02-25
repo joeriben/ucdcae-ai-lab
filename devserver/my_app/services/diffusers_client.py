@@ -182,6 +182,7 @@ class DiffusersClient:
         seed: int = -1,
         callback: Optional[Callable[[int, int, Any], None]] = None,
         loras: Optional[list] = None,
+        fusion_strategy: str = "legacy",
     ) -> Optional[bytes]:
         """T5-CLIP fusion generation. Returns PNG bytes or None."""
         import asyncio
@@ -196,6 +197,7 @@ class DiffusersClient:
             'steps': steps,
             'cfg_scale': cfg_scale,
             'seed': seed,
+            'fusion_strategy': fusion_strategy,
         }
         if loras:
             payload['loras'] = loras

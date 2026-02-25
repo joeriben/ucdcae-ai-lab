@@ -3382,6 +3382,7 @@ def legacy_workflow():
         # Surrealizer-specific parameters
         negative_prompt = data.get('negative_prompt')
         cfg = data.get('cfg')
+        fusion_strategy = data.get('fusion_strategy')
 
         # Feature probing parameters
         prompt_b = data.get('prompt_b')
@@ -3511,6 +3512,8 @@ def legacy_workflow():
             custom_params['t5_prompt'] = t5_prompt
         if alpha_factor is not None:
             custom_params['alpha_factor'] = alpha_factor
+        if fusion_strategy is not None:
+            custom_params['fusion_strategy'] = fusion_strategy
         if negative_prompt is not None:
             custom_params['negative_prompt'] = negative_prompt
         if cfg is not None:

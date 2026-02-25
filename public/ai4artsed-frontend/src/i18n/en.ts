@@ -728,10 +728,19 @@ export const en = {
     expandActive: 'Expanding prompt...',
     expandResultLabel: 'T5 expansion (T5 encoder only)',
     advancedLabel: 'Advanced Settings',
+    fusionStrategyLabel: 'Fusion Strategy',
+    fusionDualAlpha: 'Dual Alpha',
+    fusionNormalized: 'Normalized',
+    fusionLegacy: 'Legacy',
+    fusionHint_dual_alpha: 'Gentle distortion on core tokens (structural anchor), full extrapolation on extended tokens (aesthetic surprise). Best for contingent similarity.',
+    fusionHint_normalized: 'Full extrapolation on all tokens, then magnitude-normalized. Preserves direction but controls attention balance. More uniform distortion.',
+    fusionHint_legacy: 'Original ComfyUI behavior: extrapolates first 77 tokens, appends rest unchanged. Less surreal with long prompts.',
     negativeLabel: 'Negative Prompt',
     negativeHint: 'Extrapolated with the same α. Determines what the image extrapolates AWAY from — different negatives produce fundamentally different aesthetics.',
     cfgLabel: 'CFG Scale',
-    cfgHint: 'Classifier-Free Guidance: strength of prompt influence. Higher = stronger effect, less variation.'
+    cfgHint: 'Classifier-Free Guidance: strength of prompt influence. Higher = stronger effect, less variation.',
+    seedLabel: 'Seed',
+    seedHint: '-1 = random. Fixed seed enables A/B comparison across strategies.'
   },
   musicGeneration: {
     infoTitle: 'Music Generation',
