@@ -219,7 +219,7 @@ const canStart = computed(() => {
   return project_name.value.length > 3 && images.value.length >= 5;
 });
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:17802';
+const API_BASE = import.meta.env.DEV ? 'http://localhost:17802' : '';
 
 // Axios instance with long timeout for file uploads (5 minutes)
 const uploadClient = axios.create({
