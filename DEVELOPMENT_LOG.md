@@ -1,5 +1,26 @@
 # Development Log
 
+## Session 210 - Sketch Canvas for Image Transformation
+**Date:** 2026-02-25
+**Focus:** Let kids draw a freehand sketch in the browser that feeds into img2img pipelines
+
+### Implementation
+
+Extended `MediaInputBox` with a third `inputType: 'sketch'` — parallel to `'text'` and `'image'`. New `SketchCanvas.vue` component provides an HTML5 Canvas drawing surface with pointer events (`touch-action: none` for tablet/stylus), pen/eraser tools, 3 brush sizes, undo stack (max 20 snapshots), and a "Done" button that exports PNG → uploads via `/api/media/upload/image` → emits the identical `image-uploaded` / `image-removed` event contract as `ImageUploadWidget`. Parent components don't know or care whether the image came from file upload or drawing.
+
+On `image_transformation.vue`, a small upload/sketch toggle above the image input box lets users switch modes. The rest of the page (context prompt, category selection, model bubbles, generation) stays unchanged — existing `flux2_img2img` / `qwen_img2img` configs work with any input image.
+
+No new backend routes, pipelines, or output configs needed.
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `src/components/SketchCanvas.vue` | NEW — freehand drawing canvas with toolbar + upload |
+| `src/components/MediaInputBox.vue` | Added `'sketch'` inputType, SketchCanvas branch |
+| `src/views/image_transformation.vue` | Upload/sketch toggle, `imageInputMode` ref, CSS |
+| `src/i18n/en.ts` | `sketchCanvas.*` (9 keys) + `imageTransform.uploadMode/sketchMode` |
+| `src/i18n/WORK_ORDERS.md` | Translation work order for 11 new keys |
+
 ## Session 209 - Trans-Aktion: Parameter Pipeline Fix + Global Poet Lineup
 **Date:** 2026-02-24
 **Focus:** Wire generation parameters through pipeline, fix collision prompts, diversify poet selection
