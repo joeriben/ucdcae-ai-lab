@@ -8,18 +8,24 @@
     "ko": "조리된 네거티브",
     "uk": "Варені негативи",
     "fr": "Négatifs cuits",
-    "es": "Negativos cocidos"
+    "es": "Negativos cocidos",
+    "he": "נגטיבים מבושלים",
+    "ar": "السلبيات المطبوخة"
   },
   "description": {
     "en": "Transforms ideas into the appearance of film negatives that have distorted by cooking for artistic purposes.",
     "de": "Verwandelt Ideen in den Bildeindruck von Filmnegativen die zur künstlerischen Verfremdung vor der Entwicklung gekocht wurden.",
     "uk": "Зварені фотонегативи",
     "fr": "Transforme les idées en apparence de négatifs photographiques déformés par la cuisson à des fins artistiques.",
-    "es": "Transforma ideas en la apariencia de negativos fotográficos distorsionados por cocción con fines artísticos."
+    "es": "Transforma ideas en la apariencia de negativos fotográficos distorsionados por cocción con fines artísticos.",
+    "he": "ממיר רעיונות למראה נגטיבים פוטוגרפיים שעוּוּתו על ידי בישול למטרות אמנותיות.",
+    "ar": "يحوّل الأفكار إلى مظهر السلبيات الفوتوغرافية التي شُوِّهت بالطهي لأغراض فنية."
   },
   "category": {
     "de": "Fotografie & Medien",
-    "en": "Photography & Media"
+    "en": "Photography & Media",
+    "he": "צילום ומדיה",
+    "ar": "التصوير والإعلام"
   },
   "properties": [
     "technical_imaging"

@@ -8,18 +8,24 @@
     "ko": "키치 제거기",
     "uk": "Декітч",
     "fr": "Anti-cliché",
-    "es": "Anti-cliché"
+    "es": "Anti-cliché",
+    "he": "נגד קלישאה",
+    "ar": "مكافح المبتذل"
   },
   "description": {
     "en": "Removes overused phrases and stereotypical descriptions. Helps you avoid clichés and find more original ways to express your ideas.",
     "de": "Entfernt abgenutzte Phrasen und stereotype Beschreibungen. Hilft dir, Klischees zu vermeiden und originellere Ausdrucksweisen zu finden.",
     "uk": "Фільтр проти кітчу",
     "fr": "Supprime les expressions usées et les descriptions stéréotypées. T'aide à éviter les clichés et à trouver des moyens plus originaux d'exprimer tes idées.",
-    "es": "Elimina frases sobreutilizadas y descripciones estereotipadas. Te ayuda a evitar clichés y encontrar formas más originales de expresar tus ideas."
+    "es": "Elimina frases sobreutilizadas y descripciones estereotipadas. Te ayuda a evitar clichés y encontrar formas más originales de expresar tus ideas.",
+    "he": "מסיר ביטויים שחוקים ותיאורים סטריאוטיפיים. עוזר לך להימנע מקלישאות ולמצוא דרכים מקוריות יותר לבטא את רעיונותיך.",
+    "ar": "يُزيل العبارات المبتذلة والأوصاف النمطية. يساعدك على تجنب الكليشيهات وإيجاد طرق أكثر أصالة للتعبير عن أفكارك."
   },
   "category": {
     "de": "Kreative Verwandlungen",
-    "en": "Creative Transformations"
+    "en": "Creative Transformations",
+    "he": "טרנספורמציות יצירתיות",
+    "ar": "التحولات الإبداعية"
   },
   "properties": [
     "aesthetics"

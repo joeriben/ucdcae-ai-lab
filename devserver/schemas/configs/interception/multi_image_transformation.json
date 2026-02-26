@@ -8,18 +8,24 @@
     "ko": "다중 이미지 변환",
     "uk": "Злиття зображень",
     "fr": "Transformation multi-images",
-    "es": "Transformación multi-imagen"
+    "es": "Transformación multi-imagen",
+    "he": "טרנספורמציה של מספר תמונות",
+    "ar": "تحويل صور متعددة"
   },
   "description": {
     "en": "Fuse multiple images with AI guidance",
     "de": "Fusioniere mehrere Bilder mit KI-Führung",
     "uk": "Злиття кількох зображень",
     "fr": "Fusionne plusieurs images avec guidage IA",
-    "es": "Fusiona múltiples imágenes con guía de IA"
+    "es": "Fusiona múltiples imágenes con guía de IA",
+    "he": "מיזוג מספר תמונות עם הנחיית AI",
+    "ar": "دمج صور متعددة بتوجيه الذكاء الاصطناعي"
   },
   "category": {
     "de": "System",
-    "en": "System"
+    "en": "System",
+    "he": "מערכת",
+    "ar": "النظام"
   },
   "properties": [],
   "context": {},

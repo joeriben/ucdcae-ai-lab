@@ -8,18 +8,24 @@
     "ko": "너의 이야기",
     "uk": "Твоя історія",
     "fr": "Ton histoire",
-    "es": "Tu historia"
+    "es": "Tu historia",
+    "he": "הסיפור שלך",
+    "ar": "قصتك"
   },
   "description": {
     "en": "Helps you telling a story.",
     "de": "Hilft Dir, eine Geschichte zu erzählen.",
     "uk": "Розкажи свою історію",
     "fr": "T'aide à raconter une histoire.",
-    "es": "Te ayuda a contar una historia."
+    "es": "Te ayuda a contar una historia.",
+    "he": "עוזר לך לספר סיפור.",
+    "ar": "يساعدك على رواية قصة."
   },
   "category": {
     "de": "Kreative Verwandlungen",
-    "en": "Creative Transformations"
+    "en": "Creative Transformations",
+    "he": "טרנספורמציות יצירתיות",
+    "ar": "التحولات الإبداعية"
   },
   "properties": [
     "freestyle"

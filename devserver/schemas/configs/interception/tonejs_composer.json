@@ -8,18 +8,24 @@
     "ko": "음악 작곡가",
     "uk": "Музичний композитор",
     "fr": "Compositeur musical",
-    "es": "Compositor musical"
+    "es": "Compositor musical",
+    "he": "מלחין מוזיקלי",
+    "ar": "الملحّن الموسيقي"
   },
   "description": {
     "en": "Transforms scene or mood descriptions into structured musical concepts with rhythm, bass, harmony, melody, and texture layers. Perfect for additive musical construction.",
     "de": "Verwandelt Szenen- oder Stimmungsbeschreibungen in strukturierte musikalische Konzepte mit Rhythmus, Bass, Harmonie, Melodie und Texturschichten. Perfekt fuer additiven musikalischen Aufbau.",
     "uk": "Композиція Tone.js",
     "fr": "Transforme les descriptions de scènes ou d'ambiances en concepts musicaux structurés avec des couches de rythme, basse, harmonie, mélodie et texture. Parfait pour la construction musicale additive.",
-    "es": "Transforma descripciones de escenas o estados de ánimo en conceptos musicales estructurados con capas de ritmo, bajo, armonía, melodía y textura. Perfecto para la construcción musical aditiva."
+    "es": "Transforma descripciones de escenas o estados de ánimo en conceptos musicales estructurados con capas de ritmo, bajo, armonía, melodía y textura. Perfecto para la construcción musical aditiva.",
+    "he": "ממיר תיאורי סצנה או מצב רוח למושגים מוזיקליים מובנים עם שכבות של קצב, בס, הרמוניה, מלודיה ומרקם. מושלם לבנייה מוזיקלית אדיטיבית.",
+    "ar": "يُحوّل أوصاف المشاهد أو المزاج إلى مفاهيم موسيقية منظّمة بطبقات من الإيقاع والباص والتناسق واللحن والنسيج. مثالي للبناء الموسيقي التراكمي."
   },
   "category": {
     "de": "Kreative Verwandlungen",
-    "en": "Creative Transformations"
+    "en": "Creative Transformations",
+    "he": "טרנספורמציות יצירתיות",
+    "ar": "التحولات الإبداعية"
   },
   "properties": [
     "music"

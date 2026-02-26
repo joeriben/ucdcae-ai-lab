@@ -8,18 +8,24 @@
     "ko": "이미지 변환",
     "uk": "Трансформація зображення",
     "fr": "Transformation d'image",
-    "es": "Transformación de imagen"
+    "es": "Transformación de imagen",
+    "he": "טרנספורמציית תמונה",
+    "ar": "تحويل الصورة"
   },
   "description": {
     "en": "Transform images with AI-guided editing",
     "de": "Transformiere Bilder mit KI-geführter Bearbeitung",
     "uk": "Трансформуй завантажене зображення",
     "fr": "Transforme les images avec l'édition guidée par IA",
-    "es": "Transforma imágenes con edición guiada por IA"
+    "es": "Transforma imágenes con edición guiada por IA",
+    "he": "טרנספורמציה של תמונות עם עריכה מונחית AI",
+    "ar": "تحويل الصور بالتحرير الموجَّه بالذكاء الاصطناعي"
   },
   "category": {
     "de": "System",
-    "en": "System"
+    "en": "System",
+    "he": "מערכת",
+    "ar": "النظام"
   },
   "properties": [],
   "context": {},

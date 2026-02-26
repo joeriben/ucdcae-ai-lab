@@ -8,18 +8,24 @@
     "ko": "rationa",
     "uk": "Баухаус",
     "fr": "rationa",
-    "es": "rationa"
+    "es": "rationa",
+    "he": "באוהאוס",
+    "ar": "الباوهاوس"
   },
   "description": {
     "en": "Reduces everything to basic geometric shapes and primary colors. Focuses on function and clear structure, stripping away decoration.",
     "de": "Reduziert alles auf geometrische Grundformen und Primärfarben. Konzentriert sich auf Funktion und klare Struktur, ohne Dekoration.",
     "uk": "Геометричний дизайн Баухаусу",
     "fr": "Réduit tout à des formes géométriques de base et des couleurs primaires. Se concentre sur la fonction et la structure claire, en éliminant toute décoration.",
-    "es": "Reduce todo a formas geométricas básicas y colores primarios. Se centra en la función y la estructura clara, eliminando toda decoración."
+    "es": "Reduce todo a formas geométricas básicas y colores primarios. Se centra en la función y la estructura clara, eliminando toda decoración.",
+    "he": "מצמצם הכל לצורות גיאומטריות בסיסיות וצבעים ראשוניים. מתמקד בפונקציה ומבנה ברור, תוך הסרת כל קישוט.",
+    "ar": "يُختزل كل شيء إلى أشكال هندسية أساسية وألوان أولية. يركّز على الوظيفة والبنية الواضحة مع تجريد أي زخرفة."
   },
   "category": {
     "de": "Kunstgeschichte",
-    "en": "Art History"
+    "en": "Art History",
+    "he": "היסטוריית האמנות",
+    "ar": "تاريخ الفن"
   },
   "properties": [
     "arts"

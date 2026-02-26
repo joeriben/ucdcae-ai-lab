@@ -21,13 +21,12 @@ Tags:
   - (MODIFIED) = English text changed, all 5 translations are stale and must be re-done
 -->
 
-### WO-2026-02-23-hebrew-arabic-interception-configs
-- **Session**: 201
-- **Scope**: All 36 JSON files in `devserver/schemas/configs/interception/` + `devserver/schemas/llama_guard_explanations.json`
-- **Changed keys**: Add `he` and `ar` entries to all LocalizedString objects (name, description, hint_message, base_message, category, codes)
-- **Context**: Interception config names/descriptions and safety filter explanations need Hebrew and Arabic translations. These are user-facing strings shown in the UI. The `context` field in interception configs is a meta-prompt (LLM instruction) and should NOT be translated — only `name`, `description`, and `category` fields.
-
 ## Completed
+
+### WO-2026-02-23-hebrew-arabic-interception-configs
+- **Completed**: 2026-02-26
+- **Scope**: 33 interception config JSONs (32 with LocalizedString + hunkydoryharmonizer) + llama_guard_explanations.json
+- **Result**: Added he/ar to name, description, category in all configs. llama_guard_explanations: he/ar added to base_message, hint_message, all 13 codes, fallback. 4 configs skipped (flat string descriptions: lyrics_from_theme, lyrics_refinement, tags_generation, tag_suggestion_from_lyrics).
 
 ### WO-2026-02-26-surrealizer-fusion-strategy
 - **Completed**: 2026-02-26

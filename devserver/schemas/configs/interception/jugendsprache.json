@@ -8,18 +8,24 @@
     "ko": "청소년 슬랭",
     "uk": "Молодіжний сленг",
     "fr": "Argot jeune",
-    "es": "Jerga juvenil"
+    "es": "Jerga juvenil",
+    "he": "סלנג נוער",
+    "ar": "لغة الشباب"
   },
   "description": {
     "en": "Tries to rewrote everything in UK street slang as it could be used by teens in urban areas. Uses words from Drill, Grime, and Trap culture.",
     "de": "Versucht, alles in urbanen Jugend-Slang umzuschreiben. Drill-, Grime- und Trap-Kultur.",
     "uk": "Молодіжна мова",
     "fr": "Tente de tout réécrire en argot de rue tel qu'il pourrait être utilisé par les jeunes en milieu urbain. Utilise des mots issus de la culture Drill, Grime et Trap.",
-    "es": "Intenta reescribir todo en jerga callejera como la que podrían usar los jóvenes en zonas urbanas. Usa palabras de la cultura Drill, Grime y Trap."
+    "es": "Intenta reescribir todo en jerga callejera como la que podrían usar los jóvenes en zonas urbanas. Usa palabras de la cultura Drill, Grime y Trap.",
+    "he": "מנסה לשכתב הכל בסלנג רחוב בריטי כפי שבני נוער באזורים עירוניים עשויים להשתמש בו. משתמש במילים מתרבות Drill, Grime ו-Trap.",
+    "ar": "يحاول إعادة كتابة كل شيء بالعامية الشارعية البريطانية كما قد يستخدمها المراهقون في المناطق الحضرية. يستخدم كلمات من ثقافة Drill وGrime وTrap."
   },
   "category": {
     "de": "Kreative Verwandlungen",
-    "en": "Creative Transformations"
+    "en": "Creative Transformations",
+    "he": "טרנספורמציות יצירתיות",
+    "ar": "التحولات الإبداعية"
   },
   "properties": [
     "semantics"

@@ -8,18 +8,24 @@
     "ko": "아날로그 사진",
     "uk": "Аналогова фотографія",
     "fr": "Photographie analogique",
-    "es": "Fotografía analógica"
+    "es": "Fotografía analógica",
+    "he": "צילום אנלוגי",
+    "ar": "التصوير التناظري"
   },
   "description": {
     "en": "Reimagines concepts through the lens of 1970s analog photography. Manual focus, film grain, limited exposures per roll, and the materiality of chemical development shape every decision.",
     "de": "Denkt Konzepte neu durch die Linse der analogen Fotografie der 1970er Jahre. Manueller Fokus, Filmkorn, begrenzte Aufnahmen pro Film und die Materialität chemischer Entwicklung prägen jede Entscheidung.",
     "uk": "Фотографічний стиль 1970-х",
     "fr": "Réimagine les concepts à travers l'objectif de la photographie analogique des années 1970. Mise au point manuelle, grain du film, nombre limité de poses par pellicule et la matérialité du développement chimique façonnent chaque décision.",
-    "es": "Reimagina conceptos a través del lente de la fotografía analógica de los años 70. Enfoque manual, grano de película, exposiciones limitadas por rollo y la materialidad del revelado químico moldean cada decisión."
+    "es": "Reimagina conceptos a través del lente de la fotografía analógica de los años 70. Enfoque manual, grano de película, exposiciones limitadas por rollo y la materialidad del revelado químico moldean cada decisión.",
+    "he": "מדמיין מחדש מושגים דרך עדשת הצילום האנלוגי של שנות ה-70. פוקוס ידני, גרעיני סרט, חשיפות מוגבלות לגליל ומוחשיות הפיתוח הכימי מעצבים כל החלטה.",
+    "ar": "يعيد تصوّر المفاهيم من خلال عدسة التصوير التناظري في السبعينيات. التركيز اليدوي وحبيبات الفيلم ومحدودية التعريضات في البكرة ومادية التحميض الكيميائي تشكّل كل قرار."
   },
   "category": {
     "de": "Fotografie & Medien",
-    "en": "Photography & Media"
+    "en": "Photography & Media",
+    "he": "צילום ומדיה",
+    "ar": "التصوير والإعلام"
   },
   "properties": [
     "technical_imaging"

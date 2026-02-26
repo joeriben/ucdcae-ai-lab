@@ -8,18 +8,24 @@
     "ko": "다게레오타입",
     "uk": "Дагеротипія",
     "fr": "Daguerréotype",
-    "es": "Daguerrotipo"
+    "es": "Daguerrotipo",
+    "he": "דגרוטיפ",
+    "ar": "الداغيروتيب"
   },
   "description": {
     "en": "Reimagines concepts through the lens of 1870s daguerreotype photography. Large-format wooden cameras, silver-iodized copper plates, mercury development, and the unique metallic surface of the daguerreotype shape every decision.",
     "de": "Denkt Konzepte neu durch die Linse der Daguerreotypie der 1870er Jahre. Großformat-Holzkameras, silberjodierte Kupferplatten, Quecksilberentwicklung und die einzigartige metallische Oberfläche der Daguerreotypie prägen jede Entscheidung.",
     "uk": "Мистецька фотографія з 1870-х",
     "fr": "Réimagine les concepts à travers l'objectif de la photographie au daguerréotype des années 1870. Chambres photographiques en bois grand format, plaques de cuivre iodo-argentées, développement au mercure et la surface métallique unique du daguerréotype façonnent chaque décision.",
-    "es": "Reimagina conceptos a través del lente de la fotografía de daguerrotipo de la década de 1870. Cámaras de gran formato en madera, placas de cobre yodadas con plata, revelado con mercurio y la superficie metálica única del daguerrotipo moldean cada decisión."
+    "es": "Reimagina conceptos a través del lente de la fotografía de daguerrotipo de la década de 1870. Cámaras de gran formato en madera, placas de cobre yodadas con plata, revelado con mercurio y la superficie metálica única del daguerrotipo moldean cada decisión.",
+    "he": "מדמיין מחדש מושגים דרך עדשת צילום הדגרוטיפ של שנות ה-1870. מצלמות עץ בפורמט גדול, לוחות נחושת מיוד בכסף, פיתוח כספית והמשטח המתכתי הייחודי של הדגרוטיפ מעצבים כל החלטה.",
+    "ar": "يعيد تصوّر المفاهيم من خلال عدسة تصوير الداغيروتيب في سبعينيات القرن التاسع عشر. الكاميرات الخشبية كبيرة الفورمات، وألواح النحاس المعالجة باليود والفضة، والتحميض بالزئبق، والسطح المعدني الفريد للداغيروتيب تشكّل كل قرار."
   },
   "category": {
     "de": "Fotografie & Medien",
-    "en": "Photography & Media"
+    "en": "Photography & Media",
+    "he": "צילום ומדיה",
+    "ar": "التصوير والإعلام"
   },
   "properties": [
     "technical_imaging"

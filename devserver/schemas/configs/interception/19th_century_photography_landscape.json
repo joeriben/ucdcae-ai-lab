@@ -2,13 +2,37 @@
   "pipeline": "text_transformation",
   "instruction_type": "artistic_transformation",
   "name": {
-    "en": "Early Photography Landscape"
+    "en": "Early Photography Landscape",
+    "de": "Frühe Fotografie Landschaft",
+    "tr": "Erken Fotoğraf Manzarası",
+    "ko": "초기 사진 풍경",
+    "uk": "Рання фотографія пейзаж",
+    "fr": "Paysage de la photographie ancienne",
+    "es": "Paisaje fotográfico temprano",
+    "he": "נוף הצילום המוקדם",
+    "ar": "منظر التصوير المبكر"
   },
   "description": {
-    "en": "Transforms ideas into the visual language of early photographic landscape imagery from 1850–1900, shaped by wet plate processes, albumen prints, and the atmospheric qualities of long-exposure large-format photography."
+    "en": "Transforms ideas into the visual language of early photographic landscape imagery from 1850–1900, shaped by wet plate processes, albumen prints, and the atmospheric qualities of long-exposure large-format photography.",
+    "de": "Verwandelt Ideen in die visuelle Sprache früher Landschaftsfotografie von 1850–1900, geprägt von Nassplatten-Prozessen, Albumindrucken und den atmosphärischen Qualitäten der Langzeitbelichtung mit Großformatkameras.",
+    "tr": "Fikirleri 1850–1900 yıllarına ait erken dönem fotoğraf manzara görüntülerinin görsel diline dönüştürür; ıslak plaka süreçleri, albümin baskılar ve uzun pozlamalı büyük format fotoğrafçılığının atmosferik nitelikleri tarafından şekillendirilir.",
+    "ko": "1850–1900년 초기 사진 풍경 이미지의 시각적 언어로 아이디어를 변환합니다. 습판 프로세스, 알부민 인화, 장노출 대형 포맷 사진의 대기적 특성에 의해 형성됩니다.",
+    "uk": "Перетворює ідеї у візуальну мову ранньої пейзажної фотографії 1850–1900 років, сформованої мокрим колодіоновим процесом, альбуміновими відбитками та атмосферними якостями довгої витримки крупноформатної фотографії.",
+    "fr": "Transforme les idées en langage visuel des premières images photographiques de paysage de 1850–1900, façonné par les procédés au collodion humide, les tirages albuminés et les qualités atmosphériques de la photographie grand format à longue exposition.",
+    "es": "Transforma ideas en el lenguaje visual de las primeras imágenes fotográficas de paisaje de 1850–1900, moldeado por procesos de placa húmeda, impresiones de albúmina y las cualidades atmosféricas de la fotografía de gran formato con larga exposición.",
+    "he": "ממיר רעיונות לשפה החזותית של צילומי הנוף המוקדמים מ-1850 עד 1900, שעוצבה על ידי תהליכי לוח רטוב, הדפסי אלבומין ואיכויות האווירה של צילום גדול-פורמט עם חשיפה ארוכה.",
+    "ar": "يحوّل الأفكار إلى اللغة البصرية لصور المناظر الطبيعية التصويرية المبكرة من 1850 إلى 1900، المشكّلة بعمليات الألواح الرطبة وطبعات الألبومين والجودة الجوية لتصوير الفورمات الكبير بالتعريض الطويل."
   },
   "category": {
-    "en": "Photography & Media"
+    "en": "Photography & Media",
+    "de": "Fotografie & Medien",
+    "tr": "Fotoğraf & Medya",
+    "ko": "사진 & 미디어",
+    "uk": "Фотографія та медіа",
+    "fr": "Photographie & Médias",
+    "es": "Fotografía & Medios",
+    "he": "צילום ומדיה",
+    "ar": "التصوير والإعلام"
   },
   "properties": [
     "technical_imaging"
