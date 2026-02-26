@@ -197,21 +197,21 @@ class DiffusersImageGenerator:
 
         transformer = Flux2Transformer2DModel.from_pretrained(
             model_id, subfolder="transformer",
-            torch_dtype=dtype, low_cpu_mem_usage=True, **cache_kwargs
+            torch_dtype=dtype, low_cpu_mem_usage=True, local_files_only=True, **cache_kwargs
         )
         text_encoder = AutoModelForImageTextToText.from_pretrained(
             model_id, subfolder="text_encoder",
-            torch_dtype=dtype, low_cpu_mem_usage=True, **cache_kwargs
+            torch_dtype=dtype, low_cpu_mem_usage=True, local_files_only=True, **cache_kwargs
         )
         vae = AutoencoderKLFlux2.from_pretrained(
             model_id, subfolder="vae",
-            torch_dtype=dtype, **cache_kwargs
+            torch_dtype=dtype, local_files_only=True, **cache_kwargs
         )
         tokenizer = PixtralProcessor.from_pretrained(
-            model_id, subfolder="tokenizer", **cache_kwargs
+            model_id, subfolder="tokenizer", local_files_only=True, **cache_kwargs
         )
         scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(
-            model_id, subfolder="scheduler", **cache_kwargs
+            model_id, subfolder="scheduler", local_files_only=True, **cache_kwargs
         )
 
         pipe = Flux2Pipeline(
@@ -312,6 +312,7 @@ class DiffusersImageGenerator:
                     dtype_key: self._get_torch_dtype(),
                     "use_safetensors": True,
                     "low_cpu_mem_usage": True,
+                    "local_files_only": True,
                 }
                 if self.cache_dir:
                     kwargs["cache_dir"] = str(self.cache_dir)
@@ -320,7 +321,7 @@ class DiffusersImageGenerator:
                 if pipeline_class == "WanPipeline":
                     from diffusers import AutoencoderKLWan
                     kwargs[dtype_key] = torch.bfloat16
-                    vae_kwargs = {dtype_key: torch.float32}
+                    vae_kwargs = {dtype_key: torch.float32, "local_files_only": True}
                     if self.cache_dir:
                         vae_kwargs["cache_dir"] = str(self.cache_dir)
                     vae = AutoencoderKLWan.from_pretrained(

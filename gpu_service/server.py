@@ -8,9 +8,12 @@ Both dev (17802) and prod (17801) backends call this via HTTP REST.
 Port: 17803 (configurable via GPU_SERVICE_PORT env var)
 """
 
+import os
+# Block all HuggingFace Hub network access — all models are cached locally
+os.environ["HF_HUB_OFFLINE"] = "1"
+
 import logging
 import sys
-import os
 
 # Configure logging before importing app
 logging.basicConfig(

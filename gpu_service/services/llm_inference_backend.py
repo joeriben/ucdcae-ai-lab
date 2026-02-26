@@ -223,6 +223,7 @@ class LLMInferenceBackend:
                 # Build load kwargs — NO device_map, explicit .to(device) instead
                 load_kwargs = {
                     "low_cpu_mem_usage": True,
+                    "local_files_only": True,
                 }
 
                 if quantization == "bf16":
@@ -242,7 +243,7 @@ class LLMInferenceBackend:
 
                 if is_vision:
                     from transformers import AutoModelForVision2Seq, AutoProcessor
-                    processor = AutoProcessor.from_pretrained(model_id)
+                    processor = AutoProcessor.from_pretrained(model_id, local_files_only=True)
                     model = AutoModelForVision2Seq.from_pretrained(model_id, **load_kwargs)
                     model = model.to(self.device)
                     model.eval()
@@ -250,7 +251,7 @@ class LLMInferenceBackend:
                     model_type = "vision"
                 else:
                     from transformers import AutoModelForCausalLM, AutoTokenizer
-                    tokenizer = AutoTokenizer.from_pretrained(model_id)
+                    tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
                     if tokenizer.pad_token is None:
                         tokenizer.pad_token = tokenizer.eos_token
                     # NO output_hidden_states, NO output_attentions (pure inference)
