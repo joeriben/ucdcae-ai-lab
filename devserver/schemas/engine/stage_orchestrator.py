@@ -662,21 +662,24 @@ def parse_preoutput_json(output: str) -> Dict[str, Any]:
     """
     output_cleaned = output.strip().lower()
 
-    # CASE 1: Plain text "safe"/"unsafe" from llama-guard
-    if output_cleaned == "safe":
+    # CASE 1: Plain text "safe"/"unsafe" from llama-guard or classification models
+    # Handle multi-line output (GPU Service tokenization produces repeated verdicts)
+    lines = [l.strip() for l in output_cleaned.split('\n') if l.strip()]
+    if lines and all(l in ('safe', 'unsafe') or l.startswith(('unsafe', 's')) for l in lines):
+        # ANY "unsafe" line → block (fail-closed safety)
+        if any(l.startswith('unsafe') for l in lines):
+            return {
+                "safe": False,
+                "positive_prompt": None,
+                "negative_prompt": None,
+                "abort_reason": "Content flagged as unsafe by safety filter"
+            }
+        # All lines are "safe" → pass
         return {
             "safe": True,
             "positive_prompt": None,
             "negative_prompt": None,
             "abort_reason": None
-        }
-    elif output_cleaned.startswith("unsafe"):
-        # llama-guard returns "unsafe\nS1\nS2" etc.
-        return {
-            "safe": False,
-            "positive_prompt": None,
-            "negative_prompt": None,
-            "abort_reason": "Content flagged as unsafe by safety filter"
         }
 
     # CASE 2: Try JSON parsing

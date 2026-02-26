@@ -156,6 +156,11 @@ class LLMClient:
 
         Returns {"content": str, "thinking": str|None} or None on total failure.
         """
+        # Guard/classification models: route directly to Ollama (correct tokenization)
+        if model in self._OLLAMA_ONLY_MODELS:
+            logger.info(f"[LLM-CLIENT] Routing guard model {model} directly to Ollama")
+            return self._ollama_chat(model, messages, images, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
+
         # Try GPU service first
         gpu_data = {
             "model": model,
@@ -185,6 +190,12 @@ class LLMClient:
         logger.info(f"[LLM-CLIENT] Falling back to Ollama for chat ({model})")
         return self._ollama_chat(model, messages, images, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
 
+    # Guard models require Ollama's native GGUF inference (correct chat template).
+    # GPU Service HF tokenization produces garbage for these classification models.
+    _OLLAMA_ONLY_MODELS = frozenset({
+        "llama-guard3:1b", "llama-guard3:latest", "llama-guard3:8b",
+    })
+
     def generate(self, model: str, prompt: str,
                  temperature: float = 0.7, max_new_tokens: int = 500,
                  keep_alive: str = "10m",
@@ -194,6 +205,11 @@ class LLMClient:
 
         Returns {"response": str, "thinking": str|None} or None on total failure.
         """
+        # Guard/classification models: route directly to Ollama (correct tokenization)
+        if model in self._OLLAMA_ONLY_MODELS:
+            logger.info(f"[LLM-CLIENT] Routing guard model {model} directly to Ollama")
+            return self._ollama_generate(model, prompt, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
+
         gpu_data = {
             "model": model,
             "prompt": prompt,
