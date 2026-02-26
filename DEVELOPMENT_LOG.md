@@ -1,5 +1,64 @@
 # Development Log
 
+## Session 214 - i18n Nightly Batch Translation & Automation
+**Date:** 2026-02-26
+**Focus:** Process all pending i18n work orders, audit key completeness, improve nightly automation
+
+### Translation Work Completed
+Processed all 8 pending work orders across 8 target languages (DE/TR/KO/UK/FR/ES/HE/AR):
+
+| Commit | Scope | Files |
+|--------|-------|-------|
+| `1b64c92` | 7 .ts work orders + 6 poetry config JSONs | 15 files, 725 insertions |
+| `8d7757c` | WO-7: he/ar for 33 interception configs + llama_guard_explanations | 35 files, 368 insertions |
+
+**Work orders translated:**
+- WO-2026-02-26 surrealizer-fusion-strategy (13 keys: 4 modified + 9 new)
+- WO-2026-02-25 random-prompt-token-limit (1 key)
+- WO-2026-02-25 sketch-canvas (11 keys)
+- WO-2026-02-25 backend-status-dashboard (31 keys)
+- WO-2026-02-24 trans-aktion-poetry-configs (6 JSON configs)
+- WO-2026-02-23 hebrew-arabic-language-labels (2 keys)
+- WO-2026-02-23 spanish-language-label (1 key)
+- WO-2026-02-23 hebrew-arabic-interception-configs (33 JSONs + guard explanations)
+
+### Audit Findings & Fixes
+Ran automated audit comparing `en.ts` (1170 keys) against all 8 target files:
+- **es.ts**: 2 missing keys (`arabicAr`, `hebrewHe`) — never backfilled after Session 201 added HE/AR
+- **ar.ts**: `§86a` key encoding bug — `'\u00A786a'` written as key name instead of literal `§`
+- **WO-5 file mismatch**: Work order listed `rilke/dickinson/whitman` but actual files were `sappho/mirabai/nahuatl/yoruba_oriki` — session renamed poets without updating WO
+- **hunkydoryharmonizer.json**: Missed by background agent, fixed manually
+
+### i18n Agent Improvements (`a0d43e8`, `51f7955`)
+
+**Auto-Audit (Phase 1)**: Agent now compares en.ts keys vs all 8 targets at start of every run. Catches missing keys even when sessions forget to create work orders. Work orders remain necessary for MODIFIED keys (stale translations) and JSON interception configs.
+
+**Unattended Mode**: `6_run_i18n_translator.sh` rewritten:
+- `./6_run_i18n_translator.sh` — foreground, logs to `logs/i18n/`
+- `./6_run_i18n_translator.sh --unattended` — tmux session, zero permission prompts
+- Uses `--permission-mode bypassPermissions` + `--allowedTools "Read" "Edit" "Write" "Bash" "Glob" "Grep"`
+- Prompt piped via stdin (`echo | claude -p`) — positional arg broken by `--allowedTools` variadic parsing
+
+**Agent definition updated** (`.claude/agents/i18n-translator.md`):
+- 5 → 8 target languages (added ES, HE, AR)
+- 4-phase workflow: Auto-Audit → Work Orders → Validation → Commit
+- Added interception config JSON translation rules
+- Validation checks all 8 language files
+
+### Technical Lessons
+- `--allowedTools <tools...>` is variadic in Claude CLI — consumes all subsequent positional args. Must pipe prompt via stdin.
+- `--permission-mode bypassPermissions` is the correct flag for unattended runs (not `--dangerously-skip-permissions`)
+- Sonnet agent hit context limit on first attempt (7 WOs + 8 languages = too much in one pass). Splitting .ts and JSON into separate agents worked.
+- Work order system is inherently unreliable for detecting ALL gaps — auto-audit is essential as safety net
+
+### Commits
+- `1b64c92` chore(i18n): translate 7 pending work orders (8 languages)
+- `8d7757c` chore(i18n): add Hebrew + Arabic to all interception configs (WO-7)
+- `a0d43e8` feat(i18n): add auto-audit + unattended nightly mode to translator
+- `51f7955` fix(i18n): fix script argument parsing, rename --nightly to --unattended
+
+---
+
 ## Session 213 - LoRA Training Auto-Captioning & LoRA Testing
 **Date:** 2026-02-26
 **Focus:** Integrate automatic VLM-based image captioning into the LoRA training pipeline; test trained LoRA via Diffusers and ComfyUI
