@@ -310,13 +310,21 @@ class ComfyUIWebSocketClient:
                 data = msg.get("data", {})
 
                 # Filter: only react to OUR prompt
-                if msg_type == "execution_start":
-                    if data.get("prompt_id") == prompt_id:
+                # Check prompt_id on EVERY event (not just execution_start)
+                # to handle the race where execution_start fires before WS connects
+                event_prompt_id = data.get("prompt_id")
+                if event_prompt_id == prompt_id:
+                    if not our_execution_started:
                         our_execution_started = True
-                        logger.debug(f"[COMFYUI-WS] Execution started: {prompt_id}")
+                        logger.info(f"[COMFYUI-WS] Tracking execution: {prompt_id} (first event: {msg_type})")
+                elif event_prompt_id and event_prompt_id != prompt_id:
+                    # Event for a different prompt — skip
                     continue
 
-                # Skip events for other prompts
+                if msg_type == "execution_start":
+                    continue
+
+                # Skip events until we've seen at least one event for our prompt
                 if not our_execution_started:
                     continue
 
