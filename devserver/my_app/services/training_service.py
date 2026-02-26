@@ -1,3 +1,4 @@
+import base64
 import os
 import shutil
 import subprocess
@@ -27,7 +28,10 @@ from config import (
     CLIP_L_PATH,
     CLIP_G_PATH,
     T5XXL_PATH,
-    OLLAMA_API_BASE_URL
+    OLLAMA_API_BASE_URL,
+    CAPTION_VLM_MODEL,
+    CAPTION_CLEANUP_MODEL,
+    CAPTION_ENABLED,
 )
 
 # Logger Setup
@@ -349,20 +353,19 @@ class TrainingService:
             shutil.rmtree(project_dir)
         final_image_dir.mkdir(parents=True, exist_ok=True)
 
-        # 3. Save Images + Create Caption Files
+        # 3. Save Images
         for img in images:
-            # Save image
             file_path = final_image_dir / img.filename
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(img.file, buffer)
 
-            # Create caption file with all triggers (if multiple provided)
-            if len(triggers) > 1:
-                caption_path = final_image_dir / f"{Path(img.filename).stem}.txt"
-                with open(caption_path, "w") as f:
-                    f.write(all_tags)
+        # Store trigger info for captioning step (runs in training thread)
+        self._pending_caption_info = {
+            "image_dir": final_image_dir,
+            "trigger": all_tags if all_tags else primary_trigger,
+        }
 
-        # 3. Detect Hardware & Optimize Config
+        # 4. Detect Hardware & Optimize Config
         vram = self.get_gpu_vram()
         optim_params = self.calculate_training_params(vram)
 
@@ -438,6 +441,110 @@ class TrainingService:
             }
         }
 
+    def _generate_captions(self):
+        """Auto-caption training images using a VLM via Ollama.
+
+        Two-stage approach: qwen3-vl describes the image (may include chain-of-thought),
+        then a fast text LLM extracts the clean descriptive sentence.
+        """
+        info = getattr(self, "_pending_caption_info", None)
+        if not info or not CAPTION_ENABLED:
+            return
+
+        image_dir: Path = info["image_dir"]
+        trigger: str = info["trigger"]
+        images = sorted(
+            p for p in image_dir.iterdir()
+            if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+        )
+
+        if not images:
+            return
+
+        self._append_log(f"Auto-captioning {len(images)} images with {CAPTION_VLM_MODEL}...")
+
+        # Short prompt avoids triggering qwen3-vl thinking mode
+        vlm_prompt = (
+            "Describe this photograph in one dense sentence for AI image training. "
+            "Include subject, composition, tonal qualities, photographic technique, and lighting."
+        )
+
+        for i, img_path in enumerate(images, 1):
+            txt_path = img_path.with_suffix(".txt")
+            try:
+                # Stage 1: VLM describes the image
+                img_b64 = base64.b64encode(img_path.read_bytes()).decode()
+                resp = requests.post(
+                    f"{OLLAMA_API_BASE_URL}/api/chat",
+                    json={
+                        "model": CAPTION_VLM_MODEL,
+                        "messages": [{"role": "user", "content": vlm_prompt, "images": [img_b64]}],
+                        "stream": False,
+                        "options": {"num_predict": 500, "temperature": 0.3},
+                    },
+                    timeout=120,
+                )
+                resp.raise_for_status()
+                msg = resp.json()["message"]
+                raw = msg.get("content", "").strip()
+
+                # qwen3-vl may put everything in 'thinking' when content is empty
+                if not raw and msg.get("thinking"):
+                    raw = msg["thinking"].strip()
+
+                # Stage 2: If VLM output looks like reasoning, extract via fast text LLM
+                caption = self._cleanup_caption(raw) if raw else ""
+
+                if caption:
+                    txt_path.write_text(f"{trigger}, {caption}", encoding="utf-8")
+                    self._append_log(f"  [{i}/{len(images)}] {img_path.name} — OK")
+                else:
+                    txt_path.write_text(trigger, encoding="utf-8")
+                    self._append_log(f"  [{i}/{len(images)}] {img_path.name} — empty response, trigger only")
+
+            except Exception as e:
+                # Graceful degradation: write trigger only
+                txt_path.write_text(trigger, encoding="utf-8")
+                self._append_log(f"  [{i}/{len(images)}] {img_path.name} — FAILED ({e}), trigger only")
+
+        self._append_log("Captioning complete.")
+        self._pending_caption_info = None
+
+    def _cleanup_caption(self, raw_text: str) -> str:
+        """Extract a clean caption from VLM output that may contain chain-of-thought reasoning."""
+        raw_text = raw_text.strip().strip('"\'')
+
+        # If it already looks like a clean description, return as-is
+        reasoning_prefixes = ("We are", "Okay,", "Let me", "The user", "I need", "First,", "Got it", "So,", "Alright")
+        if not raw_text.startswith(reasoning_prefixes):
+            return raw_text
+
+        # Chain-of-thought detected — use a non-thinking LLM to extract the caption
+        try:
+            resp = requests.post(
+                f"{OLLAMA_API_BASE_URL}/api/chat",
+                json={
+                    "model": CAPTION_CLEANUP_MODEL,
+                    "messages": [{
+                        "role": "user",
+                        "content": (
+                            "The following text contains reasoning AND a final image description sentence. "
+                            "Extract ONLY the final descriptive sentence. Output nothing else, no quotes.\n\n"
+                            + raw_text[:3000]
+                        ),
+                    }],
+                    "stream": False,
+                    "options": {"num_predict": 300, "temperature": 0.1},
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            cleaned = resp.json()["message"].get("content", "").strip().strip('"\'')
+            return cleaned if cleaned and len(cleaned) > 30 else raw_text
+        except Exception as e:
+            logger.warning(f"Caption cleanup failed: {e}")
+            return raw_text
+
     def start_training_process(self, project_name: str, auto_clear_vram: bool = True, min_free_gb: float = 50.0):
         """
         Starts the training subprocess.
@@ -511,6 +618,9 @@ class TrainingService:
 
         def run_proc():
             try:
+                # Auto-caption images before training starts
+                self._generate_captions()
+
                 self._current_process = subprocess.Popen(
                     cmd,
                     cwd=str(KOHYA_DIR),

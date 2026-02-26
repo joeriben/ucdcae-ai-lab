@@ -548,6 +548,11 @@ TRAINING_DATASET_DIR = KOHYA_DIR / "dataset"
 TRAINING_LOG_DIR = KOHYA_DIR / "logs"
 # Note: Output prefix (e.g. "sd35_") is determined by the model-specific config generator in training_service.py
 
+# Auto-Captioning for LoRA Training (VLM generates per-image descriptions)
+CAPTION_VLM_MODEL = "qwen3-vl:32b"
+CAPTION_CLEANUP_MODEL = "mistral-nemo:latest"  # Non-thinking model to extract caption from VLM reasoning
+CAPTION_ENABLED = True
+
 # Model paths for training (relative to SWARMUI_BASE_PATH)
 _SWARMUI_PATH = Path(SWARMUI_BASE_PATH)
 SD35_LARGE_MODEL_PATH = _SWARMUI_PATH / "Models" / "Stable-Diffusion" / "OfficialStableDiffusion" / "sd3.5_large.safetensors"
