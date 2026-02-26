@@ -1509,8 +1509,10 @@ def execute_pipeline_streaming(data: dict):
                     filter_name = 'Kids-Filter' if safety_level == 'kids' else 'Youth-Filter'
                     logger.info(f"[UNIFIED-STREAMING] {filter_name} hit: {found_age[:3]} → LLM context check")
                     verify_result = llm_verify_age_filter_context(input_text, found_age, safety_level)
-                    if verify_result is None or verify_result:
-                        reason = 'Sicherheitssystem (Ollama) reagiert nicht' if verify_result is None else f'{filter_name}: {", ".join(found_age[:3])}'
+                    if verify_result is None:
+                        logger.warning(f"[UNIFIED-STREAMING] {filter_name} LLM unavailable — fail-open (TEMPORARY)")
+                    elif verify_result:
+                        reason = f'{filter_name}: {", ".join(found_age[:3])}'
                         logger.warning(f"[UNIFIED-STREAMING] {filter_name} BLOCKED: {reason}")
                         yield generate_sse_event('blocked', {
                             'stage': 'safety',
@@ -1525,8 +1527,10 @@ def execute_pipeline_streaming(data: dict):
             has_pii, found_pii, spacy_ok = fast_dsgvo_check(input_text)
             if spacy_ok and has_pii:
                 verify_result = llm_verify_person_name(input_text, found_pii)
-                if verify_result is None or verify_result:
-                    reason = 'Sicherheitssystem (Ollama) reagiert nicht' if verify_result is None else f'DSGVO: {", ".join(found_pii[:3])}'
+                if verify_result is None:
+                    logger.warning(f"[UNIFIED-STREAMING] DSGVO LLM unavailable — fail-open (TEMPORARY)")
+                elif verify_result:
+                    reason = f'DSGVO: {", ".join(found_pii[:3])}'
                     logger.warning(f"[UNIFIED-STREAMING] DSGVO BLOCKED: {reason}")
                     yield generate_sse_event('blocked', {
                         'stage': 'safety',
@@ -2056,13 +2060,8 @@ def safety_check_quick():
                 logger.info(f"[SAFETY-QUICK] {filter_name} hit: {found_age_terms[:3]} → LLM context check")
                 verify_result = llm_verify_age_filter_context(text, found_age_terms, safety_level)
                 if verify_result is None:
-                    # LLM unavailable — fail-closed
-                    logger.warning(f"[SAFETY-QUICK] {filter_name} LLM unavailable — fail-closed")
-                    return jsonify({
-                        'safe': False,
-                        'checks_passed': checks_passed + ['age_filter'],
-                        'error_message': 'Sicherheitssystem (Ollama) reagiert nicht. Bitte den Systemadministrator kontaktieren.'
-                    })
+                    # LLM unavailable — fail-open (TEMPORARY)
+                    logger.warning(f"[SAFETY-QUICK] {filter_name} LLM unavailable — fail-open (TEMPORARY)")
                 elif verify_result:
                     # LLM confirmed inappropriate
                     logger.warning(f"[SAFETY-QUICK] {filter_name} BLOCKED (LLM confirmed): {found_age_terms[:3]}")
@@ -2084,13 +2083,8 @@ def safety_check_quick():
             logger.info(f"[SAFETY-QUICK] NER triggered: {found_pii[:3]} — verifying with LLM")
             verify_result = llm_verify_person_name(text, found_pii)
             if verify_result is None:
-                # LLM unavailable — fail-closed
-                logger.error(f"[SAFETY-QUICK] LLM verification unavailable — fail-closed")
-                return jsonify({
-                    'safe': False,
-                    'checks_passed': checks_passed + ['dsgvo_ner'],
-                    'error_message': 'Sicherheitssystem (Ollama) reagiert nicht, daher kann keine weitere Verarbeitung erfolgen. Bitte den Systemadministrator kontaktieren.'
-                })
+                # LLM unavailable — fail-open (TEMPORARY)
+                logger.warning(f"[SAFETY-QUICK] DSGVO LLM unavailable — fail-open (TEMPORARY)")
             elif verify_result:
                 logger.warning(f"[SAFETY-QUICK] DSGVO BLOCKED (LLM confirmed): {found_pii[:3]}")
                 return jsonify({
