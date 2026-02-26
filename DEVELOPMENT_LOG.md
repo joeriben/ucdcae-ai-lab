@@ -1,5 +1,55 @@
 # Development Log
 
+## Session 215 - Agentic Architecture Research
+**Date:** 2026-02-26
+**Focus:** Deep research into evolving AI4ArtsEd into an agentic platform with self-monitoring, experience accumulation, and knowledge distillation
+
+### Context
+With the maturation of agentic AI patterns (ICLR 2026 RSI Workshop, UNO Framework, Claude Opus 4.6), the platform can begin acting autonomously in defined areas: collecting experiences, self-monitoring, executing bounded skills, and training a diversity-aware prompt transformation model.
+
+### Research Findings
+
+**Existing agentic infrastructure** (more than expected):
+- Wikipedia Research Loop = working ReAct-style agent (`pipeline_executor.py:496-720`)
+- VRAMCoordinator = resource negotiation with LRU eviction
+- SSE `user_activity` tracker = idle detector (5min timeout)
+- ConfigLoader auto-discovery = plugin architecture
+- 3,752 runs / 7.1 GB experience data already available
+
+**State of the art** (web research):
+- [UNO Framework](https://arxiv.org/abs/2602.06470) (ICLR 2026): Distills user logs into semi-structured rules + preference pairs, clusters by dual features, measures "cognitive gap" (tau*=0.45) to route between Primary/Reflective experience modules
+- [Unsloth QLoRA](https://unsloth.ai): 2x faster LoRA training, ~4GB VRAM for qwen3:4b, supports all Qwen3 models
+- [ICLR 2026 RSI Workshop](https://recursive-workshop.github.io/): Taxonomy of recursive self-improvement (parameters, memory, tools, architectures)
+
+### Architecture: 5 Pillars + 6 Phases
+
+| Pillar | Kern |
+|--------|------|
+| Experience Engine | JSON aggregation + session-aware narrative summaries (platform sensitivity) |
+| Self-Monitoring Daemon | Daemon-thread in DevServer, 30s tick, health checks, idle detection |
+| Skill System | AUTO/CONFIRM/MANUAL bounded autonomy |
+| Prompt Intelligence | UNO-inspired rule extraction, experience hints in Stage 2, A/B framework |
+| Pipeline Laboratory | Sandboxed `*_lab/` folders for agent-generated config experiments |
+
+**Cross-cutting: Knowledge Distillation** — Claude Sonnet 4.6 (teacher) generates gold-standard transformations, qwen3:4b learns via QLoRA (student). English-channel for PI (translation per MediaBox). Diversity-aware training as core research contribution.
+
+### Key Design Decisions
+1. **Daemon-thread, not separate process** — dies with server, no hidden background processes
+2. **English-channel for PI** — LoRA model only needs English, translation handled by existing qwen3:4b. Toggle per MediaBox (interface switch already exists)
+3. **Platform sensitivity** — system develops narrative understanding of user intent through session-level analysis (not just statistics). Identifies creative engagement modes: identity expression, aesthetic pursuit, deconstruction, exploration, self-articulation, boundary-testing
+4. **Diversity-aware training** — potentially first diversity-aware prompt transformation model. No cultural hierarchy, WIE-rules (perspective, description, perception) instead of "in the style of"
+5. **Production data only** — workshop runs (`{uuid}_{date}` device IDs), dev-testing prompts filtered out
+
+### Documents Created
+- `docs/plans/agentic/MASTERPLAN.md` — overview + dependencies + key decisions
+- `docs/plans/agentic/RESEARCH_NOTES.md` — UNO + QLoRA deep dives with full algorithms
+- `docs/plans/agentic/phase-{0-5}-*.md` — 6 implementation-ready phase plans
+
+### Commits
+- `c84ccd7` docs: add agentic architecture research (masterplan + 6 phase plans)
+
+---
+
 ## Session 214 - i18n Nightly Batch Translation & Automation
 **Date:** 2026-02-26
 **Focus:** Process all pending i18n work orders, audit key completeness, improve nightly automation
