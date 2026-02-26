@@ -1,9 +1,9 @@
 #!/bin/bash
-# Start ComfyUI directly (no SwarmUI middleware)
+# Start ComfyUI directly (standalone installation)
 #
-# This replaces 2_start_swarmui.sh for COMFYUI_DIRECT mode.
 # ComfyUI runs on port 7821 and is accessed directly by the DevServer
 # via WebSocket (progress tracking) and HTTP (media download).
+# Models are in dlbackend/ComfyUI/models/ (ComfyUI standard paths).
 
 # Keep window open on error
 trap 'echo ""; echo "❌ Script failed! Press any key to close..."; read -n 1 -s -r' ERR
@@ -13,8 +13,8 @@ COMFYUI_PORT=7821
 # Get directory where this script lives (repo root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# ComfyUI location (inside SwarmUI's dlbackend)
-COMFYUI_DIR="$SCRIPT_DIR/../SwarmUI/dlbackend/ComfyUI"
+# ComfyUI location (standalone installation)
+COMFYUI_DIR="$SCRIPT_DIR/dlbackend/ComfyUI"
 
 # Check if port is in use and terminate any process using it
 echo "Checking port ${COMFYUI_PORT}..."
@@ -25,22 +25,23 @@ if lsof -ti:${COMFYUI_PORT} > /dev/null 2>&1; then
     echo "✅ Process terminated."
 fi
 
-echo "=== Starting ComfyUI (Direct Mode) ==="
+echo "=== Starting ComfyUI (Standalone) ==="
 echo ""
 
 # Check if ComfyUI directory exists
 if [ ! -d "$COMFYUI_DIR" ]; then
     echo "❌ ERROR: ComfyUI not found at: $COMFYUI_DIR"
     echo ""
-    echo "Expected location: SwarmUI/dlbackend/ComfyUI/"
+    echo "Expected location: dlbackend/ComfyUI/"
+    echo "Run: cd dlbackend && git clone https://github.com/comfyanonymous/ComfyUI.git"
     exit 1
 fi
 
 cd "$COMFYUI_DIR"
 echo "Working directory: $COMFYUI_DIR"
 
-# Activate venv (SwarmUI's venv has all ComfyUI dependencies)
-VENV_DIR="$SCRIPT_DIR/../SwarmUI/venv"
+# Activate ComfyUI's own venv
+VENV_DIR="$COMFYUI_DIR/venv"
 if [ -d "$VENV_DIR" ]; then
     source "$VENV_DIR/bin/activate"
     echo "Activated venv: $VENV_DIR"
@@ -57,10 +58,10 @@ trap - ERR
 
 # Start ComfyUI directly
 # --listen 127.0.0.1: only local access (DevServer connects locally)
-# --port 7821: same port as SwarmUI's integrated ComfyUI
-# --extra-model-paths-config: use SwarmUI's model directories
+# --port 7821: ComfyUI backend port
+# Models are in standard ComfyUI paths (models/checkpoints, models/clip, etc.)
+# No --extra-model-paths-config needed
 python main.py \
     --listen 127.0.0.1 \
     --port "$COMFYUI_PORT" \
-    --extra-model-paths-config extra_model_paths.yaml \
     --preview-method auto

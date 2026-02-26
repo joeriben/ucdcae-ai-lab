@@ -539,11 +539,11 @@ MODEL_RESOLUTION_FALLBACK = True      # Fallback to original names if resolution
 # Base paths for model resolution (configure these to your actual paths)
 # Note: _SERVER_BASE and _AI_TOOLS_BASE are defined at top of file
 SWARMUI_BASE_PATH = os.environ.get("SWARMUI_PATH", str(_AI_TOOLS_BASE / "SwarmUI"))
-COMFYUI_BASE_PATH = os.environ.get("COMFYUI_PATH", str(_AI_TOOLS_BASE / "SwarmUI" / "dlbackend" / "ComfyUI"))
+COMFYUI_BASE_PATH = os.environ.get("COMFYUI_PATH", str(_SERVER_BASE / "dlbackend" / "ComfyUI"))
 
 # LoRA Training Paths (Kohya SS)
 KOHYA_DIR = Path(os.environ.get("KOHYA_DIR", str(_AI_TOOLS_BASE / "kohya_ss_new")))
-LORA_OUTPUT_DIR = Path(os.environ.get("LORA_OUTPUT_DIR", str(_AI_TOOLS_BASE / "SwarmUI" / "Models" / "loras")))
+LORA_OUTPUT_DIR = Path(os.environ.get("LORA_OUTPUT_DIR", str(Path(COMFYUI_BASE_PATH) / "models" / "loras")))
 TRAINING_DATASET_DIR = KOHYA_DIR / "dataset"
 TRAINING_LOG_DIR = KOHYA_DIR / "logs"
 # Note: Output prefix (e.g. "sd35_") is determined by the model-specific config generator in training_service.py
@@ -553,12 +553,12 @@ CAPTION_VLM_MODEL = "qwen3-vl:32b"
 CAPTION_CLEANUP_MODEL = "mistral-nemo:latest"  # Non-thinking model to extract caption from VLM reasoning
 CAPTION_ENABLED = True
 
-# Model paths for training (relative to SWARMUI_BASE_PATH)
-_SWARMUI_PATH = Path(SWARMUI_BASE_PATH)
-SD35_LARGE_MODEL_PATH = _SWARMUI_PATH / "Models" / "Stable-Diffusion" / "OfficialStableDiffusion" / "sd3.5_large.safetensors"
-CLIP_L_PATH = _SWARMUI_PATH / "Models" / "clip" / "clip_l.safetensors"
-CLIP_G_PATH = _SWARMUI_PATH / "Models" / "clip" / "clip_g.safetensors"
-T5XXL_PATH = _SWARMUI_PATH / "Models" / "clip" / "t5xxl_fp16.safetensors"
+# Model paths for training and ComfyUI inference
+_COMFYUI_MODELS_PATH = Path(COMFYUI_BASE_PATH) / "models"
+SD35_LARGE_MODEL_PATH = _COMFYUI_MODELS_PATH / "checkpoints" / "OfficialStableDiffusion" / "sd3.5_large.safetensors"
+CLIP_L_PATH = _COMFYUI_MODELS_PATH / "clip" / "clip_l.safetensors"
+CLIP_G_PATH = _COMFYUI_MODELS_PATH / "clip" / "clip_g.safetensors"
+T5XXL_PATH = _COMFYUI_MODELS_PATH / "clip" / "t5xxl_fp16.safetensors"
 
 # Default Negative Terms Configuration
 DEFAULT_NEGATIVE_TERMS = "blurry, bad quality, worst quality, low quality, low resolution, extra limbs, extra fingers, distorted, deformed, jpeg artifacts, watermark"
@@ -614,7 +614,7 @@ SYSTEM_WORKFLOW_FOLDERS = ["aesthetics", "semantics", "arts"]
 # LORA CONFIGURATION (Temporary - will be replaced by dynamic source)
 # ============================================================================
 # Format: List of dicts with 'name' and 'strength'
-# 'name' = filename without path (file must be in SwarmUI/Models/loras/)
+# 'name' = filename without path (file must be in dlbackend/ComfyUI/models/loras/)
 # Set to empty list [] to disable LoRA injection
 #
 LORA_TRIGGERS = [

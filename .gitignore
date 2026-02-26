@@ -118,3 +118,7 @@ gpu_service/weights/
 # -------------------------------------
 # Research: generated data artifacts (tensors, corpora, WAVs)
 research/t5_interpretability/data/
+
+# -------------------------------------
+# Standalone ComfyUI backend (large, cloned separately)
+dlbackend/
