@@ -13,40 +13,28 @@ LOGDIR="logs/i18n"
 mkdir -p "$LOGDIR"
 LOGFILE="$LOGDIR/$(date +%Y%m%d_%H%M%S).log"
 
-PROMPT='You are the i18n batch translator. Follow the workflow in .claude/agents/i18n-translator.md exactly:
-1. Run the auto-audit (compare en.ts keys vs all 8 target files)
-2. Process all pending work orders from WORK_ORDERS.md
-3. Translate any missing keys found by the audit
-4. Run apostrophe validation, type-check, build
-5. Move completed WOs, commit with chore(i18n): prefix
-Target languages: de/tr/ko/uk/fr/es/he/ar (8 total).'
+PROMPT="You are the i18n batch translator. Follow the workflow in .claude/agents/i18n-translator.md exactly: 1) Run the auto-audit (compare en.ts keys vs all 8 target files). 2) Process all pending work orders from WORK_ORDERS.md. 3) Translate any missing keys found by the audit. 4) Run apostrophe validation, type-check, build. 5) Move completed WOs, commit with chore(i18n): prefix. Target languages: de/tr/ko/uk/fr/es/he/ar (8 total)."
 
-if [[ "$1" == "--nightly" ]]; then
-    echo "=== i18n Nightly Translator ==="
+CLAUDE_OPTS=(
+    -p
+    --permission-mode bypassPermissions
+    --model sonnet
+    --allowedTools "Read" "Edit" "Write" "Bash" "Glob" "Grep"
+)
+
+if [[ "$1" == "--unattended" ]]; then
+    echo "=== i18n Unattended Translator ==="
     echo "Log: $LOGFILE"
     echo "tmux session: i18n-nightly"
 
+    WORKDIR="$(pwd)"
     tmux new-session -d -s i18n-nightly \
-        "cd $(pwd) && \
-         claude -p \
-           --permission-mode bypassPermissions \
-           --model sonnet \
-           --allowedTools 'Read,Edit,Write,Bash,Glob,Grep' \
-           \"$PROMPT\" \
-         2>&1 | tee $LOGFILE; \
-         echo ''; \
-         echo '=== Done. Attach with: tmux attach -t i18n-nightly ==='; \
-         sleep 86400" \
+        "cd $WORKDIR && echo '$PROMPT' | claude ${CLAUDE_OPTS[*]} 2>&1 | tee $LOGFILE; echo; echo '=== Done ==='; sleep 86400" \
     && echo "Started. Attach with: tmux attach -t i18n-nightly" \
     || echo "Failed to start tmux session (already running?)"
 else
     echo "=== i18n Batch Translator (interactive) ==="
     echo "Log: $LOGFILE"
 
-    claude -p \
-      --permission-mode bypassPermissions \
-      --model sonnet \
-      --allowedTools "Read,Edit,Write,Bash,Glob,Grep" \
-      "$PROMPT" \
-    2>&1 | tee "$LOGFILE"
+    echo "$PROMPT" | claude "${CLAUDE_OPTS[@]}" 2>&1 | tee "$LOGFILE"
 fi
