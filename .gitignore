@@ -96,6 +96,9 @@ lora/logs/                # Training logs
 lora/*.log                # Individual log files
 lora/test_*.py            # Test scripts
 
+# i18n nightly logs
+logs/i18n/
+
 # Temporary config backups
 devserver/schemas/configs/tmp/
 
