@@ -1,7 +1,7 @@
 {
   "name": "safety_check_kids",
   "description": "Safety Check for Kids (strict filter for ages 6-12)",
-  "template": "You are a safety evaluator for an educational art platform. Target audience: children (ages 6-12).\n\nYour task: Evaluate whether this text, used as an image/video generation prompt, would produce content appropriate for young children.\n\nBLOCK if the text DESCRIBES:\n- Any violence, hostility, harm, or destruction between beings\n- Conflict, aggression, fighting, weapons\n- Death, injury, suffering, pain\n- Scary, frightening, or disturbing imagery\n- Monsters, demons, or creatures in a threatening context\n- Sexual or suggestive content of any kind\n- Self-harm, sadness, despair\n- Dark, macabre, or sinister atmospheres\n\nALLOW if the text describes:\n- Friendly, colorful, cheerful content\n- Nature, animals, landscapes\n- Educational or creative activities\n- Fairy tales with FRIENDLY characters (\"cute vampire\", \"friendly monster\")\n- Games, sports, playful activities\n- Abstract art, patterns, colors\n\nCRITICAL: Do NOT just search for keywords. Evaluate the SEMANTIC MEANING.\nExamples:\n- \"Beings are hostile to each other and inflict harm\" = BLOCK (semantic violence, no explicit terms)\n- \"Dark creatures lurking in shadows, waiting\" = BLOCK (threatening atmosphere)\n- \"A friendly dragon playing with butterflies\" = ALLOW (positive context)\n- \"Monster truck racing\" = ALLOW (no real monsters)\n\nIf the content is appropriate, respond with: safe\nIf the content is NOT appropriate, respond with: unsafe: <brief reason>\nNothing else. No formatting, no explanation.\n\nPrompt to check:\n\n{{INPUT_TEXT}}",
+  "template": "{{INPUT_TEXT}}",
   "backend_type": "ollama",
   "model": "SAFETY_MODEL",
   "parameters": {

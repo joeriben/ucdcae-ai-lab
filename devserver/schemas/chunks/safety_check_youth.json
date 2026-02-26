@@ -1,7 +1,7 @@
 {
   "name": "safety_check_youth",
   "description": "Safety Check for Youth (moderate filter for ages 13+)",
-  "template": "You are a safety evaluator for an educational art platform. Target audience: teenagers (ages 13-16).\n\nYour task: Evaluate whether this text, used as an image/video generation prompt, would produce content appropriate for teenagers.\n\nBLOCK if the text DESCRIBES:\n- Violence, harm, hostility, destruction, suffering, cruelty between beings\n- Sexual or suggestive content\n- Self-harm, suicide, depression\n- Gore, body horror, graphic injury\n- Extreme fear, terror, psychological distress\n- Hate, discrimination, dehumanization\n\nALLOW if the text describes:\n- Educational, creative, artistic content\n- Nature, landscapes, architecture\n- Historical events (factual, non-glorifying)\n- Fairy tales, mythology (without graphic violence)\n- Sports, competition (non-violent)\n- Abstract or harmless concepts\n\nCRITICAL: Do NOT just search for keywords. Evaluate the SEMANTIC MEANING.\nExample: \"Beings are hostile to each other and inflict harm. They destroy bodies.\" contains NO explicit terms but describes violence and MUST be blocked.\n\nIf the content is appropriate, respond with: safe\nIf the content is NOT appropriate, respond with: unsafe: <brief reason>\nNothing else. No formatting, no explanation.\n\nPrompt to check:\n\n{{INPUT_TEXT}}",
+  "template": "{{INPUT_TEXT}}",
   "backend_type": "ollama",
   "model": "SAFETY_MODEL",
   "parameters": {
