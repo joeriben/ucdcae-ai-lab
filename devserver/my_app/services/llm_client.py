@@ -152,37 +152,12 @@ class LLMClient:
              keep_alive: str = "10m",
              repetition_penalty: Optional[float] = None,
              enable_thinking: bool = True) -> Optional[Dict[str, Any]]:
-        """Messages-based chat. GPU Service primary, Ollama fallback.
+        """Messages-based chat. Direct to Ollama (GPU Service LLM bypassed).
 
         Returns {"content": str, "thinking": str|None} or None on total failure.
         """
-        # Try GPU service first
-        gpu_data = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_new_tokens": max_new_tokens,
-            "enable_thinking": enable_thinking,
-        }
-        if images:
-            gpu_data["images"] = images
-        if repetition_penalty is not None:
-            gpu_data["repetition_penalty"] = repetition_penalty
-
-        result = self._gpu_post('/api/llm/chat', gpu_data)
-
-        if result is not None:
-            if result.get("success"):
-                return {
-                    "content": result.get("content", ""),
-                    "thinking": result.get("thinking"),
-                }
-            # GPU service returned an error (not connection failure) — propagate
-            logger.error(f"[LLM-CLIENT] GPU service chat error: {result.get('error')}")
-            # Fall through to Ollama — GPU service error could be model-loading related
-
-        # Fallback to Ollama
-        logger.info(f"[LLM-CLIENT] Falling back to Ollama for chat ({model})")
+        # GPU Service LLM inference DISABLED — causes cascading failures.
+        # Go directly to Ollama. Re-enable when GPU Service LLM is fixed.
         return self._ollama_chat(model, messages, images, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
 
     def generate(self, model: str, prompt: str,
@@ -190,32 +165,12 @@ class LLMClient:
                  keep_alive: str = "10m",
                  repetition_penalty: Optional[float] = None,
                  enable_thinking: bool = True) -> Optional[Dict[str, Any]]:
-        """Raw prompt generation. GPU Service primary, Ollama fallback.
+        """Raw prompt generation. Direct to Ollama (GPU Service LLM bypassed).
 
         Returns {"response": str, "thinking": str|None} or None on total failure.
         """
-        gpu_data = {
-            "model": model,
-            "prompt": prompt,
-            "temperature": temperature,
-            "max_new_tokens": max_new_tokens,
-            "enable_thinking": enable_thinking,
-        }
-        if repetition_penalty is not None:
-            gpu_data["repetition_penalty"] = repetition_penalty
-
-        result = self._gpu_post('/api/llm/generate', gpu_data)
-
-        if result is not None:
-            if result.get("success"):
-                return {
-                    "response": result.get("response", ""),
-                    "thinking": result.get("thinking"),
-                }
-            logger.error(f"[LLM-CLIENT] GPU service generate error: {result.get('error')}")
-
-        # Fallback to Ollama
-        logger.info(f"[LLM-CLIENT] Falling back to Ollama for generate ({model})")
+        # GPU Service LLM inference DISABLED — causes cascading failures.
+        # Go directly to Ollama. Re-enable when GPU Service LLM is fixed.
         return self._ollama_generate(model, prompt, temperature, max_new_tokens, keep_alive, repetition_penalty, enable_thinking)
 
     def list_models(self) -> list:
