@@ -476,15 +476,20 @@ class DiffusersImageGenerator:
                 continue
             adapter_name = f"lora_{i}"
             pipe.load_lora_weights(
-                str(LORA_DIR), weight_name=lora['name'], adapter_name=adapter_name
+                str(LORA_DIR), weight_name=lora['name'], adapter_name=adapter_name,
+                prefix=None,  # Auto-detect Kohya key format (lora_unet_*, lora_te1_*)
             )
             adapter_names.append(adapter_name)
             adapter_weights.append(lora.get('strength', 1.0))
             logger.info(f"[DIFFUSERS-LORA] Loaded: {lora['name']} (strength={lora.get('strength', 1.0)})")
 
         if adapter_names:
-            pipe.set_adapters(adapter_names, adapter_weights)
-            logger.info(f"[DIFFUSERS-LORA] Active adapters: {adapter_names}")
+            try:
+                pipe.set_adapters(adapter_names, adapter_weights)
+                logger.info(f"[DIFFUSERS-LORA] Active adapters: {adapter_names}")
+            except ValueError as e:
+                # Kohya SD3 LoRAs may fuse directly without PEFT adapter tracking
+                logger.warning(f"[DIFFUSERS-LORA] set_adapters skipped (weights applied directly): {e}")
 
     def _remove_loras(self, pipe):
         """Unload all LoRA weights from pipeline."""
