@@ -29,6 +29,46 @@
 
 ---
 
+## 🖼️ Auto-Captioning im LoRA-Training: VLM-Pipeline mit Thinking-Cleanup (2026-02-26)
+
+**Kontext:** LoRA-Training auf SD3.5 Large mit Kohya SS. Trainingsbilder werden über die Web-UI hochgeladen. Bisher verwendete Kohya nur den Ordner-Trigger (`40_impphoto`) als Beschreibung — alle Bilder erhielten dieselbe einzige Caption. Detaillierte Per-Image-Captions verbessern die LoRA-Qualität erheblich.
+
+### Decision 1: Auto-Captioning automatisch im Training-Thread, nicht im Upload-Request
+
+**Problem:** Captioning dauert ~8s/Bild × N Bilder. Das in `create_project()` (synchroner HTTP-Request) zu machen, würde den Upload-Response für Minuten blockieren.
+
+**Decision:** Captioning läuft in `start_training_process()` im Background-Thread, nach VRAM-Check und vor Kohya-Start. Der User sieht den Fortschritt im SSE-Logstream: `[1/25] bild.jpg — OK (7.2s)`.
+
+**Alternativen verworfen:**
+- ❌ Captioning im Upload-Request: Blockiert UI für Minuten
+- ❌ Separater Captioning-Endpoint: Unnötige Komplexität — Captions sind kein eigenständiges Feature, sondern Trainings-Preprocessing
+- ❌ User muss .txt-Dateien selbst hochladen: Zerstört den Workflow, User soll nur Bilder drag&droppen
+
+### Decision 2: Zwei-Stufen-VLM-Pipeline (qwen3-vl → mistral-nemo) statt Single-Model
+
+**Problem:** qwen3-vl:32b ist das beste verfügbare VLM, aber hat einen Thinking-Modus-Bug: bei komplexen Prompts landet die Antwort im `thinking`-Feld statt `content`, oder das `content`-Feld enthält Chain-of-Thought-Reasoning statt der sauberen Caption. Ollama's `"think": false` API-Parameter funktioniert nicht zuverlässig für qwen3-vl (bekannter Bug: ollama/ollama#12610, #12917).
+
+**Decision:** Zwei-Stufen-Ansatz:
+1. **qwen3-vl:32b** beschreibt das Bild (beste VLM-Qualität)
+2. Falls Output wie Reasoning aussieht (Prefix-Heuristik: "Got it", "We are", etc.), extrahiert **mistral-nemo** (kein Thinking-Modus) die saubere Caption
+
+**Warum nicht einfach ein anderes VLM?** llama3.2-vision:90b funktioniert ohne Thinking-Problem, liefert aber qualitativ schwächere Beschreibungen als qwen3-vl:32b. Die Zwei-Stufen-Lösung kombiniert das beste VLM mit zuverlässiger Extraktion.
+
+**Alternativen verworfen:**
+- ❌ Regex-Extraktion: Fragil — qwen3-vl variiert das Reasoning-Format zwischen Runs
+- ❌ llama3.2-vision als einziges Modell: Geringere Caption-Qualität
+- ❌ qwen3:1.7b als Cleanup: Hat selbst Thinking-Modus, gibt leeren Content bei langem Input
+
+### Decision 3: LoRA-Generierung über ComfyUI, nicht Diffusers
+
+**Problem:** Kohya SD3 LoRAs verwenden Key-Prefixes (`lora_unet_*`, `lora_te1_*`, `lora_te2_*`) die Diffusers' `load_lora_weights()` für SD3Transformer2DModel nicht konvertieren kann. Es existiert kein SD3-spezifischer Kohya-Converter in `diffusers.loaders.lora_conversion_utils`. Die Weights werden geladen aber nicht angewandt — identische Bilder mit und ohne LoRA.
+
+**Decision:** ComfyUI bleibt der primäre Pfad für LoRA-Generierungen. ComfyUI's `LoraLoader`-Node liest Kohya-Format nativ. Diffusers-Backend fängt den Fehler graceful ab (`set_adapters` ValueError → Warning statt Crash).
+
+**Betroffene Dateien:** `devserver/config.py`, `devserver/my_app/services/training_service.py`, `gpu_service/services/diffusers_backend.py`
+
+---
+
 ## ✏️ Sketch-Input als plattformweiter Eingabekanal in MediaInputBox (2026-02-26)
 
 **Kontext:** Session 210 führte SketchCanvas.vue ein — aber die Toggle-Logik (Upload vs. Sketch) war als Page-Level-Code in `image_transformation.vue` hardcoded. Sketch war damit ein Feature einer einzelnen Seite, nicht der Plattform.
