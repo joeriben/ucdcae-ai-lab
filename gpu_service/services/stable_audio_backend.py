@@ -149,7 +149,6 @@ class StableAudioGenerator:
                 pipe = StableAudioPipeline.from_pretrained(
                     self.model_id,
                     torch_dtype=torch_dtype,
-                    local_files_only=True,
                 )
                 pipe = pipe.to(self.device)
                 return pipe

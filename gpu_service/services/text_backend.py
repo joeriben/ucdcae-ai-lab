@@ -224,14 +224,13 @@ class TextBackend:
 
                 vram_before = torch.cuda.memory_allocated(0) if torch.cuda.is_available() else 0
 
-                tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
+                tokenizer = AutoTokenizer.from_pretrained(model_id)
                 if tokenizer.pad_token is None:
                     tokenizer.pad_token = tokenizer.eos_token
 
                 # Build load kwargs — NO device_map, explicit .to(device) instead
                 load_kwargs = {
                     "low_cpu_mem_usage": True,
-                    "local_files_only": True,
                 }
 
                 if quantization == "bf16":
