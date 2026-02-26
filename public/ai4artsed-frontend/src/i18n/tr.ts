@@ -147,7 +147,8 @@ export const tr = {
       export: 'Araştırma Verileri',
       config: 'Yapılandırma',
       demos: 'Minigame Demo',
-      matrix: 'Model Matrisi'
+      matrix: 'Model Matrisi',
+      status: 'Backend Durumu'
     },
     loading: 'Ayarlar yükleniyor...',
     presets: {
@@ -173,10 +174,13 @@ export const tr = {
       defaultLanguage: 'Varsayılan Dil',
       germanDe: 'Almanca (de)',
       englishEn: 'İngilizce (en)',
+      arabicAr: 'Arapça (ar)',
+      hebrewHe: 'İbranice (he)',
       turkishTr: 'Türkçe (tr)',
       koreanKo: '한국어 (ko)',
       ukrainianUk: 'Українська (uk)',
-      frenchFr: 'Fransızca (fr)'
+      frenchFr: 'Fransızca (fr)',
+      spanishEs: 'İspanyolca (es)'
     },
     safety: {
       kidsTitle: 'Çocuklar (8–12)',
@@ -251,6 +255,37 @@ export const tr = {
       applying: 'Uygulanıyor...',
       success: 'Ayarlar kaydedildi ve uygulandı',
       presetApplied: 'Ön ayar uygulandı: {preset}'
+    },
+    backendStatus: {
+      loading: 'Backend durumu kontrol ediliyor...',
+      refresh: 'Yenile',
+      refreshing: 'Yenileniyor...',
+      localInfrastructure: 'Yerel Altyapı',
+      cloudApis: 'Bulut API\'leri',
+      outputConfigs: 'Backend\'e Göre Çıktı Yapılandırmaları',
+      reachable: 'Erişilebilir',
+      unreachable: 'Erişilemiyor',
+      available: 'Mevcut',
+      unavailable: 'Mevcut Değil',
+      configured: 'Yapılandırıldı',
+      notConfigured: 'Yapılandırılmadı',
+      gpuService: 'GPU Service',
+      subBackend: 'Alt Backend',
+      status: 'Durum',
+      comfyui: 'ComfyUI / SwarmUI',
+      ollama: 'Ollama',
+      gpuHardware: 'GPU Donanımı',
+      notDetected: 'Algılanamadı',
+      showModels: 'Modelleri göster',
+      hideModels: 'Modelleri gizle',
+      provider: 'Sağlayıcı',
+      keyStatus: 'API Key',
+      dsgvoLabel: 'DSGVO',
+      region: 'Bölge',
+      dsgvoCompliant: 'Uyumlu',
+      dsgvoNotCompliant: 'Uyumsuz',
+      configsAvailable: '{total} yapılandırmadan {available} tanesi mevcut',
+      hidden: 'gizli'
     }
   },
   pipeline: {
@@ -312,6 +347,17 @@ export const tr = {
     uploadFailed: 'Yükleme başarısız',
     infoOriginal: 'Orijinal:',
     infoSize: 'Boyut:'
+  },
+  sketchCanvas: {
+    drawHere: 'Eskizinizi buraya çizin',
+    pen: 'Kalem',
+    eraser: 'Silgi',
+    undo: 'Geri Al',
+    clear: 'Temizle',
+    done: 'Tamam',
+    brushSmall: 'Küçük',
+    brushMedium: 'Orta',
+    brushLarge: 'Büyük'
   },
   mediaInput: {
     choosePreset: 'Bakış Açısı Seçin',
@@ -436,6 +482,9 @@ export const tr = {
         customPromptLabel: 'Analiz Promptu',
         customPromptPlaceholder: 'Görselin nasıl analiz edilmesi gerektiğini açıklayın...'
       },
+      randomPrompt: {
+        tokenLimit: 'Prompt Uzunluğu'
+      },
       display: {
         imageAlt: 'Önizleme',
         emptyText: 'Önizleme (çalıştırmadan sonra)'
@@ -544,7 +593,9 @@ export const tr = {
   imageTransform: {
     imageLabel: 'Görseliniz',
     contextLabel: 'Görselde ne değiştirmek istediğinizi açıklayın',
-    contextPlaceholder: 'örn. Yağlı boya tabloya dönüştür... Daha renkli yap... Gün batımı ekle...'
+    contextPlaceholder: 'örn. Yağlı boya tabloya dönüştür... Daha renkli yap... Gün batımı ekle...',
+    uploadMode: 'Yükle',
+    sketchMode: 'Eskiz'
   },
   textTransform: {
     inputLabel: 'Fikriniz = NE?',
@@ -659,11 +710,11 @@ export const tr = {
   },
   surrealizer: {
     infoTitle: 'Gerçeküstüleştirici — Bilinenden Ötesine Ekstrapolasyon',
-    infoDescription: 'İki yapay zeka "beyni" metninizi okur: CLIP-L dili görseller aracılığıyla, T5 ise onu saf dilbilimsel olarak anlar. Kaydırıcı sadece aralarında karıştırmaz — görseli T5\'in tek başına üretebileceğinin çok ötesine iter. Yapay zekanın ardından eğitim sırasında hiç karşılaşmadığı vektörleri yorumlaması gerekir. Sonuç: Yapay zeka halüsinasyonları — hiçbir promptun doğrudan üretemeyeceği görseller.',
-    purposeTitle: 'Kaydırıcı',
-    purposeText: 'α < 0: CLIP-L yükseltildi, T5 olumsuzlandı — üst 3328 boyut (CLIP-L\'nin sıfırla doldurulduğu) ters çevrilmiş T5 vektörleri alır. Transformatördeki çapraz dikkat örüntüleri tersine döner: görsel odaklı halüsinasyonlar. ◆ α = 0: saf CLIP-L — normal görsel. ◆ α = 1: saf T5-XXL — hâlâ normal, ancak farklı kalite. ◆ α > 1: T5\'in ötesine ekstrapolasyon. α = 20\'de formül gömmeyi T5\'in 19 katı ötesinde keşfedilmemiş vektör uzayına iter — dilbilimsel odaklı halüsinasyonlar. ◆ En iyi nokta: α = 15–35.',
+    infoDescription: 'İki yapay zeka "beyni" metninizi okur: CLIP-L dili görseller aracılığıyla (77 token, 768 boyut) anlar, T5-XXL ise onu saf dilbilimsel olarak (512 token, 4096 boyut). Kaydırıcı sadece karıştırmaz — görseli her iki kodlayıcının tek başına üretebileceğinin çok ötesine iter. Ekstrapolasyonun token dizisi boyunca nasıl dağıtıldığını Füzyon Stratejisi belirler.',
+    purposeTitle: 'Füzyon Stratejisi & Kaydırıcı',
+    purposeText: 'Füzyon Stratejisi ekstrapolasyonun NEREDE gerçekleşeceğini belirler. Dual Alpha ilk 77 tokeni (CLIP-L\'den gelen görsel çekirdek) hafifçe bozarken genişletilmiş T5 tokenlerini tam olarak ekstrapolasyon yapar — görsel yapısal olarak tanınabilir kalır ama estetik açıdan şaşırtıcı hale gelir. Normalize Her Yerde aynı ekstrapolasyonu uygular ancak hiçbir tokenin dikkati domine etmemesi için büyüklüğü kontrol eder. Legacy yalnızca ilk 77 tokeni ekstrapolasyon yapar ve geri kalanı değişmeden bırakır — orijinal yaklaşım, ancak uzun promptlarda değişmeden kalan T5 tokenleri etkiyi sulandırdığı için daha az gerçeküstü. ◆ α kaydırıcısı NE KADAR UZAĞA gidileceğini belirler: α = 0 saf CLIP-L (normal), α = 1 saf T5 (hâlâ normal), α > 1 T5\'in ötesinde keşfedilmemiş vektör uzayına iter. En iyi nokta: 15–35. ◆ α < 0 T5\'i olumsuzlar ve CLIP-L\'yi yükseltir — niteliksel olarak farklı halüsinasyonlar.',
     techTitle: 'Nasıl Çalışır',
-    techText: 'Promptunuz iki kodlayıcı aracılığıyla ayrı ayrı gönderilir: CLIP-L (görsel olarak eğitilmiş, 77 token, 768 boyut → 4096\'ya doldurulmuş) ve T5-XXL (dilbilimsel olarak eğitilmiş, 512 token, 4096 boyut). İlk 77 token konumu birleştirilir: (1-α)·CLIP-L + α·T5. Geri kalan T5 tokenları (78–512) anlamsal çapa olarak değişmeden kalır — α ne kadar uç olursa olsun görseli metninize bağlarlar. α > 1\'de bu karışım değil ekstrapoloasyondur: hiçbir eğitimin üretmediği vektörler. α < 0\'da T5 olumsuzlanır ve CLIP-L yükseltilir — transformatördeki çapraz dikkat örüntüleri tersine çevrildiğinden niteliksel olarak farklı halüsinasyonlar.',
+    techText: 'CLIP-L 768 boyuta kodlar, 4096\'ya doldurulur — 3328 boyut sıfırdır. T5-XXL tüm 4096 boyutu doldurur. Bu asimetri motordur: ekstrapolasyon seyrek CLIP-L uzayını kullanır. (1-α)·CLIP-L + α·T5 formülü her iki kodlayıcının da veri sahibi olduğu ilk 77 token konumuna uygulanır. 77. konumun ötesinde yalnızca T5 mevcuttur. Bu genişletilmiş tokenlerin nasıl ele alındığı üç stratejiyi birbirinden ayırır: Dual Alpha onları α ile çarpar (tam ekstrapolasyon), Normalize tipik T5 büyüklüğüne yeniden ölçekler, Legacy onları 1×\'te bırakır (değişmeden). Yüksek α değerlerinde bu fark dramatiktir — Legacy ile diğer ikisi arasında 25× faktörü.',
     sliderLabel: 'Ekstrapolasyon (α)',
     sliderNormal: 'normal',
     sliderWeird: 'tuhaf',
@@ -677,10 +728,19 @@ export const tr = {
     expandActive: 'Prompt genişletiliyor...',
     expandResultLabel: 'T5 genişletmesi (yalnızca T5 kodlayıcı)',
     advancedLabel: 'Gelişmiş Ayarlar',
+    fusionStrategyLabel: 'Füzyon Stratejisi',
+    fusion_dual_alpha: 'Dual Alpha',
+    fusion_normalized: 'Normalize',
+    fusion_legacy: 'Legacy',
+    fusionHint_dual_alpha: 'Çekirdek tokenlere (CLIP-L aracılığıyla yapısal çapa) hafif α, genişletilmiş tokenlere (estetik sürpriz) tam α. Yapısal olarak tanınabilir, estetik açıdan şaşırtıcı.',
+    fusionHint_normalized: 'Tüm tokenlere eşit α, ardından tipik T5 büyüklüğüne L2 normalize. Dual Alpha ile aynı ekstrapolasyon yönü, ancak büyüklük kontrollü — hiçbir token dikkati domine etmez.',
+    fusionHint_legacy: 'Orijinal davranış: ilk 77 tokeni ekstrapolasyon yapar, T5 kalanını değişmeden ekler (1×). Uzun promptlarda daha az gerçeküstü — değişmeden kalan tokenler etkiyi sulandırır.',
     negativeLabel: 'Negatif Prompt',
     negativeHint: 'Aynı α ile ekstrapolasyon yapılır. Görselin NEREDEN uzaklaştığını belirler — farklı negatifler temelden farklı estetikler üretir.',
     cfgLabel: 'CFG Ölçeği',
-    cfgHint: 'Classifier-Free Guidance: prompt etkisinin gücü. Yüksek = daha güçlü etki, daha az varyasyon.'
+    cfgHint: 'Classifier-Free Guidance: prompt etkisinin gücü. Yüksek = daha güçlü etki, daha az varyasyon.',
+    seedLabel: 'Seed',
+    seedHint: '-1 = rastgele. Sabit seed stratejiler arasında A/B karşılaştırmasına olanak tanır.'
   },
   musicGeneration: {
     infoTitle: 'Müzik Oluşturma',

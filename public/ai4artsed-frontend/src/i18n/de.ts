@@ -147,7 +147,8 @@ export const de = {
       export: 'Forschungsdaten',
       config: 'Konfiguration',
       demos: 'Minigame-Demo',
-      matrix: 'Modell-Matrix'
+      matrix: 'Modell-Matrix',
+      status: 'Backend-Status'
     },
     loading: 'Einstellungen laden...',
     presets: {
@@ -173,10 +174,13 @@ export const de = {
       defaultLanguage: 'Standardsprache',
       germanDe: 'Deutsch (de)',
       englishEn: 'Englisch (en)',
+      arabicAr: 'Arabisch (ar)',
+      hebrewHe: 'Hebräisch (he)',
       turkishTr: 'Türkisch (tr)',
       koreanKo: 'Koreanisch (ko)',
       ukrainianUk: 'Ukrainisch (uk)',
-      frenchFr: 'Französisch (fr)'
+      frenchFr: 'Französisch (fr)',
+      spanishEs: 'Spanisch (es)'
     },
     safety: {
       kidsTitle: 'Kinder (8–12)',
@@ -251,6 +255,37 @@ export const de = {
       applying: 'Anwenden...',
       success: 'Einstellungen gespeichert und angewendet',
       presetApplied: 'Preset angewendet: {preset}'
+    },
+    backendStatus: {
+      loading: 'Backend-Status wird geprüft...',
+      refresh: 'Aktualisieren',
+      refreshing: 'Wird aktualisiert...',
+      localInfrastructure: 'Lokale Infrastruktur',
+      cloudApis: 'Cloud-APIs',
+      outputConfigs: 'Output-Configs nach Backend',
+      reachable: 'Erreichbar',
+      unreachable: 'Nicht erreichbar',
+      available: 'Verfügbar',
+      unavailable: 'Nicht verfügbar',
+      configured: 'Konfiguriert',
+      notConfigured: 'Nicht konfiguriert',
+      gpuService: 'GPU Service',
+      subBackend: 'Sub-Backend',
+      status: 'Status',
+      comfyui: 'ComfyUI / SwarmUI',
+      ollama: 'Ollama',
+      gpuHardware: 'GPU-Hardware',
+      notDetected: 'Nicht erkannt',
+      showModels: 'Modelle anzeigen',
+      hideModels: 'Modelle ausblenden',
+      provider: 'Anbieter',
+      keyStatus: 'API Key',
+      dsgvoLabel: 'DSGVO',
+      region: 'Region',
+      dsgvoCompliant: 'Konform',
+      dsgvoNotCompliant: 'Nicht konform',
+      configsAvailable: '{available} von {total} Configs verfügbar',
+      hidden: 'ausgeblendet'
     }
   },
   pipeline: {
@@ -312,6 +347,17 @@ export const de = {
     uploadFailed: 'Upload fehlgeschlagen',
     infoOriginal: 'Original:',
     infoSize: 'Größe:'
+  },
+  sketchCanvas: {
+    drawHere: 'Zeichne deine Skizze hier',
+    pen: 'Stift',
+    eraser: 'Radierer',
+    undo: 'Rückgängig',
+    clear: 'Leeren',
+    done: 'Fertig',
+    brushSmall: 'Klein',
+    brushMedium: 'Mittel',
+    brushLarge: 'Groß'
   },
   mediaInput: {
     choosePreset: 'Perspektive wählen',
@@ -436,6 +482,9 @@ export const de = {
         customPromptLabel: 'Analyse-Prompt',
         customPromptPlaceholder: 'Beschreibe, wie das Bild analysiert werden soll...'
       },
+      randomPrompt: {
+        tokenLimit: 'Prompt-Länge'
+      },
       display: {
         imageAlt: 'Vorschau',
         emptyText: 'Vorschau (nach Ausführung)'
@@ -544,7 +593,9 @@ export const de = {
   imageTransform: {
     imageLabel: 'Dein Bild',
     contextLabel: 'Sage was Du an dem Bild verändern möchtest',
-    contextPlaceholder: 'z.B. Verwandle es in ein Ölgemälde... Mache es bunter... Füge einen Sonnenuntergang hinzu...'
+    contextPlaceholder: 'z.B. Verwandle es in ein Ölgemälde... Mache es bunter... Füge einen Sonnenuntergang hinzu...',
+    uploadMode: 'Hochladen',
+    sketchMode: 'Skizze'
   },
   textTransform: {
     inputLabel: 'Deine Idee = WAS?',
@@ -659,11 +710,11 @@ export const de = {
   },
   surrealizer: {
     infoTitle: 'Surrealisierer — Extrapolation jenseits des Bekannten',
-    infoDescription: 'Zwei KI-"Gehirne" lesen deinen Text: CLIP-L versteht Sprache durch Bilder, T5 versteht sie rein sprachlich. Der Regler mischt nicht einfach zwischen beiden — er schiebt das Bild weit über das hinaus, was T5 allein erzeugen würde. Die KI muss dann Vektoren interpretieren, die sie im Training nie gesehen hat. Das Ergebnis: KI-Halluzinationen — Bilder, die kein Prompt direkt erzeugen könnte.',
-    purposeTitle: 'Der Regler',
-    purposeText: 'α < 0: CLIP-L wird verstärkt, T5 negiert — die oberen 3328 Dimensionen (wo CLIP-L nur Nullen hat) erhalten invertierte T5-Vektoren. Die Cross-Attention-Muster im Transformer kehren sich um: visuell getriebene Halluzinationen. ◆ α = 0: reines CLIP-L — normales Bild. ◆ α = 1: reines T5-XXL — noch normal, aber andere Qualität. ◆ α > 1: Extrapolation über T5 hinaus. Bei α = 20 schiebt die Formel das Embedding 19× über T5 hinweg in unerforschten Vektorraum — sprachlich getriebene Halluzinationen. ◆ Sweet Spot: α = 15–35.',
+    infoDescription: 'Zwei KI-"Gehirne" lesen deinen Text: CLIP-L versteht Sprache durch Bilder (77 Tokens, 768 Dimensionen), T5-XXL versteht sie rein sprachlich (512 Tokens, 4096 Dimensionen). Der Regler mischt nicht — er schiebt das Bild weit über das hinaus, was beide Encoder allein erzeugen würden. Wie die Extrapolation über die Token-Sequenz verteilt wird, bestimmt die Fusions-Strategie.',
+    purposeTitle: 'Fusions-Strategie & Regler',
+    purposeText: 'Die Fusions-Strategie bestimmt, WO die Extrapolation stattfindet. Dual Alpha verzerrt die ersten 77 Tokens (visueller Kern aus CLIP-L) sanft, extrapoliert die erweiterten T5-Tokens vollständig — das Bild bleibt strukturell erkennbar, wird aber ästhetisch überraschend. Normalisiert wendet dieselbe Extrapolation überall an, kontrolliert aber die Magnitude, damit keine Tokens die Aufmerksamkeit dominieren. Legacy extrapoliert nur die ersten 77 Tokens und lässt den Rest unverändert — der ursprüngliche Ansatz, aber weniger surreal bei langen Prompts, weil unveränderte T5-Tokens den Effekt verwässern. ◆ Der α-Regler bestimmt WIE WEIT: α = 0 ist reines CLIP-L (normal), α = 1 ist reines T5 (noch normal), α > 1 schiebt über T5 hinaus in unerforschten Vektorraum. Sweet Spot: 15–35. ◆ α < 0 invertiert T5 und verstärkt CLIP-L — qualitativ andere Halluzinationen.',
     techTitle: 'Wie es funktioniert',
-    techText: 'Dein Prompt wird getrennt durch zwei Encoder geschickt: CLIP-L (visuell trainiert, 77 Tokens, 768 Dimensionen → aufgefüllt auf 4096) und T5-XXL (sprachlich trainiert, 512 Tokens, 4096 Dimensionen). Die ersten 77 Token-Positionen werden per Formel fusioniert: (1-α)·CLIP-L + α·T5. Die restlichen T5-Tokens (78–512) bleiben unverändert als semantischer Anker — sie halten das Bild an deinem Text fest, egal wie extrem α wird. Bei α > 1 entsteht keine Mischung, sondern Extrapolation: Vektoren, die kein Training je erzeugt hat. Bei α < 0 wird T5 negiert und CLIP-L verstärkt — qualitativ andere Halluzinationen, weil die Cross-Attention-Muster im Transformer invertiert werden.',
+    techText: 'CLIP-L kodiert in 768 Dimensionen, aufgefüllt auf 4096 — 3328 Dimensionen sind Nullen. T5-XXL füllt alle 4096 Dimensionen. Diese Asymmetrie ist der Motor: Extrapolation nutzt den spärlichen CLIP-L-Raum. Die Formel (1-α)·CLIP-L + α·T5 gilt für die ersten 77 Token-Positionen, wo beide Encoder Daten haben. Jenseits Position 77 existiert nur noch T5. Wie diese erweiterten Tokens behandelt werden, unterscheidet die drei Strategien: Dual Alpha multipliziert sie mit α (volle Extrapolation), Normalisiert macht dasselbe, skaliert aber auf typische T5-Magnitude, Legacy lässt sie bei 1× (unverändert). Bei hohen α-Werten ist dieser Unterschied dramatisch — Faktor 25× zwischen Legacy und den anderen beiden.',
     sliderLabel: 'Extrapolation (α)',
     sliderNormal: 'normal',
     sliderWeird: 'weird',
@@ -677,10 +728,19 @@ export const de = {
     expandActive: 'Erweitere Prompt...',
     expandResultLabel: 'T5-Erweiterung (nur für T5-Encoder)',
     advancedLabel: 'Weitere Einstellungen',
+    fusionStrategyLabel: 'Fusions-Strategie',
+    fusion_dual_alpha: 'Dual Alpha',
+    fusion_normalized: 'Normalisiert',
+    fusion_legacy: 'Legacy',
+    fusionHint_dual_alpha: 'Sanftes α auf Kern-Tokens (struktureller Anker via CLIP-L), volles α auf erweiterte Tokens (ästhetische Überraschung). Strukturell erkennbar, ästhetisch überraschend.',
+    fusionHint_normalized: 'Gleichmäßiges α auf alle Tokens, dann L2-normalisiert auf typische T5-Magnitude. Gleiche Extrapolationsrichtung wie Dual Alpha, aber magnitudenkontrolliert — keine Tokens dominieren die Aufmerksamkeit.',
+    fusionHint_legacy: 'Ursprüngliches Verhalten: extrapoliert erste 77 Tokens, hängt T5-Rest unverändert an (1×). Weniger surreal bei langen Prompts — unveränderte Tokens verwässern den Effekt.',
     negativeLabel: 'Negativ-Prompt',
     negativeHint: 'Wird mit gleichem α extrapoliert. Bestimmt, woVON das Bild weg-extrapoliert wird — verschiedene Negativ-Prompts erzeugen grundlegend verschiedene Bildästhetiken.',
     cfgLabel: 'CFG Scale',
-    cfgHint: 'Classifier-Free Guidance: Stärke des Prompt-Einflusses. Höher = stärkerer Effekt, weniger Variation.'
+    cfgHint: 'Classifier-Free Guidance: Stärke des Prompt-Einflusses. Höher = stärkerer Effekt, weniger Variation.',
+    seedLabel: 'Seed',
+    seedHint: '-1 = zufällig. Fester Seed ermöglicht A/B-Vergleich zwischen Strategien.'
   },
   musicGeneration: {
     infoTitle: 'Musik-Generierung',

@@ -146,7 +146,8 @@ export const ko = {
       export: '연구 데이터',
       config: '설정',
       demos: '미니게임 데모',
-      matrix: '모델 매트릭스'
+      matrix: '모델 매트릭스',
+      status: '백엔드 상태'
     },
     loading: '설정 불러오는 중...',
     presets: {
@@ -172,10 +173,13 @@ export const ko = {
       defaultLanguage: '기본 언어',
       germanDe: '독일어 (de)',
       englishEn: '영어 (en)',
+      arabicAr: '아랍어 (ar)',
+      hebrewHe: '히브리어 (he)',
       turkishTr: '터키어 (tr)',
       koreanKo: '한국어 (ko)',
       ukrainianUk: 'Українська (uk)',
-      frenchFr: '프랑스어 (fr)'
+      frenchFr: '프랑스어 (fr)',
+      spanishEs: '스페인어 (es)'
     },
     safety: {
       kidsTitle: '어린이 (8-12세)',
@@ -250,6 +254,37 @@ export const ko = {
       applying: '적용 중...',
       success: '설정이 저장 및 적용되었습니다',
       presetApplied: '적용된 프리셋: {preset}'
+    },
+    backendStatus: {
+      loading: '백엔드 상태 확인 중...',
+      refresh: '새로고침',
+      refreshing: '새로고침 중...',
+      localInfrastructure: '로컬 인프라',
+      cloudApis: '클라우드 API',
+      outputConfigs: '백엔드별 출력 설정',
+      reachable: '접근 가능',
+      unreachable: '접근 불가',
+      available: '사용 가능',
+      unavailable: '사용 불가',
+      configured: '설정됨',
+      notConfigured: '설정 안됨',
+      gpuService: 'GPU Service',
+      subBackend: '서브 백엔드',
+      status: '상태',
+      comfyui: 'ComfyUI / SwarmUI',
+      ollama: 'Ollama',
+      gpuHardware: 'GPU 하드웨어',
+      notDetected: '감지되지 않음',
+      showModels: '모델 표시',
+      hideModels: '모델 숨기기',
+      provider: '제공자',
+      keyStatus: 'API Key',
+      dsgvoLabel: 'DSGVO',
+      region: '지역',
+      dsgvoCompliant: '준수',
+      dsgvoNotCompliant: '미준수',
+      configsAvailable: '총 {total}개 설정 중 {available}개 사용 가능',
+      hidden: '숨겨짐'
     }
   },
   pipeline: {
@@ -311,6 +346,17 @@ export const ko = {
     uploadFailed: '업로드 실패',
     infoOriginal: '원본:',
     infoSize: '크기:'
+  },
+  sketchCanvas: {
+    drawHere: '여기에 스케치를 그리세요',
+    pen: '펜',
+    eraser: '지우개',
+    undo: '실행 취소',
+    clear: '지우기',
+    done: '완료',
+    brushSmall: '작음',
+    brushMedium: '중간',
+    brushLarge: '큼'
   },
   mediaInput: {
     choosePreset: '관점 선택',
@@ -435,6 +481,9 @@ export const ko = {
         customPromptLabel: '분석 프롬프트',
         customPromptPlaceholder: '이미지 분석 방법을 설명하세요...'
       },
+      randomPrompt: {
+        tokenLimit: '프롬프트 길이'
+      },
       display: {
         imageAlt: '미리보기',
         emptyText: '미리보기 (실행 후)'
@@ -543,7 +592,9 @@ export const ko = {
   imageTransform: {
     imageLabel: '이미지',
     contextLabel: '이미지에서 변경하고 싶은 것을 설명하세요',
-    contextPlaceholder: '예: 유화로 변환... 더 다채롭게... 석양 추가...'
+    contextPlaceholder: '예: 유화로 변환... 더 다채롭게... 석양 추가...',
+    uploadMode: '업로드',
+    sketchMode: '스케치'
   },
   textTransform: {
     inputLabel: '아이디어 = 무엇?',
@@ -658,11 +709,11 @@ export const ko = {
   },
   surrealizer: {
     infoTitle: '초현실화기 — 알려진 것을 넘어선 외삽',
-    infoDescription: '두 개의 AI "두뇌"가 텍스트를 읽습니다: CLIP-L은 이미지를 통해 언어를 이해하고, T5는 순수하게 언어적으로 이해합니다. 슬라이더는 단순히 혼합하지 않고 — T5만으로 생성할 수 있는 것을 훨씬 넘어서 이미지를 밀어냅니다. AI는 학습 중에 한 번도 접하지 못한 벡터를 해석해야 합니다. 결과: AI 환각 — 어떤 프롬프트로도 직접 생성할 수 없는 이미지.',
-    purposeTitle: '슬라이더',
-    purposeText: 'α < 0: CLIP-L 증폭, T5 부정 — 상위 3328차원(CLIP-L이 제로패딩된 곳)이 반전된 T5 벡터를 받습니다. 트랜스포머의 교차 어텐션 패턴이 뒤집힙니다: 시각 주도 환각. ◆ α = 0: 순수 CLIP-L — 일반 이미지. ◆ α = 1: 순수 T5-XXL — 여전히 일반적이지만 다른 품질. ◆ α > 1: T5를 넘어선 외삽. α = 20에서 공식은 임베딩을 T5 너머 탐험되지 않은 벡터 공간으로 19배 밀어냅니다 — 언어 주도 환각. ◆ 최적 범위: α = 15-35.',
+    infoDescription: '두 개의 AI "두뇌"가 텍스트를 읽습니다: CLIP-L은 이미지를 통해 언어를 이해하고(77토큰, 768차원), T5-XXL은 순수하게 언어적으로 이해합니다(512토큰, 4096차원). 슬라이더는 단순히 혼합하지 않고 — 두 인코더가 단독으로 생성할 수 있는 것을 훨씬 넘어서 이미지를 밀어냅니다. 외삽이 토큰 시퀀스에 걸쳐 어떻게 분산되는지는 융합 전략이 제어합니다.',
+    purposeTitle: '융합 전략 & 슬라이더',
+    purposeText: '융합 전략은 외삽이 어디서 일어나는지를 결정합니다. Dual Alpha는 처음 77개 토큰(CLIP-L의 시각적 핵심)을 부드럽게 왜곡하면서 확장된 T5 토큰을 완전히 외삽합니다 — 이미지는 구조적으로 인식 가능하게 유지되지만 미학적으로 놀랍습니다. 정규화는 모든 곳에 동일한 외삽을 적용하지만 어떤 토큰도 어텐션을 지배하지 않도록 크기를 제어합니다. Legacy는 처음 77개 토큰만 외삽하고 나머지는 변경 없이 두어 — 원래 접근 방식이지만 변경되지 않은 T5 토큰이 효과를 희석시키므로 긴 프롬프트에서 덜 초현실적입니다. ◆ α 슬라이더는 얼마나 멀리 갈지를 제어합니다: α = 0은 순수 CLIP-L(일반), α = 1은 순수 T5(여전히 일반), α > 1은 T5 너머 미탐험 벡터 공간으로 밀어냅니다. 최적 범위: 15–35. ◆ α < 0은 T5를 부정하고 CLIP-L을 증폭합니다 — 질적으로 다른 환각.',
     techTitle: '작동 방식',
-    techText: '프롬프트가 두 인코더를 통해 개별적으로 전송됩니다: CLIP-L (시각적으로 학습, 77토큰, 768차원 → 4096으로 패딩) 및 T5-XXL (언어적으로 학습, 512토큰, 4096차원). 처음 77개 토큰 위치가 융합됩니다: (1-α)·CLIP-L + α·T5. 나머지 T5 토큰(78-512)은 의미적 앵커로 변경 없이 유지됩니다 — α가 아무리 극단적이어도 이미지를 텍스트에 연결합니다. α > 1에서 이것은 혼합이 아닌 외삽입니다: 어떤 학습도 생성하지 못한 벡터. α < 0에서 T5가 부정되고 CLIP-L이 증폭됩니다 — 트랜스포머의 교차 어텐션 패턴이 반전되므로 질적으로 다른 환각.',
+    techText: 'CLIP-L은 768차원으로 인코딩하고 4096으로 패딩됩니다 — 3328차원이 영입니다. T5-XXL은 모든 4096차원을 채웁니다. 이 비대칭이 엔진입니다: 외삽은 희소한 CLIP-L 공간을 활용합니다. (1-α)·CLIP-L + α·T5 공식은 두 인코더 모두 데이터를 가진 처음 77개 토큰 위치에 적용됩니다. 77번 위치를 넘어서면 T5만 존재합니다. 이 확장된 토큰들이 어떻게 처리되는지가 세 가지 전략을 구분합니다: Dual Alpha는 α를 곱하고(완전 외삽), 정규화는 동일하지만 전형적인 T5 크기로 재조정하며, Legacy는 1×으로 두어(변경 없음). 높은 α 값에서 이 차이는 극적입니다 — Legacy와 다른 두 전략 사이에 25배 계수.',
     sliderLabel: '외삽 (α)',
     sliderNormal: '일반',
     sliderWeird: '이상한',
@@ -676,10 +727,19 @@ export const ko = {
     expandActive: '프롬프트 확장 중...',
     expandResultLabel: 'T5 확장 (T5 인코더만)',
     advancedLabel: '고급 설정',
+    fusionStrategyLabel: '융합 전략',
+    fusion_dual_alpha: 'Dual Alpha',
+    fusion_normalized: '정규화',
+    fusion_legacy: 'Legacy',
+    fusionHint_dual_alpha: '핵심 토큰에 부드러운 α(CLIP-L을 통한 구조적 앵커), 확장 토큰에 완전한 α(미학적 놀라움). 구조적으로 인식 가능하지만 미학적으로 놀라운.',
+    fusionHint_normalized: '모든 토큰에 균일한 α, 그 다음 전형적인 T5 크기로 L2 정규화. Dual Alpha와 같은 외삽 방향이지만 크기 제어됨 — 어떤 토큰도 어텐션을 지배하지 않음.',
+    fusionHint_legacy: '원래 동작: 처음 77개 토큰을 외삽하고 T5 나머지를 변경 없이 추가(1×). 긴 프롬프트에서 덜 초현실적 — 변경되지 않은 토큰이 효과를 희석.',
     negativeLabel: '네거티브 프롬프트',
     negativeHint: '동일한 α로 외삽됩니다. 이미지가 무엇으로부터 멀어지는지를 결정합니다 — 다른 네거티브는 근본적으로 다른 미학을 생성합니다.',
     cfgLabel: 'CFG 스케일',
-    cfgHint: 'Classifier-Free Guidance: 프롬프트 영향의 강도. 높을수록 = 더 강한 효과, 적은 변화.'
+    cfgHint: 'Classifier-Free Guidance: 프롬프트 영향의 강도. 높을수록 = 더 강한 효과, 적은 변화.',
+    seedLabel: 'Seed',
+    seedHint: '-1 = 무작위. 고정 seed는 전략 간 A/B 비교를 가능하게 합니다.'
   },
   musicGeneration: {
     infoTitle: '음악 생성',

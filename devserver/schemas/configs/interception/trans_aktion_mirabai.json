@@ -3,15 +3,36 @@
   "instruction_type": "transformation",
   "name": {
     "en": "Mirabai",
-    "de": "Mirabai"
+    "de": "Mirabai",
+    "tr": "Mirabai",
+    "ko": "Mirabai",
+    "uk": "Mirabai",
+    "fr": "Mirabai",
+    "es": "Mirabai",
+    "he": "Mirabai",
+    "ar": "Mirabai"
   },
   "description": {
     "en": "Material collision with Mirabai's bhajans (~1500). Ecstatic devotion, poison drunk laughing, a princess who left her palace for the road. Colliding with your prompt through a deliberately insufficient model.",
-    "de": "Materialkollision mit Mirabais Bhajans (~1500). Ekstatische Hingabe, Gift lachend getrunken, eine Prinzessin die ihren Palast fuer die Strasse verliess. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+    "de": "Materialkollision mit Mirabais Bhajans (~1500). Ekstatische Hingabe, Gift lachend getrunken, eine Prinzessin die ihren Palast fuer die Strasse verliess. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell.",
+    "tr": "Mirabai'nin bhajan'larıyla (~1500) malzeme çarpışması. Coşkulu adanmışlık, gülerek içilen zehir, sarayını yol için terk eden bir prenses. Kasıtlı olarak yetersiz bir model aracılığıyla prompt'unuzla çarpışıyor.",
+    "ko": "미라바이의 바잔(~1500)과의 재료 충돌. 황홀한 헌신, 웃으며 마신 독, 궁전을 버리고 길을 택한 공주. 의도적으로 불완전한 모델을 통해 당신의 프롬프트와 충돌합니다.",
+    "uk": "Матеріальне зіткнення з бхаджанами Мірабай (~1500). Екстатична відданість, отрута випита зі сміхом, принцеса, що залишила палац заради дороги. Зіткнення з вашим промптом через навмисно недостатню модель.",
+    "fr": "Collision matérielle avec les bhajans de Mirabai (~1500). Dévotion extatique, poison bu en riant, une princesse qui a quitté son palais pour la route. Entrant en collision avec votre prompt à travers un modèle délibérément insuffisant.",
+    "es": "Colisión material con los bhajans de Mirabai (~1500). Devoción extática, veneno bebido riendo, una princesa que abandonó su palacio por el camino. Chocando con tu prompt a través de un modelo deliberadamente insuficiente.",
+    "he": "התנגשות חומרית עם הבהג'אנים של מיראבאי (~1500). מסירות נלהבת, רעל שנשתה בצחוק, נסיכה שעזבה את ארמונה למען הדרך. מתנגשת עם הפרומפט שלך דרך מודל מכוון בלתי-מספק.",
+    "ar": "تصادم مادي مع أغاني البهجان لميرابائي (~1500). تفانٍ متحمس، سُم يُشرب ضاحكاً، أميرة تركت قصرها من أجل الطريق. يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
     "en": "Trans-Aktion",
-    "de": "Trans-Aktion"
+    "de": "Trans-Aktion",
+    "tr": "Trans-Aktion",
+    "ko": "Trans-Aktion",
+    "uk": "Trans-Aktion",
+    "fr": "Trans-Aktion",
+    "es": "Trans-Aktion",
+    "he": "Trans-Aktion",
+    "ar": "Trans-Aktion"
   },
   "properties": [
     "trans_aktion"

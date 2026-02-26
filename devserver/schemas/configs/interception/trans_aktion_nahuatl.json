@@ -3,15 +3,36 @@
   "instruction_type": "transformation",
   "name": {
     "en": "Nahuatl Xochicuicatl",
-    "de": "Nahuatl Xochicuicatl"
+    "de": "Nahuatl Xochicuicatl",
+    "tr": "Nahuatl Xochicuicatl",
+    "ko": "Nahuatl Xochicuicatl",
+    "uk": "Nahuatl Xochicuicatl",
+    "fr": "Nahuatl Xochicuicatl",
+    "es": "Nahuatl Xochicuicatl",
+    "he": "Nahuatl Xochicuicatl",
+    "ar": "Nahuatl Xochicuicatl"
   },
   "description": {
     "en": "Material collision with Nahuatl Xochicuicatl — Flower and Song (Mesoamerican oral tradition). Everything vanishes, only flower-and-song remains. Colliding with your prompt through a deliberately insufficient model.",
-    "de": "Materialkollision mit Nahuatl Xochicuicatl — Blume und Gesang (mesoamerikanische muendliche Tradition). Alles vergeht, nur Blume-und-Gesang bleibt. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+    "de": "Materialkollision mit Nahuatl Xochicuicatl — Blume und Gesang (mesoamerikanische muendliche Tradition). Alles vergeht, nur Blume-und-Gesang bleibt. Kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell.",
+    "tr": "Nahuatl Xochicuicatl ile malzeme çarpışması — Çiçek ve Şarkı (Mezoamerika sözlü geleneği). Her şey yok olur, yalnızca çiçek-ve-şarkı kalır. Kasıtlı olarak yetersiz bir model aracılığıyla prompt'unuzla çarpışıyor.",
+    "ko": "Nahuatl Xochicuicatl과의 재료 충돌 — 꽃과 노래 (메소아메리카 구전 전통). 모든 것이 사라지고, 오직 꽃과 노래만이 남는다. 의도적으로 불완전한 모델을 통해 당신의 프롬프트와 충돌합니다.",
+    "uk": "Матеріальне зіткнення з Nahuatl Xochicuicatl — Квіткою та Піснею (мезоамериканська усна традиція). Все зникає, лишається лише квітка-і-пісня. Зіткнення з вашим промптом через навмисно недостатню модель.",
+    "fr": "Collision matérielle avec le Nahuatl Xochicuicatl — Fleur et Chant (tradition orale mésoaméricaine). Tout s'évanouit, seule la fleur-et-le-chant demeure. Entrant en collision avec votre prompt à travers un modèle délibérément insuffisant.",
+    "es": "Colisión material con el Nahuatl Xochicuicatl — Flor y Canto (tradición oral mesoamericana). Todo desaparece, solo flor-y-canto permanece. Chocando con tu prompt a través de un modelo deliberadamente insuficiente.",
+    "he": "התנגשות חומרית עם Nahuatl Xochicuicatl — פרח ושיר (מסורת בעל-פה מזו-אמריקאית). הכל נעלם, רק פרח-ושיר נותרים. מתנגשת עם הפרומפט שלך דרך מודל מכוון בלתי-מספק.",
+    "ar": "تصادم مادي مع Nahuatl Xochicuicatl — الزهرة والأغنية (التقليد الشفهي الميزوأمريكي). كل شيء يتلاشى، تبقى الزهرة-والأغنية فقط. يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
     "en": "Trans-Aktion",
-    "de": "Trans-Aktion"
+    "de": "Trans-Aktion",
+    "tr": "Trans-Aktion",
+    "ko": "Trans-Aktion",
+    "uk": "Trans-Aktion",
+    "fr": "Trans-Aktion",
+    "es": "Trans-Aktion",
+    "he": "Trans-Aktion",
+    "ar": "Trans-Aktion"
   },
   "properties": [
     "trans_aktion"

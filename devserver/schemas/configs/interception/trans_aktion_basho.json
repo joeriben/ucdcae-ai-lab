@@ -3,15 +3,36 @@
   "instruction_type": "transformation",
   "name": {
     "en": "Basho",
-    "de": "Basho"
+    "de": "Basho",
+    "tr": "Basho",
+    "ko": "Basho",
+    "uk": "Basho",
+    "fr": "Basho",
+    "es": "Basho",
+    "he": "Basho",
+    "ar": "Basho"
   },
   "description": {
     "en": "Material collision with three haiku by Matsuo Basho (17th century). Maximum compression, Japanese originals alongside German translation — colliding with your prompt through a deliberately insufficient model.",
-    "de": "Materialkollision mit drei Haiku von Matsuo Basho (17. Jh.). Maximale Kompression, japanische Originale neben deutscher Uebersetzung — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+    "de": "Materialkollision mit drei Haiku von Matsuo Basho (17. Jh.). Maximale Kompression, japanische Originale neben deutscher Uebersetzung — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell.",
+    "tr": "Matsuo Basho'nun (17. yüzyıl) üç haiku'suyla malzeme çarpışması. Maksimum sıkıştırma, Japonca orijinaller Almanca çeviriyle yan yana — kasıtlı olarak yetersiz bir model aracılığıyla prompt'unuzla çarpışıyor.",
+    "ko": "마쓰오 바쇼(17세기)의 하이쿠 세 편과의 재료 충돌. 최대한의 압축, 일본어 원문과 독일어 번역이 나란히 — 의도적으로 불완전한 모델을 통해 당신의 프롬프트와 충돌합니다.",
+    "uk": "Матеріальне зіткнення з трьома хайку Мацуо Басьо (17 ст.). Максимальне стиснення, японські оригінали поряд із німецьким перекладом — зіткнення з вашим промптом через навмисно недостатню модель.",
+    "fr": "Collision matérielle avec trois haïkus de Matsuo Basho (XVIIe siècle). Compression maximale, originaux japonais côte à côte avec la traduction allemande — entrant en collision avec votre prompt à travers un modèle délibérément insuffisant.",
+    "es": "Colisión material con tres haikus de Matsuo Basho (siglo XVII). Compresión máxima, originales japoneses junto a la traducción alemana — chocando con tu prompt a través de un modelo deliberadamente insuficiente.",
+    "he": "התנגשות חומרית עם שלושה הייקו של מאטסואו בשו (המאה ה-17). דחיסה מקסימלית, המקוריות ביפנית לצד תרגום גרמני — מתנגשת עם הפרומפט שלך דרך מודל מכוון בלתי-מספק.",
+    "ar": "تصادم مادي مع ثلاثة هايكو لماتسو باشو (القرن السابع عشر). ضغط أقصى، الأصول اليابانية جنباً إلى جنب مع الترجمة الألمانية — تتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
     "en": "Trans-Aktion",
-    "de": "Trans-Aktion"
+    "de": "Trans-Aktion",
+    "tr": "Trans-Aktion",
+    "ko": "Trans-Aktion",
+    "uk": "Trans-Aktion",
+    "fr": "Trans-Aktion",
+    "es": "Trans-Aktion",
+    "he": "Trans-Aktion",
+    "ar": "Trans-Aktion"
   },
   "properties": [
     "trans_aktion"

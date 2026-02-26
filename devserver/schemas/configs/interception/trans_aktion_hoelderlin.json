@@ -3,15 +3,36 @@
   "instruction_type": "transformation",
   "name": {
     "en": "Hoelderlin",
-    "de": "Hoelderlin"
+    "de": "Hoelderlin",
+    "tr": "Hoelderlin",
+    "ko": "Hoelderlin",
+    "uk": "Hoelderlin",
+    "fr": "Hoelderlin",
+    "es": "Hoelderlin",
+    "he": "Hoelderlin",
+    "ar": "Hoelderlin"
   },
   "description": {
     "en": "Material collision with Hoelderlin's 'Haelfte des Lebens' (1805). Fullness shattering into emptiness — colliding with your prompt through a deliberately insufficient model.",
-    "de": "Materialkollision mit Hoelderlins 'Haelfte des Lebens' (1805). Fuelle die in Leere zerbricht — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell."
+    "de": "Materialkollision mit Hoelderlins 'Haelfte des Lebens' (1805). Fuelle die in Leere zerbricht — kollidierend mit deinem Prompt durch ein absichtlich unzureichendes Modell.",
+    "tr": "Hoelderlin'in 'Haelfte des Lebens' (1805) adlı şiiriyle malzeme çarpışması. Doluluk, boşluğa parçalanıyor — kasıtlı olarak yetersiz bir model aracılığıyla prompt'unuzla çarpışıyor.",
+    "ko": "횔덜린의 '삶의 절반'(1805)과의 재료 충돌. 충만함이 공허함으로 부서지며 — 의도적으로 불완전한 모델을 통해 당신의 프롬프트와 충돌합니다.",
+    "uk": "Матеріальне зіткнення з «Половиною життя» Гельдерліна (1805). Повнота, що розбивається на порожнечу — зіткнення з вашим промптом через навмисно недостатню модель.",
+    "fr": "Collision matérielle avec 'Haelfte des Lebens' de Hoelderlin (1805). La plénitude se fracassant dans le vide — entrant en collision avec votre prompt à travers un modèle délibérément insuffisant.",
+    "es": "Colisión material con 'Haelfte des Lebens' de Hoelderlin (1805). La plenitud que se hace añicos en el vacío — chocando con tu prompt a través de un modelo deliberadamente insuficiente.",
+    "he": "התנגשות חומרית עם 'חצי החיים' של הלדרלין (1805). מלאות המתנפצת לתוך ריקנות — מתנגשת עם הפרומפט שלך דרך מודל מכוון בלתי-מספק.",
+    "ar": "تصادم مادي مع قصيدة هولدرلين 'نصف الحياة' (1805). الامتلاء يتحطم في الفراغ — يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
     "en": "Trans-Aktion",
-    "de": "Trans-Aktion"
+    "de": "Trans-Aktion",
+    "tr": "Trans-Aktion",
+    "ko": "Trans-Aktion",
+    "uk": "Trans-Aktion",
+    "fr": "Trans-Aktion",
+    "es": "Trans-Aktion",
+    "he": "Trans-Aktion",
+    "ar": "Trans-Aktion"
   },
   "properties": [
     "trans_aktion"

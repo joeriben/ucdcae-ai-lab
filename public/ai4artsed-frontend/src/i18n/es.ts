@@ -147,7 +147,8 @@ export const es = {
       export: 'Datos de investigación',
       config: 'Configuración',
       demos: 'Demo de minijuegos',
-      matrix: 'Matriz de modelos'
+      matrix: 'Matriz de modelos',
+      status: 'Estado del backend'
     },
     loading: 'Cargando configuración...',
     presets: {
@@ -173,6 +174,8 @@ export const es = {
       defaultLanguage: 'Idioma predeterminado',
       germanDe: 'Alemán (de)',
       englishEn: 'Inglés (en)',
+      arabicAr: 'Árabe (ar)',
+      hebrewHe: 'Hebreo (he)',
       turkishTr: 'Turco (tr)',
       koreanKo: 'Coreano (ko)',
       ukrainianUk: 'Ucraniano (uk)',
@@ -252,6 +255,37 @@ export const es = {
       applying: 'Aplicando...',
       success: 'Configuración guardada y aplicada',
       presetApplied: 'Preset aplicado: {preset}'
+    },
+    backendStatus: {
+      loading: 'Verificando estado del backend...',
+      refresh: 'Actualizar',
+      refreshing: 'Actualizando...',
+      localInfrastructure: 'Infraestructura local',
+      cloudApis: 'APIs en la nube',
+      outputConfigs: 'Configuraciones de salida por backend',
+      reachable: 'Accesible',
+      unreachable: 'Inaccesible',
+      available: 'Disponible',
+      unavailable: 'No disponible',
+      configured: 'Configurado',
+      notConfigured: 'No configurado',
+      gpuService: 'GPU Service',
+      subBackend: 'Sub-backend',
+      status: 'Estado',
+      comfyui: 'ComfyUI / SwarmUI',
+      ollama: 'Ollama',
+      gpuHardware: 'Hardware GPU',
+      notDetected: 'No detectado',
+      showModels: 'Mostrar modelos',
+      hideModels: 'Ocultar modelos',
+      provider: 'Proveedor',
+      keyStatus: 'API Key',
+      dsgvoLabel: 'DSGVO',
+      region: 'Región',
+      dsgvoCompliant: 'Conforme',
+      dsgvoNotCompliant: 'No conforme',
+      configsAvailable: '{available} de {total} configuraciones disponibles',
+      hidden: 'oculto'
     }
   },
   pipeline: {
@@ -313,6 +347,17 @@ export const es = {
     uploadFailed: 'Error al subir',
     infoOriginal: 'Original:',
     infoSize: 'Tamaño:'
+  },
+  sketchCanvas: {
+    drawHere: 'Dibuja tu boceto aquí',
+    pen: 'Pluma',
+    eraser: 'Borrador',
+    undo: 'Deshacer',
+    clear: 'Limpiar',
+    done: 'Listo',
+    brushSmall: 'Pequeño',
+    brushMedium: 'Mediano',
+    brushLarge: 'Grande'
   },
   mediaInput: {
     choosePreset: 'Elegir perspectiva',
@@ -437,6 +482,9 @@ export const es = {
         customPromptLabel: 'Prompt de análisis',
         customPromptPlaceholder: 'Describe cómo debe analizarse la imagen...'
       },
+      randomPrompt: {
+        tokenLimit: 'Longitud del prompt'
+      },
       display: {
         imageAlt: 'Vista previa',
         emptyText: 'Vista previa (después de la ejecución)'
@@ -545,7 +593,9 @@ export const es = {
   imageTransform: {
     imageLabel: 'Tu imagen',
     contextLabel: 'Describe lo que quieres cambiar en la imagen',
-    contextPlaceholder: 'p. ej. Transfórmala en una pintura al óleo... Hazla más colorida... Agrega un atardecer...'
+    contextPlaceholder: 'p. ej. Transfórmala en una pintura al óleo... Hazla más colorida... Agrega un atardecer...',
+    uploadMode: 'Subir',
+    sketchMode: 'Boceto'
   },
   textTransform: {
     inputLabel: '¿Tu idea = QUÉ?',
@@ -660,11 +710,11 @@ export const es = {
   },
   surrealizer: {
     infoTitle: 'Surrealizer — Extrapolación más allá de lo conocido',
-    infoDescription: 'Dos "cerebros" de IA leen tu texto: CLIP-L entiende el lenguaje a través de imágenes, T5 lo entiende de forma puramente lingüística. El control deslizante no simplemente mezcla entre ambos — empuja la imagen mucho más allá de lo que T5 solo produciría. La IA debe entonces interpretar vectores que nunca encontró durante el entrenamiento. El resultado: alucinaciones de IA — imágenes que ningún prompt podría producir directamente.',
-    purposeTitle: 'El control deslizante',
-    purposeText: 'α < 0: CLIP-L amplificado, T5 negado — las 3328 dimensiones superiores (donde CLIP-L tiene relleno de ceros) reciben vectores T5 invertidos. Los patrones de atención cruzada en el transformer se invierten: alucinaciones guiadas visualmente. ◆ α = 0: CLIP-L puro — imagen normal. ◆ α = 1: T5-XXL puro — todavía normal, pero calidad diferente. ◆ α > 1: extrapolación más allá de T5. Con α = 20 la fórmula empuja el embedding 19× más allá de T5 hacia un espacio vectorial inexplorado — alucinaciones guiadas lingüísticamente. ◆ Punto óptimo: α = 15–35.',
+    infoDescription: 'Dos "cerebros" de IA leen tu texto: CLIP-L entiende el lenguaje a través de imágenes (77 tokens, 768 dimensiones), T5-XXL lo entiende de forma puramente lingüística (512 tokens, 4096 dimensiones). El control deslizante no simplemente mezcla — empuja la imagen mucho más allá de lo que ambos encoders producirían solos. Cómo se distribuye la extrapolación a lo largo de la secuencia de tokens lo controla la Estrategia de fusión.',
+    purposeTitle: 'Estrategia de fusión & Control deslizante',
+    purposeText: 'La Estrategia de fusión determina DÓNDE ocurre la extrapolación. Dual Alpha distorsiona suavemente los primeros 77 tokens (el núcleo visual de CLIP-L) mientras extrapola completamente los tokens T5 extendidos — la imagen permanece estructuralmente reconocible pero se vuelve estéticamente sorprendente. Normalizado aplica la misma extrapolación en todos lados pero controla la magnitud para que ningún token domine la atención. Legacy solo extrapola los primeros 77 tokens y deja el resto sin cambios — el enfoque original, pero menos surrealista con prompts largos porque los tokens T5 sin modificar diluyen el efecto. ◆ El control deslizante α controla QUÉ TAN LEJOS: α = 0 es CLIP-L puro (normal), α = 1 es T5 puro (todavía normal), α > 1 empuja más allá de T5 hacia un espacio vectorial inexplorado. Punto óptimo: 15–35. ◆ α < 0 invierte T5 y amplifica CLIP-L — alucinaciones cualitativamente diferentes.',
     techTitle: 'Cómo funciona',
-    techText: 'Tu prompt se envía a través de dos codificadores por separado: CLIP-L (entrenado visualmente, 77 tokens, 768 dimensiones → rellenado a 4096) y T5-XXL (entrenado lingüísticamente, 512 tokens, 4096 dimensiones). Las primeras 77 posiciones de tokens se fusionan: (1-α)·CLIP-L + α·T5. Los tokens T5 restantes (78–512) permanecen sin cambios como ancla semántica — mantienen la imagen ligada a tu texto sin importar cuán extremo sea α. Con α > 1 esto no es mezcla sino extrapolación: vectores que ningún entrenamiento jamás produjo. Con α < 0, T5 se niega y CLIP-L se amplifica — alucinaciones cualitativamente diferentes porque los patrones de atención cruzada en el transformer se invierten.',
+    techText: 'CLIP-L codifica en 768 dimensiones, rellenado a 4096 — 3328 dimensiones son ceros. T5-XXL llena las 4096 dimensiones. Esta asimetría es el motor: la extrapolación aprovecha el espacio CLIP-L disperso. La fórmula (1-α)·CLIP-L + α·T5 se aplica a las primeras 77 posiciones de tokens donde ambos encoders tienen datos. Más allá de la posición 77 solo existe T5. Cómo se tratan estos tokens extendidos es lo que distingue las tres estrategias: Dual Alpha los multiplica por α (extrapolación completa), Normalizado hace lo mismo pero reescala a la magnitud T5 típica, Legacy los deja en 1× (sin cambios). Con valores α altos, esta diferencia es dramática — un factor 25× entre Legacy y los otros dos.',
     sliderLabel: 'Extrapolación (α)',
     sliderNormal: 'normal',
     sliderWeird: 'extraño',
@@ -678,10 +728,19 @@ export const es = {
     expandActive: 'Expandiendo prompt...',
     expandResultLabel: 'Expansión T5 (solo codificador T5)',
     advancedLabel: 'Configuración avanzada',
+    fusionStrategyLabel: 'Estrategia de fusión',
+    fusion_dual_alpha: 'Dual Alpha',
+    fusion_normalized: 'Normalizado',
+    fusion_legacy: 'Legacy',
+    fusionHint_dual_alpha: 'α suave en tokens centrales (ancla estructural via CLIP-L), α completo en tokens extendidos (sorpresa estética). Estructuralmente reconocible, estéticamente sorprendente.',
+    fusionHint_normalized: 'α uniforme en todos los tokens, luego normalizado L2 a la magnitud T5 típica. Misma dirección de extrapolación que Dual Alpha, pero magnitud controlada — ningún token domina la atención.',
+    fusionHint_legacy: 'Comportamiento original: extrapola los primeros 77 tokens, añade el resto T5 sin cambios (1×). Menos surrealista con prompts largos — los tokens sin modificar diluyen el efecto.',
     negativeLabel: 'Prompt negativo',
     negativeHint: 'Extrapolado con el mismo α. Determina de QUÉ se aleja la imagen en la extrapolación — diferentes negativos producen estéticas fundamentalmente diferentes.',
     cfgLabel: 'Escala CFG',
-    cfgHint: 'Classifier-Free Guidance: fuerza de la influencia del prompt. Mayor = efecto más fuerte, menos variación.'
+    cfgHint: 'Classifier-Free Guidance: fuerza de la influencia del prompt. Mayor = efecto más fuerte, menos variación.',
+    seedLabel: 'Seed',
+    seedHint: '-1 = aleatorio. Un seed fijo permite la comparación A/B entre estrategias.'
   },
   musicGeneration: {
     infoTitle: 'Generación de música',
