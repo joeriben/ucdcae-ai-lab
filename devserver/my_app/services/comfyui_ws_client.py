@@ -187,9 +187,12 @@ class ComfyUIWebSocketClient:
                 on_progress=on_progress,
                 start_time=start_time,
             )
+        except (RuntimeError, TimeoutError):
+            # ComfyUI execution errors and timeouts propagate immediately
+            raise
         except Exception as e:
-            # On WebSocket failure, fall back to history polling
-            logger.warning(f"[COMFYUI-WS] WebSocket tracking failed: {e}. Falling back to history polling.")
+            # Only fall back to polling for WebSocket connection failures
+            logger.warning(f"[COMFYUI-WS] WebSocket connection failed: {e}. Falling back to history polling.")
             await self._poll_until_complete(prompt_id, timeout=timeout, start_time=start_time)
 
         # 4. Download media via HTTP
@@ -262,6 +265,9 @@ class ComfyUIWebSocketClient:
             ping_timeout=10,
             close_timeout=5,
         ) as ws:
+            # Race condition guard: check if execution already completed before WS connected
+            await self._check_already_completed(prompt_id)
+
             nodes_done = 0
             current_step = 0
             max_steps = 1
@@ -368,6 +374,34 @@ class ComfyUIWebSocketClient:
                 elif msg_type == "executed":
                     # Final output from a node — execution will end with executing(node=None) next
                     pass
+
+    async def _check_already_completed(self, prompt_id: str):
+        """Check if execution already completed before WebSocket connected (race condition guard)."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.base_url}/history/{prompt_id}",
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as response:
+                    if response.status == 200:
+                        history = await response.json()
+                        if history and prompt_id in history:
+                            entry = history[prompt_id]
+                            status_str = entry.get("status", {}).get("status_str", "")
+                            if status_str == "error":
+                                msgs = entry.get("status", {}).get("messages", [])
+                                error_msg = "Unknown error"
+                                for msg in msgs:
+                                    if isinstance(msg, list) and msg[0] == "execution_error":
+                                        error_msg = msg[1].get("exception_message", error_msg)
+                                raise RuntimeError(f"ComfyUI execution error: {error_msg}")
+                            if entry.get("outputs"):
+                                logger.info(f"[COMFYUI-WS] Execution already completed (pre-WS)")
+                                return  # Will be picked up by _download_outputs
+        except RuntimeError:
+            raise
+        except Exception:
+            pass  # History check failed, continue with WS tracking
 
     # ------------------------------------------------------------------
     # Fallback: History polling (when WebSocket fails)

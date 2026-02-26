@@ -1256,10 +1256,8 @@ def execute_stage3_4():
         # Determine media type from output config
         if 'image' in output_config.lower() or 'sd' in output_config.lower() or 'flux' in output_config.lower() or 'gpt' in output_config.lower():
             media_type = 'image'
-        elif 'audio' in output_config.lower():
+        elif 'audio' in output_config.lower() or 'music' in output_config.lower() or 'ace' in output_config.lower():
             media_type = 'audio'
-        elif 'music' in output_config.lower() or 'ace' in output_config.lower():
-            media_type = 'music'
         elif 'video' in output_config.lower():
             media_type = 'video'
         else:
@@ -3792,11 +3790,13 @@ def legacy_workflow():
         duration_ms = (time.time() - start_time) * 1000
         logger.info(f"[LEGACY-ENDPOINT] Success in {duration_ms:.0f}ms")
 
+        # Determine media_type from workflow metadata (set in backend_router from chunk definition)
+        response_media_type = output_result.metadata.get('media_type', 'image') if output_result.metadata else 'image'
         response_data = {
             'status': 'success',
             'media_output': {
-                'media_type': 'image',
-                'url': f'/api/media/image/{run_id}',
+                'media_type': response_media_type,
+                'url': f'/api/media/{response_media_type}/{run_id}',
                 'run_id': run_id,
                 'seed': result_seed
             },

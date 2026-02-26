@@ -307,7 +307,7 @@ SWARMUI_API_PORT = "7801"  # SwarmUI REST API (legacy, used when COMFYUI_DIRECT=
 # False = Legacy SwarmUI proxy mode (Port 7801, polling, glob-based output)
 #
 # Toggle via env var for safe transition: COMFYUI_DIRECT=true in dev startup
-COMFYUI_DIRECT = os.environ.get("COMFYUI_DIRECT", "false").lower() == "true"
+COMFYUI_DIRECT = os.environ.get("COMFYUI_DIRECT", "true").lower() == "true"
 
 # Legacy SwarmUI flags (only used when COMFYUI_DIRECT=False)
 USE_SWARMUI_ORCHESTRATION = True  # Route all workflows via SwarmUI
