@@ -1,5 +1,60 @@
 # Development Log
 
+## Session 216 - Standalone ComfyUI Installation (SwarmUI-Abloesung)
+**Date:** 2026-02-26
+**Focus:** Replace SwarmUI's embedded ComfyUI with a standalone installation; fix WebSocket race condition and model availability fallback
+
+### Problem
+Direct ComfyUI WebSocket Client (COMFYUI_DIRECT) was unreliable against SwarmUI's embedded ComfyUI — WebSocket events not arriving consistently. Goal: own ComfyUI installation within the DevServer project so SwarmUI can be deleted.
+
+### Changes
+
+**Standalone ComfyUI (`dlbackend/ComfyUI/`)**
+- Fresh ComfyUI v0.15.0 clone with own Python 3.13 venv + PyTorch 2.12.0+cu130 (Blackwell nightly)
+- Models (~438GB) moved from `SwarmUI/Models/` to `dlbackend/ComfyUI/models/` (same filesystem, instant rename)
+- Symlinks in `SwarmUI/Models/` point back for transition period
+- Additional models from `SwarmUI/dlbackend/ComfyUI/models/` copied (qwen_image_edit, ltxv-distilled, stable-audio, t5-base)
+- 13 ai4artsed custom nodes copied and verified
+- `dlbackend/` added to `.gitignore`
+
+**Startup Script (`2_start_comfyui.sh`)**
+- Points to `$SCRIPT_DIR/dlbackend/ComfyUI` with its own venv
+- No `--extra-model-paths-config` needed (standard ComfyUI paths)
+
+**Config (`devserver/config.py`)**
+- `COMFYUI_BASE_PATH` → `_SERVER_BASE / dlbackend / ComfyUI`
+- Model paths (SD35, CLIP_L, CLIP_G, T5XXL) → `_COMFYUI_MODELS_PATH`
+- `LORA_OUTPUT_DIR` → ComfyUI loras directory
+
+**WebSocket Race Condition Fix (`comfyui_ws_client.py`)**
+- Root cause: WS client connected AFTER submitting workflow via HTTP POST. If ComfyUI fired `execution_start` before WS was ready, `our_execution_started` stayed False and ALL events were silently dropped — client hung until timeout.
+- Fix: Check `prompt_id` on every event, not just `execution_start`. Any matching event triggers tracking.
+
+**Model Availability Fallback (`model_availability_service.py`)**
+- When GPU service (diffusers/heartmula/stable_audio) is unavailable, now checks `meta.fallback_chunk` in the primary chunk for ComfyUI availability
+- SD3.5 now appears as available even when GPU service is offline
+
+**SD3.5 ComfyUI-First (`sd35_large.json` + chunk)**
+- Config switched to `OUTPUT_CHUNK: "output_image_sd35_large"` (ComfyUI), `backend_type: "comfyui"`
+- Chunk: `requires_workflow: true` to prevent Diffusers auto-redirect (DIFFUSERS_ENABLED bypass)
+- Chunk: `fallback_chunk: "output_image_sd35_diffusers"` for when GPU service is available
+
+### Commits
+- `13117ce` fix(comfyui): enable direct mode by default, fix media type routing and WS race condition
+- `b1927c2` feat(comfyui): standalone ComfyUI installation replacing SwarmUI dependency
+- `fcf566f` fix(availability): check ComfyUI fallback when GPU service is unavailable
+- `e129333` fix(comfyui-ws): fix race condition where execution_start fires before WS connects
+- `dbb4b01` feat(sd35): switch to ComfyUI first, Diffusers fallback
+- `939e0bd` fix(sd35): force ComfyUI workflow path, prevent Diffusers auto-redirect
+
+### Lessons Learned
+- SwarmUI had TWO model locations: `Models/` (top-level) AND `dlbackend/ComfyUI/models/` — must check both when migrating
+- `SwarmUI/Models/Stable-Diffusion/` contained a `diffusion_models/` subdirectory that got nested wrong under `checkpoints/diffusion_models/`
+- The `DIFFUSERS_ENABLED` auto-detection silently overrides `backend_type: "comfyui"` for image chunks — `requires_workflow: true` is the correct way to force ComfyUI workflow execution
+- WebSocket race conditions are timing-dependent: worked with SwarmUI's slower embedded ComfyUI but failed with standalone (faster startup)
+
+---
+
 ## Session 215 - Agentic Architecture Research
 **Date:** 2026-02-26
 **Focus:** Deep research into evolving AI4ArtsEd into an agentic platform with self-monitoring, experience accumulation, and knowledge distillation
