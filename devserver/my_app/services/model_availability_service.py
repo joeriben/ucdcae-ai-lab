@@ -260,6 +260,56 @@ class ModelAvailabilityService:
             self._cache["last_reachable"] = False
             raise
 
+    async def _check_fallback_chunk(self, config_id: str, output_chunk_name: str) -> bool:
+        """Check if a chunk's fallback_chunk is available via ComfyUI.
+
+        Loads the primary chunk, reads meta.fallback_chunk, then checks if
+        ComfyUI has all models required by the fallback chunk's workflow.
+        """
+        try:
+            # Load primary chunk to get fallback_chunk name
+            primary_chunk_path = self.chunk_dir / f"{output_chunk_name}.json"
+            with open(primary_chunk_path, 'r', encoding='utf-8') as f:
+                primary_chunk = json.load(f)
+
+            fallback_name = primary_chunk.get("meta", {}).get("fallback_chunk")
+            if not fallback_name:
+                return False
+
+            # Load fallback chunk and check its models against ComfyUI
+            fallback_path = self.chunk_dir / f"{fallback_name}.json"
+            requirements = self._extract_chunk_requirements(fallback_path)
+
+            if not requirements:
+                # No model requirements = assume available
+                return True
+
+            available_models = await self.get_comfyui_models()
+
+            type_map = {
+                "checkpoint": "checkpoints",
+                "unet": "unets",
+                "vae": "vaes",
+                "clip": "clips",
+            }
+
+            for req in requirements:
+                model_list = available_models.get(type_map.get(req["loader_type"], ""), [])
+                if req["model_name"] not in model_list:
+                    logger.info(
+                        f"[MODEL_AVAILABILITY] {config_id}: Fallback {fallback_name} missing "
+                        f"{req['loader_type']} model '{req['model_name']}'"
+                    )
+                    return False
+
+            return True
+
+        except FileNotFoundError:
+            return False
+        except Exception as e:
+            logger.debug(f"[MODEL_AVAILABILITY] {config_id}: Fallback check error: {e}")
+            return False
+
     def _extract_chunk_requirements(self, chunk_path: Path) -> List[Dict[str, str]]:
         """
         Parse a chunk file to extract required models from workflow JSON.
@@ -390,23 +440,25 @@ class ModelAvailabilityService:
             # Route availability check by backend_type
             backend_type = config_data.get("meta", {}).get("backend_type")
 
-            if backend_type == "diffusers":
+            if backend_type in ("diffusers", "heartmula", "stable_audio"):
                 gpu_status = await self.get_gpu_service_status()
-                available = gpu_status["diffusers"]
-                logger.info(f"[MODEL_AVAILABILITY] {config_id}: Diffusers backend, available={available}")
-                return available
+                gpu_key = backend_type  # Keys match: "diffusers", "heartmula", "stable_audio"
+                available = gpu_status.get(gpu_key, False)
 
-            elif backend_type == "heartmula":
-                gpu_status = await self.get_gpu_service_status()
-                available = gpu_status["heartmula"]
-                logger.info(f"[MODEL_AVAILABILITY] {config_id}: HeartMuLa backend, available={available}")
-                return available
+                if available:
+                    logger.info(f"[MODEL_AVAILABILITY] {config_id}: {backend_type} backend, available=True")
+                    return True
 
-            elif backend_type == "stable_audio":
-                gpu_status = await self.get_gpu_service_status()
-                available = gpu_status.get("stable_audio", False)
-                logger.info(f"[MODEL_AVAILABILITY] {config_id}: Stable Audio backend, available={available}")
-                return available
+                # Primary backend unavailable — check ComfyUI fallback via chunk meta
+                output_chunk_name = config_data.get("parameters", {}).get("OUTPUT_CHUNK")
+                if output_chunk_name:
+                    fallback_available = await self._check_fallback_chunk(config_id, output_chunk_name)
+                    if fallback_available:
+                        logger.info(f"[MODEL_AVAILABILITY] {config_id}: {backend_type} unavailable, ComfyUI fallback available")
+                        return True
+
+                logger.info(f"[MODEL_AVAILABILITY] {config_id}: {backend_type} backend unavailable, no fallback")
+                return False
 
             elif backend_type and backend_type not in ("comfyui", "comfyui_legacy"):
                 # Cloud APIs and code-based backends (openai, openrouter, config_model)
