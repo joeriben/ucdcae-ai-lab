@@ -1,5 +1,53 @@
 # Development Log
 
+## Session 213 - LoRA Training Auto-Captioning & LoRA Testing
+**Date:** 2026-02-26
+**Focus:** Integrate automatic VLM-based image captioning into the LoRA training pipeline; test trained LoRA via Diffusers and ComfyUI
+
+### Context
+User trained a LoRA on 25 scanned pages from "Photographie und Impressionismus — Landschaft 1850-1900". Images needed rotation (17/25 were sideways), EXIF stripping (stale thumbnails), and detailed captions for better training quality.
+
+### Image Preparation (Manual/Script)
+- **Rotation**: 17 of 25 images rotated 90° CCW via `mogrify -rotate 270` (landscape photos stored in portrait orientation)
+- **EXIF Strip**: `mogrify -strip *.jpg` — removed stale embedded thumbnails that showed pre-crop versions in file managers
+- **Captioning Script**: `generate_captions.py` — sent each image to VLM via Ollama, wrote `.txt` captions alongside images
+
+### Auto-Captioning Integration (Platform Feature)
+Integrated automatic captioning into `training_service.py` so uploaded images get VLM-generated descriptions before Kohya starts.
+
+**Two-stage approach** (handles qwen3-vl thinking mode):
+1. **Stage 1**: `qwen3-vl:32b` describes the image via Ollama `/api/chat`
+2. **Stage 2**: If output contains chain-of-thought reasoning (detected by prefix heuristic), `mistral-nemo:latest` extracts the clean caption
+
+**Flow**: User uploads images → `create_project()` saves them → `start_training_process()` calls `_generate_captions()` in background thread (SSE-streamed) → Kohya reads `.txt` files automatically
+
+**qwen3-vl thinking mode lessons**:
+- `/no_think` in user message: unreliable for VL models
+- `"think": false` API parameter: doesn't work (known Ollama bug for qwen3 variants)
+- Short prompts sometimes avoid thinking; complex prompts trigger it
+- Solution: detect reasoning prefixes ("Got it", "We are", etc.) → send to non-thinking model (mistral-nemo) for extraction
+
+### LoRA Testing Results
+- **Diffusers**: Kohya SD3 LoRA keys (`lora_unet_*`, `lora_te1_*`, `lora_te2_*`) NOT auto-converted by Diffusers. No SD3-specific Kohya converter exists in `diffusers.loaders.lora_conversion_utils`. Added graceful fallback (`prefix=None` + catch `set_adapters` ValueError).
+- **ComfyUI**: LoRA loads and applies correctly via `LoraLoader` node. Clear visual difference (grain, tonality, paper texture) confirmed.
+- **Conclusion**: ComfyUI remains the reliable path for LoRA generation. Diffusers SD3 LoRA support is an upstream gap.
+
+### Config Additions (`devserver/config.py`)
+- `CAPTION_VLM_MODEL = "qwen3-vl:32b"`
+- `CAPTION_CLEANUP_MODEL = "mistral-nemo:latest"`
+- `CAPTION_ENABLED = True`
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `devserver/config.py` | +3 captioning config entries |
+| `devserver/my_app/services/training_service.py` | `_generate_captions()`, `_cleanup_caption()`, integration in training flow |
+| `gpu_service/services/diffusers_backend.py` | Graceful Kohya SD3 LoRA handling (`prefix=None`, catch ValueError) |
+
+### Commits
+- `a9eb6fd` feat(training): auto-caption uploaded images via VLM before LoRA training
+- `f8c47d5` fix(lora): handle Kohya SD3 LoRA format in Diffusers backend gracefully
+
 ## Session 212 - Sketch Toggle into MediaInputBox (Platform-Wide Sketch Input)
 **Date:** 2026-02-26
 **Focus:** Move sketch canvas toggle from page-level (hardcoded in `image_transformation.vue`) into `MediaInputBox` as a reusable `allowSketch` prop — enabling sketch input across all image MediaInputBoxes on the platform
