@@ -3,7 +3,7 @@
   "type": "output_chunk",
   "backend_type": "comfyui",
   "media_type": "image",
-  "requires_workflow": false,
+  "requires_workflow": true,
   "description": "Stable Diffusion 3.5 Large - High quality image generation with Dual CLIP",
 
   "workflow": {
