@@ -246,8 +246,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   z-index: 950;
-  background: rgba(10, 10, 10, 0.98);
-  backdrop-filter: blur(12px);
+  background: rgba(10, 10, 10, 0.99);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.3s ease;
 }
