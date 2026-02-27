@@ -10,7 +10,7 @@
     </div>
 
     <!-- Clouds - count and darkness based on CO2 -->
-    <div class="clouds">
+    <div class="clouds" :style="cloudContainerStyle">
       <div
         v-for="(cloud, index) in clouds"
         :key="index"
@@ -72,35 +72,41 @@ function getRayStyle(n: number) {
   }
 }
 
-// Cloud calculations
+// Cloud calculations — separated into stable positions + dynamic darkness
 const co2Ratio = computed(() => Math.min(1, props.co2Grams / 5)) // Max effect at 5g
 
-const clouds = computed(() => {
-  // Number of clouds: 2-12 based on CO2 (more clouds, faster accumulation)
-  const cloudCount = Math.min(12, Math.floor(props.co2Grams / 0.15) + 2)
-  const darkness = Math.min(0.8, co2Ratio.value)
+// Cloud count changes rarely (only when co2Grams crosses 0.15 thresholds)
+const cloudCount = computed(() => Math.min(12, Math.floor(props.co2Grams / 0.15) + 2))
 
-  return Array.from({ length: cloudCount }, (_, i) => {
+// Cloud positions: only recomputed when cloudCount changes (not every second)
+const clouds = computed(() => {
+  return Array.from({ length: cloudCount.value }, (_, i) => {
     // Deterministic but varied positions
     const seed = (i * 17) % 100
     const left = 5 + (seed * 0.85) % 80
     const top = 5 + (i * 11) % 25
     const scale = 0.6 + (i % 3) * 0.25
 
-    // Darker clouds as CO2 increases
-    const gray = Math.round(200 - darkness * 120)
-
     return {
       style: {
         left: `${left}%`,
         top: `${top}%`,
         transform: `scale(${scale})`,
-        '--cloud-color': `rgb(${gray}, ${gray}, ${gray})`,
-        opacity: 0.4 + darkness * 0.5,
         animationDelay: `${i * 0.7}s`
       }
     }
   })
+})
+
+// Darkness changes every second but is applied via CSS variable on container
+// instead of recreating cloud objects
+const cloudDarkness = computed(() => Math.min(0.8, co2Ratio.value))
+const cloudContainerStyle = computed(() => {
+  const gray = Math.round(200 - cloudDarkness.value * 120)
+  return {
+    '--cloud-color': `rgb(${gray}, ${gray}, ${gray})`,
+    '--cloud-opacity': 0.4 + cloudDarkness.value * 0.5
+  }
 })
 
 // Sky gradient - blue to smoggy gray-brown
@@ -221,6 +227,7 @@ const smogStyle = computed(() => {
   position: absolute;
   width: 80px;
   height: 30px;
+  opacity: var(--cloud-opacity, 0.4);
   transition: opacity 0.5s ease;
   animation: cloud-float 15s ease-in-out infinite;
 }
