@@ -43,6 +43,15 @@ def _levenshtein(s1: str, s2: str) -> int:
     return prev_row[-1]
 
 
+_WORD_BOUNDARY_CACHE: Dict[str, re.Pattern] = {}
+
+def _word_boundary_match(text_lower: str, term: str) -> bool:
+    """Word-boundary match — prevents 'kan' matching inside 'scharfkantige'."""
+    if term not in _WORD_BOUNDARY_CACHE:
+        _WORD_BOUNDARY_CACHE[term] = re.compile(r'\b' + re.escape(term) + r'\b')
+    return bool(_WORD_BOUNDARY_CACHE[term].search(text_lower))
+
+
 def _fuzzy_contains(text_lower: str, term: str, max_distance: int = 2) -> bool:
     """Check if any word/phrase in text fuzzy-matches term within Levenshtein distance"""
     term_len = len(term)
@@ -353,6 +362,20 @@ def llm_dsgvo_fallback_check(text: str) -> Optional[bool]:
         return None
 
 
+# Llama-Guard template (loaded once from safety_llamaguard.json)
+_LLAMAGUARD_TEMPLATE: Optional[str] = None
+
+def _get_llamaguard_template() -> str:
+    """Load Llama-Guard prompt template from safety config (cached)."""
+    global _LLAMAGUARD_TEMPLATE
+    if _LLAMAGUARD_TEMPLATE is None:
+        config_path = Path(__file__).parent.parent / "configs" / "pre_interception" / "safety_llamaguard.json"
+        with open(config_path, 'r') as f:
+            config_data = json.load(f)
+        _LLAMAGUARD_TEMPLATE = config_data["context"]
+    return _LLAMAGUARD_TEMPLATE
+
+
 # Cache for age-filter LLM verification results (prevents inconsistent re-checks)
 # Key: (text, safety_level), Value: (result, timestamp)
 _AGE_VERIFY_CACHE: Dict[tuple, tuple] = {}
@@ -363,15 +386,11 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
     """
     LLM context verification for age-filter fast-filter hits.
 
-    The fast filter catches terms like "erschlägt" or "Tod" but can't
-    distinguish violent context ("Ritter erschlägt Bauern") from benign
-    context ("König schlägt zum Ritter", "Tod ist ein Kartenspiel").
+    Uses Llama-Guard-3 (SAFETY_MODEL) — NOT DSGVO model.
+    Llama-Guard gets ONLY the user text, classifies safe/unsafe.
 
     Results are cached for 60s to prevent inconsistent answers when
     /safety/quick and [UNIFIED-STREAMING] check the same text.
-
-    Uses DSGVO_VERIFY_MODEL (general-purpose, local) — NOT guard models
-    (they classify content, not context).
 
     Args:
         text: The original user text
@@ -395,79 +414,48 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
             return cached_result
 
     terms_str = ", ".join(found_terms[:5])
-    age_desc = "children (ages 6-12)" if safety_level == 'kids' else "teenagers (ages 13-16)"
+    model = config.SAFETY_MODEL  # llama-guard3, NOT DSGVO model
 
-    model = config.DSGVO_VERIFY_MODEL
-    ollama_model = model.replace("local/", "") if model.startswith("local/") else model
-
-    prompt = (
-        f"The following text will be used as an image generation prompt for {age_desc}.\n\n"
-        f"Text: \"{text}\"\n\n"
-        f"Does this text describe violence, harm, death, sexual content, or anything "
-        f"inappropriate for {age_desc}?\n\n"
-        f"Evaluate the MEANING of the text, not individual words.\n\n"
-        f"Examples:\n"
-        f"- \"Ein Ritter erschlägt einen Bauern\" = UNSAFE (violence)\n"
-        f"- \"Ein König schlägt einen Bauern zum Ritter\" = SAFE (knighting ceremony)\n"
-        f"- \"Ein freundlicher Vampir\" = SAFE (friendly character)\n"
-        f"- \"Tod und Verderben\" = UNSAFE (death and destruction)\n\n"
-        f"Answer ONLY with SAFE or UNSAFE."
-    )
-    messages = [{"role": "user", "content": prompt}]
+    # Build Llama-Guard prompt (same template as Stage 1)
+    template = _get_llamaguard_template()
+    prompt = template.replace("{{PREVIOUS_OUTPUT}}", text)
 
     try:
         from my_app.services.llm_backend import get_llm_backend
         from config import OLLAMA_TIMEOUT_SAFETY
 
         start = _time.time()
-        llm_result = get_llm_backend().chat(
-            model=ollama_model,
-            messages=messages,
+        llm_result = get_llm_backend().generate(
+            model=model,
+            prompt=prompt,
             temperature=0.0,
-            max_new_tokens=500,
+            max_new_tokens=50,
             timeout=OLLAMA_TIMEOUT_SAFETY,
+            enable_thinking=False,
         )
         duration_ms = (_time.time() - start) * 1000
 
         if llm_result is None:
-            logger.error(
-                f"[AGE-LLM-VERIFY] terms={terms_str} → LLM ({ollama_model}) returned None "
-                f"({duration_ms:.0f}ms) — fail-closed"
-            )
+            logger.error(f"[AGE-LLM-VERIFY] terms={terms_str} → Llama-Guard ({model}) returned None ({duration_ms:.0f}ms) — fail-closed")
             return None
 
-        result = llm_result.get("content", "").strip()
-
-        # Thinking model fallback
-        if not result:
-            thinking = (llm_result.get("thinking") or "").strip()
-            if thinking:
-                logger.info(f"[AGE-LLM-VERIFY] content empty, checking thinking field ({len(thinking)} chars)")
-                thinking_upper = thinking.upper()
-                if "UNSAFE" in thinking_upper:
-                    result = "UNSAFE"
-                elif "SAFE" in thinking_upper:
-                    result = "SAFE"
-
-        if not result:
-            logger.error(
-                f"[AGE-LLM-VERIFY] terms={terms_str} → LLM ({ollama_model}) returned EMPTY "
-                f"({duration_ms:.0f}ms) — fail-closed"
-            )
+        output = llm_result.get("response", "").strip()
+        if not output:
+            logger.error(f"[AGE-LLM-VERIFY] terms={terms_str} → Llama-Guard ({model}) returned EMPTY ({duration_ms:.0f}ms) — fail-closed")
             return None
 
-        result_upper = result.upper().strip()
-        is_unsafe = result_upper.startswith("UNSAFE")
+        is_safe, codes = parse_llamaguard_output(output)
+        is_unsafe = not is_safe
+
         logger.info(
-            f"[AGE-LLM-VERIFY] terms={terms_str} → LLM={result!r} → "
-            f"{'UNSAFE — confirmed inappropriate' if is_unsafe else 'SAFE — false positive'} ({duration_ms:.0f}ms)"
+            f"[AGE-LLM-VERIFY] terms={terms_str} → Llama-Guard={output!r} → "
+            f"{'UNSAFE ' + str(codes) if is_unsafe else 'SAFE — false positive'} ({duration_ms:.0f}ms)"
         )
-        # Cache result to prevent inconsistent re-checks
         _AGE_VERIFY_CACHE[cache_key] = (is_unsafe, _time.time())
         return is_unsafe
 
     except Exception as e:
-        logger.error(f"[AGE-LLM-VERIFY] LLM verification failed ({ollama_model}): {e} — fail-closed")
+        logger.error(f"[AGE-LLM-VERIFY] Llama-Guard failed ({model}): {e} — fail-closed")
         return None
 
 
@@ -549,9 +537,14 @@ def fast_filter_bilingual_86a(text: str) -> Tuple[bool, List[str]]:
             if _fuzzy_contains(text_lower, term_lower, max_distance=max_dist):
                 found_terms.append(term)
         else:
-            # Short terms: exact substring match only (too many false positives otherwise)
-            if term_lower in text_lower:
-                found_terms.append(term)
+            # Very short terms (<=3 chars): word-boundary only (prevents 'kan' in 'scharfkantige')
+            # 4-5 char terms: substring match (catches 'Blut' in 'blutiger', same word stem)
+            if len(term_lower) <= 3:
+                if _word_boundary_match(text_lower, term_lower):
+                    found_terms.append(term)
+            else:
+                if term_lower in text_lower:
+                    found_terms.append(term)
 
     return (len(found_terms) > 0, found_terms)
 
@@ -581,9 +574,14 @@ def fast_filter_check(prompt: str, safety_level: str) -> Tuple[bool, List[str]]:
             if _fuzzy_contains(prompt_lower, term_lower, max_distance=max_dist):
                 found_terms.append(term)
         else:
-            # Short terms: exact substring match only
-            if term_lower in prompt_lower:
-                found_terms.append(term)
+            # Very short terms (<=3 chars): word-boundary only (prevents 'kan' in 'scharfkantige')
+            # 4-5 char terms: substring match (catches 'Blut' in 'blutiger', same word stem)
+            if len(term_lower) <= 3:
+                if _word_boundary_match(prompt_lower, term_lower):
+                    found_terms.append(term)
+            else:
+                if term_lower in prompt_lower:
+                    found_terms.append(term)
 
     return (len(found_terms) > 0, found_terms)
 
