@@ -73,6 +73,7 @@ export function useGenerationStream() {
 
   // Progress state
   const generationProgress = ref(0)
+  const previewImage = ref<string | null>(null)
   const isExecuting = ref(false)
   const currentStage = ref<'idle' | 'stage3' | 'stage4' | 'complete'>('idle')
 
@@ -219,8 +220,16 @@ export function useGenerationStream() {
       eventSource.addEventListener('stage4_start', () => {
         console.log('[GENERATION-STREAM] Stage 4 started (Media Generation)')
         currentStage.value = 'stage4'
-        // Start progress animation from here
         generationProgress.value = 0
+        previewImage.value = null
+      })
+
+      eventSource.addEventListener('generation_progress', (e: MessageEvent) => {
+        const data = JSON.parse(e.data)
+        generationProgress.value = data.percent
+        if (data.preview) {
+          previewImage.value = data.preview
+        }
       })
 
       eventSource.addEventListener('complete', (e: MessageEvent) => {
@@ -284,6 +293,7 @@ export function useGenerationStream() {
     showTranslatedStamp.value = false
     safetyChecks.value = []
     generationProgress.value = 0
+    previewImage.value = null
     isExecuting.value = false
     currentStage.value = 'idle'
   }
@@ -296,6 +306,7 @@ export function useGenerationStream() {
 
     // Progress states
     generationProgress,
+    previewImage,
     isExecuting,
     currentStage,
 

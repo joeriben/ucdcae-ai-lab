@@ -5,6 +5,9 @@
       <!-- Generation Progress Animation (random selection of 3 edutainment games) -->
       <div v-if="isExecuting && !outputImage" class="generation-animation-container">
         <RandomEdutainmentAnimation :progress="progress" :estimated-seconds="estimatedSeconds" />
+        <Transition name="fade">
+          <img v-if="previewImage" :src="previewImage" alt="" class="denoising-preview" />
+        </Transition>
       </div>
 
       <!-- Empty State with inactive Actions -->
@@ -267,6 +270,7 @@ interface Props {
   isExecuting: boolean
   progress: number
   estimatedSeconds?: number
+  previewImage?: string | null
   isAnalyzing?: boolean
   showAnalysis?: boolean
   analysisData?: AnalysisData | null
@@ -280,6 +284,7 @@ const props = withDefaults(defineProps<Props>(), {
   mediaType: 'image',
   isExecuting: false,
   progress: 0,
+  previewImage: null,
   isAnalyzing: false,
   showAnalysis: false,
   analysisData: null,
@@ -348,6 +353,29 @@ defineExpose({
   width: 100%;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+.denoising-preview {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 /* Final Output */

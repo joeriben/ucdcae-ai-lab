@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from schemas.engine.pipeline_executor import PipelineExecutor
 from schemas.engine.prompt_interception_engine import PromptInterceptionEngine, PromptInterceptionRequest
 from schemas.engine.config_loader import config_loader
+from schemas.engine.progress_callback import set_progress_callback
 from schemas.engine.instruction_selector import get_instruction
 from schemas.engine.stage_orchestrator import (
     execute_stage1_translation,
@@ -2469,37 +2470,120 @@ def execute_generation_streaming(data: dict):
         if was_translated:
             recorder.save_entity('translation_en', translated_prompt)
 
-        # Execute Stage 4 (generation only - Stage 3 already done)
-        result = asyncio.run(execute_stage4_generation_only(
-            prompt=translated_prompt,
-            output_config=output_config,
-            safety_level=safety_level,
-            run_id=run_id,
-            seed=seed,
-            recorder=recorder,
-            device_id=device_id,
-            input_text=input_text,
-            context_prompt=context_prompt,
-            interception_result=interception_result,
-            interception_config=interception_config,
-            input_image=input_image,
-            input_image1=input_image1,
-            input_image2=input_image2,
-            input_image3=input_image3,
-            alpha_factor=alpha_factor,
-            # Session 151: Generation parameters
-            width=width,
-            height=height,
-            steps=steps,
-            cfg=cfg,
-            negative_prompt=negative_prompt,
-            sampler_name=sampler_name,
-            scheduler=scheduler,
-            denoise=denoise
-        ))
+        # ── Determine backend type for progress strategy ──
+        import contextvars
+        import queue as queue_mod
 
-        if not result['success']:
-            raise Exception(result.get('error', 'Generation failed'))
+        config_obj = pipeline_executor.config_loader.get_config(output_config)
+        backend_type = (config_obj.meta.get('backend_type', 'comfyui')
+                        if config_obj and config_obj.meta else 'comfyui')
+
+        # Queue used by ComfyUI callback and as sentinel for all backends
+        progress_queue = queue_mod.Queue()
+        SENTINEL = object()
+
+        # ComfyUI: inject on_progress callback via ContextVar
+        if backend_type == 'comfyui':
+            def _on_comfyui_progress(event):
+                progress_queue.put(event)
+            set_progress_callback(_on_comfyui_progress)
+
+        # ── Run generation in background thread ──
+        ctx = contextvars.copy_context()
+        result_holder = [None]
+        error_holder = [None]
+
+        def _generation_thread():
+            try:
+                result_holder[0] = ctx.run(
+                    asyncio.run,
+                    execute_stage4_generation_only(
+                        prompt=translated_prompt,
+                        output_config=output_config,
+                        safety_level=safety_level,
+                        run_id=run_id,
+                        seed=seed,
+                        recorder=recorder,
+                        device_id=device_id,
+                        input_text=input_text,
+                        context_prompt=context_prompt,
+                        interception_result=interception_result,
+                        interception_config=interception_config,
+                        input_image=input_image,
+                        input_image1=input_image1,
+                        input_image2=input_image2,
+                        input_image3=input_image3,
+                        alpha_factor=alpha_factor,
+                        width=width, height=height, steps=steps,
+                        cfg=cfg, negative_prompt=negative_prompt,
+                        sampler_name=sampler_name, scheduler=scheduler,
+                        denoise=denoise
+                    )
+                )
+            except Exception as e:
+                error_holder[0] = e
+            finally:
+                progress_queue.put(SENTINEL)
+
+        thread = threading.Thread(target=_generation_thread, daemon=True)
+        thread.start()
+
+        # ── SSE progress event loop (backend-dependent) ──
+        if backend_type == 'comfyui':
+            # ComfyUI: push-based via WS callback → queue
+            while True:
+                try:
+                    item = progress_queue.get(timeout=2.0)
+                except queue_mod.Empty:
+                    yield ': heartbeat\n\n'
+                    continue
+                if item is SENTINEL:
+                    break
+                yield generate_sse_event('generation_progress', {
+                    'percent': round(item.overall_percent * 100),
+                    'preview': f'data:image/jpeg;base64,{item.preview_base64}' if item.preview_base64 else None,
+                    'node': item.current_node
+                })
+                yield ''
+
+        elif backend_type == 'diffusers':
+            # Diffusers: poll GPU service progress endpoint
+            gpu_progress_url = f"{config.GPU_SERVICE_URL}/api/diffusers/progress"
+            last_step = -1
+            while thread.is_alive():
+                try:
+                    resp = requests.get(gpu_progress_url, timeout=1).json()
+                    if resp.get('active') and resp.get('step', 0) != last_step:
+                        last_step = resp['step']
+                        total = resp.get('total_steps', 1)
+                        yield generate_sse_event('generation_progress', {
+                            'percent': round((last_step / total) * 100) if total > 0 else 0,
+                            'step': last_step,
+                            'total_steps': total
+                        })
+                        yield ''
+                except Exception:
+                    pass
+                time.sleep(1.0)
+
+        else:
+            # Other backends (heartmula, stable_audio, openai, etc.): heartbeat only
+            while thread.is_alive():
+                yield ': heartbeat\n\n'
+                time.sleep(2.0)
+
+        # ── Join thread + error handling ──
+        thread.join(timeout=5.0)
+        # Clean up ComfyUI callback
+        if backend_type == 'comfyui':
+            set_progress_callback(None)
+
+        if error_holder[0]:
+            raise error_holder[0]
+        result = result_holder[0]
+
+        if not result or not result['success']:
+            raise Exception(result.get('error', 'Generation failed') if result else 'Generation returned no result')
 
         logger.info(f"[GENERATION-STREAMING] Stage 4 complete: {result['media_output']}")
 

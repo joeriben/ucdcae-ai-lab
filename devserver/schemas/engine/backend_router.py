@@ -11,6 +11,7 @@ import json
 
 from my_app.services.pipeline_recorder import load_recorder
 from config import JSON_STORAGE_DIR, COMFYUI_BASE_PATH, LORA_TRIGGERS, COMFYUI_DIRECT
+from schemas.engine.progress_callback import get_progress_callback
 
 logger = logging.getLogger(__name__)
 
@@ -742,7 +743,7 @@ class BackendRouter:
 
                 logger.info(f"[COMFYUI-DIRECT] Generating image: model={model}, steps={steps}, size={width}x{height}")
 
-                result = await client.submit_and_track(workflow, timeout=parameters.get('timeout', 300))
+                result = await client.submit_and_track(workflow, timeout=parameters.get('timeout', 300), on_progress=get_progress_callback())
 
                 if not result.media_files:
                     return BackendResponse(success=False, content="", error="ComfyUI generated no output")
@@ -978,7 +979,7 @@ class BackendRouter:
                 logger.info(f"[COMFYUI-DIRECT] Submitting {media_type} workflow")
                 timeout = parameters.get('timeout', 600)
 
-                result = await client.submit_and_track(workflow, timeout=timeout)
+                result = await client.submit_and_track(workflow, timeout=timeout, on_progress=get_progress_callback())
 
                 if not result.media_files:
                     return BackendResponse(
@@ -1246,7 +1247,7 @@ class BackendRouter:
                 client = get_comfyui_ws_client()
                 timeout = parameters.get('timeout', 300)
 
-                result = await client.submit_and_track(workflow, timeout=timeout)
+                result = await client.submit_and_track(workflow, timeout=timeout, on_progress=get_progress_callback())
 
                 logger.info(f"[LEGACY-WORKFLOW] Completed: {len(result.media_files)} file(s)")
 

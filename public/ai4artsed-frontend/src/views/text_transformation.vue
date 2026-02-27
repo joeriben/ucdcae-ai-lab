@@ -392,6 +392,7 @@
           :is-executing="isPipelineExecuting"
           :progress="generationProgress"
           :estimated-seconds="estimatedGenerationSeconds"
+          :preview-image="previewImage"
           :is-analyzing="isAnalyzing"
           :show-analysis="showAnalysis"
           :analysis-data="imageAnalysis"
@@ -566,6 +567,7 @@ const {
   showTranslatedStamp,
   safetyChecks,
   generationProgress,
+  previewImage,
   currentStage,
   executeWithStreaming,
   reset: resetGenerationStream
@@ -1546,34 +1548,6 @@ async function executePipeline() {
     previousOptimizedPrompt.value = currentPromptToUse
   }
 
-  // Session 148: Progress simulation (starts when stage4_start event arrives)
-  // Use estimatedGenerationSeconds from OUTPUT config (not optimization config!)
-  let durationSeconds = estimatedGenerationSeconds.value || 30
-
-  // Apply 0.9 multiplier so animation finishes slightly before actual completion
-  durationSeconds = durationSeconds * 0.9
-  console.log(`[Progress] Using ${durationSeconds}s animation (from output config: ${selectedConfig.value})`)
-
-  const targetProgress = 98
-  const updateInterval = 100
-  const totalUpdates = (durationSeconds * 1000) / updateInterval
-  const progressPerUpdate = targetProgress / totalUpdates
-  let progressInterval: ReturnType<typeof setInterval> | null = null
-
-  // Watch for stage4 to start progress animation
-  const stopWatcher = watch(currentStage, (stage) => {
-    if (stage === 'stage4' && !progressInterval) {
-      progressInterval = setInterval(() => {
-        if (generationProgress.value < targetProgress) {
-          generationProgress.value += progressPerUpdate
-          if (generationProgress.value > targetProgress) {
-            generationProgress.value = targetProgress
-          }
-        }
-      }, updateInterval)
-    }
-  }, { immediate: true })
-
   try {
     const finalPrompt = optimizedPrompt.value || interceptionResult.value || inputText.value
 
@@ -1593,12 +1567,6 @@ async function executePipeline() {
       interception_config: lastInterceptionConfig.value || pipelineStore.selectedConfig?.id,
       device_id: deviceId
     })
-
-    // Stop progress interval
-    if (progressInterval) {
-      clearInterval(progressInterval)
-    }
-    stopWatcher()
 
     console.log('[GENERATION-STREAM] Result:', result)
 
@@ -1637,10 +1605,6 @@ async function executePipeline() {
       generationProgress.value = 0
     }
   } catch (error: any) {
-    if (progressInterval) {
-      clearInterval(progressInterval)
-    }
-    stopWatcher()
     console.error('Pipeline error:', error)
 
     generationProgress.value = 0
