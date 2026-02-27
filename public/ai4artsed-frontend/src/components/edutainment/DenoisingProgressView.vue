@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onUnmounted } from 'vue'
+import { computed, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEdutainmentFacts } from '@/composables/useEdutainmentFacts'
 
@@ -289,14 +289,9 @@ const {
 const totalKwh = computed(() => (totalEnergyWh.value / 1000).toFixed(3))
 
 // Start/stop rotation when component is shown
+// Energy counters accumulate across both phases — do NOT restart on phase change
 startRotation()
 onUnmounted(() => stopRotation())
-
-// Restart rotation if we transition between phases
-watch(() => props.previewImage, () => {
-  stopRotation()
-  startRotation()
-})
 </script>
 
 <style scoped>
