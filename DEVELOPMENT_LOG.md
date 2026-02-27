@@ -1,5 +1,35 @@
 # Development Log
 
+## Session 222 - Firefox/iGPU Performance Fix + Streaming UX
+**Date:** 2026-02-28
+**Focus:** Fix severe Firefox lag on iGPU (128MB VRAM), optimize CSS animations and JS timers, switch streaming display from char-by-char to word-by-word
+**Commits:** `2ecd79f`, `caa9299`, `a649a5d`, `228361b`, `18087ad`, `50483be`, `62d5976`
+
+### Problem
+App was unusable in Firefox on a PC with integrated GPU (128MB VRAM). Root cause analysis identified 47 `backdrop-filter: blur()` usages, 87 infinite CSS animations (many non-compositable), a 60fps RAF loop writing Vue reactive refs, 5 concurrent `setInterval` timers during generation, and a streaming buffer that added ~4s of artificial display lag.
+
+### Changes (5 performance phases + 2 UX fixes)
+
+| Phase | Change | Impact |
+|-------|--------|--------|
+| 1 | Remove `backdrop-filter` from header + footer | Eliminates permanent GPU compositing on every page |
+| 2 | Replace `text-shadow`, `box-shadow`, `border-color`, `filter`, `left` animations with `opacity`/`transform` | All infinite animations now GPU-compositable |
+| 3 | Remove `filter: drop-shadow()` from animated ChatOverlay + SpriteProgress elements | No filter recalculation per animation frame |
+| 4 | Throttle RAF to 10fps reactive updates + consolidate 3 timers → 1 | ~50 fewer Vue re-renders/sec during generation |
+| 5 | Separate ClimateBackground cloud positions from dynamic darkness | Cloud array stable (only recreated on count change, not every second) |
+| UI | Sharpen model bubble hover-info text, remove transparency | Clearer text at 2× scale on low-DPI displays |
+| UX | Switch streaming from char-by-char (30ms/1-3 chars) to word-by-word (50ms/word) | Buffer drains ~4× faster, better kids readability |
+
+### Key Insight: Word-by-Word Streaming
+The char-by-char typewriter effect was designed for perceived speed (start showing content immediately). But it also added ~4 seconds of "trickle lag" after LLM completion because the buffer drained slower than it filled. Word-by-word preserves the fast start while eliminating the lag at the end. Additionally, pedagogically superior for kids who read in word units.
+
+### Design Discussion (deferred)
+Two UX features discussed for future implementation:
+1. **Model parameter selection via long-press**: Pill-toggle popover (orientation + resolution) anchored to model bubble. Infrastructure exists in `ConfigTile.vue` (500ms long-press timer). Radial menus rejected for compound parameters.
+2. **Prompt optimization trigger**: Currently auto-runs on model click. User reports psychological avoidance of SD3.5 due to optimization wait. Potential fix: background pre-computation or split triggers by stage cost.
+
+---
+
 ## Session 221 - Mistral Large 2411 → 2512 Upgrade + Interception Quality Benchmark
 **Date:** 2026-02-27
 **Focus:** Upgrade Mistral model pin, benchmark Prompt Interception quality across all categories

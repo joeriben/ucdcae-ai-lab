@@ -29,6 +29,46 @@
 
 ---
 
+## Session 222: iGPU Performance + Streaming UX (2026-02-28)
+
+### Decision 1: Remove `backdrop-filter: blur()` from permanent UI elements
+
+**Problem:** App lagged severely in Firefox on a PC with 128MB integrated GPU. Root cause: `backdrop-filter: blur(12px)` on always-visible header and footer forces constant GPU compositing — catastrophic on weak GPUs.
+
+**Decision:** Replace with slightly more opaque solid backgrounds (`rgba(10,10,10,0.97/0.99)`). On the `#0a0a0a` page background, visually indistinguishable from blur effect. Zero GPU cost.
+
+**Files:** `App.vue` (header), `FooterGallery.vue` (footer)
+
+### Decision 2: All infinite CSS animations must use only `opacity` and `transform`
+
+**Problem:** Animations using `text-shadow`, `box-shadow`, `border-color`, `filter`, and `left` (layout property) cannot be GPU-composited — they force software rendering on every frame. On 128MB iGPU, this means constant lag.
+
+**Decision:** Replace all non-compositable infinite animations with `opacity` or `transform` equivalents. Only these two CSS properties can be fully GPU-accelerated. Static decorative values (text-shadow, box-shadow) remain on the element; the animation just pulses the element's opacity.
+
+**Affected animations:** `neon-pulse`, `pulse-glow`, `pulse-required`, `shine-move`, `pixel-dissolve`, `processor-icon-active`
+
+### Decision 3: Throttle RAF-driven Vue reactivity to 10fps
+
+**Problem:** `useAnimationProgress.ts` updated `internalProgress.value` at 60fps via `requestAnimationFrame`. Each update triggers Vue re-renders. On weak hardware, 60 re-renders/second is excessive for a progress bar.
+
+**Decision:** RAF loop still runs at native framerate (for accurate timing), but the reactive ref is only written every 100ms (10fps). This is more than sufficient for smooth progress bar animation while reducing Vue overhead by 6×.
+
+**File:** `composables/useAnimationProgress.ts`
+
+### Decision 4: Word-by-word streaming instead of character-by-character
+
+**Problem:** SSE streaming buffer processed 1-3 characters every 30ms. For a 400-character LLM response arriving in 3 seconds, the buffer needed ~4 additional seconds to drain ("trickle lag"). This doubled the perceived optimization wait time.
+
+**Decision:** Switch to word-level buffering (1 word every 50ms). Benefits:
+- Buffer drains ~4× faster (words average 5-6 chars each)
+- Better readability for kids (children read in word units, not letter sequences; half-formed words mid-display are confusing)
+- Same fast perceived start (first word appears on first SSE chunk)
+- Matches how reading apps (Reading Eggs, Epic!) present text to children
+
+**File:** `components/MediaInputBox.vue`
+
+---
+
 ## Session 218 Post-Mortem Repair: 7 Architectural Decisions (2026-02-27)
 
 **Context:** Session 217 attempted to route ALL LLM inference through GPU Service (HuggingFace Transformers). Cascading failure: Ollama model names incompatible with HF AutoTokenizer, guard model prompt format issues, fail-closed blocked everything. 5 emergency commits left 7 TEMPORARY fail-open markers, dead code, and degraded safety.
