@@ -685,7 +685,6 @@ watch(() => props.progress, (newProgress, oldProgress) => {
 .processor-icon {
   font-size: 44px;
   animation: processor-icon-pulse 1s ease-in-out infinite;
-  filter: drop-shadow(0 0 10px #4a90e2);
   z-index: 10;
 }
 
@@ -699,8 +698,8 @@ watch(() => props.progress, (newProgress, oldProgress) => {
 }
 
 @keyframes processor-icon-active {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25) rotate(-3deg); filter: brightness(1.7); }
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.25) rotate(-3deg); opacity: 1; }
 }
 
 /* Progress Bar */
