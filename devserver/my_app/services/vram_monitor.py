@@ -66,7 +66,7 @@ class VRAMMonitor:
                 "total_vram_mb": round(ollama_total_vram, 1),
             },
             "gpu_service": {
-                "reachable": gpu_status.get("status") == "healthy" or gpu_status.get("reachable", False) is not False,
+                "reachable": gpu_status.get("status") in ("ok", "healthy"),
                 "raw": gpu_status,
             },
         }

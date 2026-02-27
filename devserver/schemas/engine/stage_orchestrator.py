@@ -1079,6 +1079,38 @@ async def execute_stage3_safety(
             "execution_time": translate_time
         }
 
+    # STEP 3b: Age-appropriate fast-filter on ORIGINAL (pre-translation) text
+    # Translation models sanitize violence ("erschlägt"→"strikes", "erschiessen"→"arrest"),
+    # so the fast-filter MUST run on the German input, not the translated output.
+    has_age_terms, found_age_terms = fast_filter_check(prompt, safety_level)
+    if has_age_terms:
+        filter_name = 'Kids-Filter' if safety_level == 'kids' else 'Youth-Filter'
+        logger.info(f"[STAGE3-SAFETY] {filter_name} fast-filter hit on original text: {found_age_terms[:3]} → LLM context check")
+        verify_result = llm_verify_age_filter_context(prompt, found_age_terms, safety_level)
+        if verify_result is None:
+            # LLM unavailable — fail-closed (defense-in-depth, Stage 1 should have caught this)
+            logger.warning(f"[STAGE3-SAFETY] {filter_name} LLM verify unavailable — fail-closed")
+            return {
+                "safe": False,
+                "method": "age_filter_verify_unavailable",
+                "abort_reason": f"{filter_name}: safety verification unavailable",
+                "positive_prompt": None,
+                "negative_prompt": None,
+                "execution_time": translate_time
+            }
+        elif verify_result:
+            logger.warning(f"[STAGE3-SAFETY] {filter_name} BLOCKED (LLM confirmed): {found_age_terms[:3]}")
+            return {
+                "safe": False,
+                "method": "age_filter",
+                "abort_reason": f'{filter_name}: {", ".join(found_age_terms[:3])}',
+                "positive_prompt": None,
+                "negative_prompt": None,
+                "execution_time": translate_time
+            }
+        else:
+            logger.info(f"[STAGE3-SAFETY] {filter_name} false positive (LLM rejected): {found_age_terms[:3]}")
+
     # STEP 4: ALWAYS run LLM safety check for kids/youth
     # Semantic violence/harm cannot be caught by wordlists alone —
     # "Wesen sind feindselig zueinander und fügen einander Schaden zu"
