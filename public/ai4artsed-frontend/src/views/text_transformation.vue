@@ -400,6 +400,7 @@
           :is-favorited="isFavorited"
           :model-meta="modelMeta"
           :ui-mode="uiModeStore.mode"
+          :stage4-duration-ms="stage4DurationMs"
           forward-button-title="Weiterreichen zu Bild-Transformation"
           @save="saveMedia"
           @print="printImage"
@@ -576,6 +577,7 @@ const {
   previewImage,
   currentStage,
   modelMeta,
+  stage4DurationMs,
   executeWithStreaming,
   reset: resetGenerationStream
 } = useGenerationStream()

@@ -1,7 +1,7 @@
 <template>
   <div dir="ltr" class="denoising-progress-view">
-    <!-- Phase A: Model Loading (no preview yet) -->
-    <div v-if="!previewImage" class="model-loading-phase">
+    <!-- Phase A: Model Loading (no denoising progress yet) -->
+    <div v-if="progress === 0" class="model-loading-phase">
       <div class="model-card">
         <div class="model-card-header">
           <span class="model-icon">{{ profileIcon }}</span>
@@ -66,9 +66,9 @@
       </div>
     </div>
 
-    <!-- Phase B: Denoising Active (preview available) -->
+    <!-- Phase B: Denoising Active (progress > 0 = model loaded) -->
     <div v-else class="denoising-active-phase">
-      <div class="preview-container">
+      <div v-if="previewImage" class="preview-container">
         <img :src="previewImage" alt="" class="denoising-preview-large" />
       </div>
 
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted } from 'vue'
+import { computed, onUnmounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEdutainmentFacts } from '@/composables/useEdutainmentFacts'
 
@@ -108,6 +108,10 @@ const props = withDefaults(defineProps<Props>(), {
   modelMeta: null,
   estimatedSeconds: 30
 })
+
+const emit = defineEmits<{
+  'stats-snapshot': [stats: { energyWh: number, co2Grams: number }]
+}>()
 
 // --- Model Profiles (static lookup) ---
 interface ModelProfile {
@@ -291,6 +295,9 @@ const totalKwh = computed(() => (totalEnergyWh.value / 1000).toFixed(3))
 // Start/stop rotation when component is shown
 // Energy counters accumulate across both phases — do NOT restart on phase change
 startRotation()
+onBeforeUnmount(() => {
+  emit('stats-snapshot', { energyWh: totalEnergyWh.value, co2Grams: totalCo2Grams.value })
+})
 onUnmounted(() => stopRotation())
 </script>
 

@@ -77,6 +77,8 @@ export function useGenerationStream() {
   const isExecuting = ref(false)
   const currentStage = ref<'idle' | 'stage3' | 'stage4' | 'complete'>('idle')
   const modelMeta = ref<Record<string, any> | null>(null)
+  const stage4DurationMs = ref(0)
+  let _stage4StartTime = 0
 
   /**
    * Build SSE URL with query parameters
@@ -225,6 +227,7 @@ export function useGenerationStream() {
         generationProgress.value = 0
         previewImage.value = null
         modelMeta.value = data.model_meta || null
+        _stage4StartTime = Date.now()
       })
 
       eventSource.addEventListener('generation_progress', (e: MessageEvent) => {
@@ -242,6 +245,7 @@ export function useGenerationStream() {
         isExecuting.value = false
         currentStage.value = 'complete'
         generationProgress.value = 100
+        stage4DurationMs.value = _stage4StartTime ? Date.now() - _stage4StartTime : 0
         resolve({
           status: 'success',
           media_output: data.media_output,
@@ -300,6 +304,8 @@ export function useGenerationStream() {
     isExecuting.value = false
     currentStage.value = 'idle'
     modelMeta.value = null
+    stage4DurationMs.value = 0
+    _stage4StartTime = 0
   }
 
   return {
@@ -314,6 +320,7 @@ export function useGenerationStream() {
     isExecuting,
     currentStage,
     modelMeta,
+    stage4DurationMs,
 
     // Methods
     executeWithStreaming,

@@ -11,6 +11,7 @@
           :preview-image="previewImage"
           :model-meta="modelMeta"
           :estimated-seconds="estimatedSeconds"
+          @stats-snapshot="handleStatsSnapshot"
         />
         <!-- Kids/Youth mode: Edutainment games with small preview overlay -->
         <template v-else>
@@ -234,6 +235,8 @@
       <!-- Expert Generation Summary (persists after generation) -->
       <div v-if="uiMode === 'expert' && outputImage && modelMeta" class="expert-generation-summary">
         <span class="summary-model">{{ resolveModelName(modelMeta) }}</span>
+        <span v-if="stage4DurationMs" class="summary-detail">{{ (stage4DurationMs / 1000).toFixed(1) }}s</span>
+        <span v-if="generationEnergyWh > 0" class="summary-detail">{{ (generationEnergyWh / 1000).toFixed(3) }} kWh</span>
         <span v-if="modelMeta.recommended_resolution" class="summary-detail">{{ modelMeta.recommended_resolution }}</span>
         <span v-if="modelMeta.seed != null" class="summary-detail">seed:{{ modelMeta.seed }}</span>
         <span v-if="modelMeta.cfg != null" class="summary-detail">CFG:{{ modelMeta.cfg }}</span>
@@ -275,6 +278,12 @@ import { ref } from 'vue'
 import RandomEdutainmentAnimation from '@/components/edutainment/RandomEdutainmentAnimation.vue'
 import DenoisingProgressView from '@/components/edutainment/DenoisingProgressView.vue'
 
+// Captured from DenoisingProgressView on unmount
+const generationEnergyWh = ref(0)
+function handleStatsSnapshot(stats: { energyWh: number, co2Grams: number }) {
+  generationEnergyWh.value = stats.energyWh
+}
+
 // Template ref for autoscroll functionality
 const sectionRef = ref<HTMLElement | null>(null)
 
@@ -302,6 +311,7 @@ interface Props {
   // Expert denoising view
   modelMeta?: Record<string, any> | null
   uiMode?: string
+  stage4DurationMs?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -316,7 +326,8 @@ const props = withDefaults(defineProps<Props>(), {
   runId: null,
   isFavorited: false,
   modelMeta: null,
-  uiMode: 'youth'
+  uiMode: 'youth',
+  stage4DurationMs: 0
 })
 
 defineEmits<{

@@ -209,6 +209,7 @@
         :analysis-data="imageAnalysis"
         :model-meta="modelMeta"
         :ui-mode="uiModeStore.mode"
+        :stage4-duration-ms="stage4DurationMs"
         forward-button-title="Erneut Transformieren"
         @save="saveMedia"
         @print="printImage"
@@ -318,6 +319,7 @@ const {
   previewImage,
   currentStage,
   modelMeta,
+  stage4DurationMs,
   executeWithStreaming,
   reset: resetGenerationStream
 } = useGenerationStream()
