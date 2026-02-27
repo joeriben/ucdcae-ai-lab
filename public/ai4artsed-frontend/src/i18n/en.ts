@@ -1324,6 +1324,21 @@ export const en = {
       energyUsed: 'Energy used',
       co2Produced: 'CO₂ produced'
     },
+    denoising: {
+      modelLoading: 'Loading model into GPU memory...',
+      modelCard: 'Model Profile',
+      publisher: 'Publisher',
+      architecture: 'Architecture',
+      parameters: 'Parameters',
+      textEncoders: 'Text Encoders',
+      quantization: 'Quantization',
+      vramRequired: 'VRAM Required',
+      resolution: 'Resolution',
+      license: 'License',
+      fairCulture: 'Fair Culture',
+      safetyByDesign: 'Safety by Design',
+      denoisingActive: 'Denoising in progress...',
+    },
     energy: {
       kids_1: '💡 AI images need electricity – as much as charging your phone for 3 hours!',
       kids_2: '🔌 The GPU is like a super calculator that eats lots of power!',

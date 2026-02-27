@@ -429,6 +429,12 @@ def get_safety_level():
     return jsonify({'safety_level': config.DEFAULT_SAFETY_LEVEL})
 
 
+@settings_bp.route('/ui-mode', methods=['GET'])
+def get_ui_mode():
+    """Public endpoint: returns current UI mode for frontend adaptation."""
+    return jsonify({'ui_mode': config.UI_MODE})
+
+
 @settings_bp.route('/gpu-info', methods=['GET'])
 def get_gpu_info():
     """

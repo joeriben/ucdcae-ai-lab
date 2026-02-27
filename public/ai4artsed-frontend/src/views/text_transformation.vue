@@ -398,6 +398,8 @@
           :analysis-data="imageAnalysis"
           :run-id="currentRunId"
           :is-favorited="isFavorited"
+          :model-meta="modelMeta"
+          :ui-mode="uiModeStore.mode"
           forward-button-title="Weiterreichen zu Bild-Transformation"
           @save="saveMedia"
           @print="printImage"
@@ -448,6 +450,7 @@ import { useCurrentSession } from '@/composables/useCurrentSession'
 import { useGenerationStream } from '@/composables/useGenerationStream'
 import { useI18n } from 'vue-i18n'
 import { usePageContextStore } from '@/stores/pageContext'
+import { useUiModeStore } from '@/stores/uiMode'
 import type { PageContext, FocusHint } from '@/composables/usePageContext'
 import { getModelAvailability, type ModelAvailability } from '@/services/api'
 
@@ -461,6 +464,9 @@ const currentLanguage = computed(() => userPreferences.language)
 
 // Favorites support (Session 127)
 const favoritesStore = useFavoritesStore()
+
+// UI mode for expert denoising view
+const uiModeStore = useUiModeStore()
 
 // ============================================================================
 // Session Management (Session 82: Chat Overlay Context)
@@ -569,6 +575,7 @@ const {
   generationProgress,
   previewImage,
   currentStage,
+  modelMeta,
   executeWithStreaming,
   reset: resetGenerationStream
 } = useGenerationStream()

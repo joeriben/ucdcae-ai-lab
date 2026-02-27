@@ -207,6 +207,8 @@
         :is-analyzing="isAnalyzing"
         :show-analysis="showAnalysis"
         :analysis-data="imageAnalysis"
+        :model-meta="modelMeta"
+        :ui-mode="uiModeStore.mode"
         forward-button-title="Erneut Transformieren"
         @save="saveMedia"
         @print="printImage"
@@ -252,6 +254,7 @@ import { usePipelineExecutionStore } from '@/stores/pipelineExecution'
 import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useDeviceId } from '@/composables/useDeviceId'
 import { usePageContextStore } from '@/stores/pageContext'
+import { useUiModeStore } from '@/stores/uiMode'
 import { useGenerationStream } from '@/composables/useGenerationStream'
 import { useI18n } from 'vue-i18n'
 import type { SupportedLanguage } from '@/i18n'
@@ -263,6 +266,9 @@ import type { PageContext, FocusHint } from '@/composables/usePageContext'
 
 // Global clipboard (shared across all views)
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
+
+// UI mode for expert denoising view
+const uiModeStore = useUiModeStore()
 
 // Multi-image upload (3 images) - Full state for each
 const uploadedImage1 = ref<string | undefined>(undefined)
@@ -311,6 +317,7 @@ const {
   generationProgress,
   previewImage,
   currentStage,
+  modelMeta,
   executeWithStreaming,
   reset: resetGenerationStream
 } = useGenerationStream()

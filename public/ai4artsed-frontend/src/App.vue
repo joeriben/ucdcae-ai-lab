@@ -148,11 +148,14 @@ import ImpressumModal from './components/ImpressumModal.vue'
 import SettingsAuthModal from './components/SettingsAuthModal.vue'
 import { useUserPreferencesStore } from './stores/userPreferences'
 import { useSafetyLevelStore } from './stores/safetyLevel'
+import { useUiModeStore } from './stores/uiMode'
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './i18n'
 
 const { locale, t } = useI18n()
 const safetyStore = useSafetyLevelStore()
 if (!safetyStore.loaded) safetyStore.fetchLevel()
+const uiModeStore = useUiModeStore()
+if (!uiModeStore.loaded) uiModeStore.fetchMode()
 const route = useRoute()
 const router = useRouter()
 const userPreferences = useUserPreferencesStore()

@@ -2445,9 +2445,33 @@ def execute_generation_streaming(data: dict):
         # ====================================================================
         # STAGE 4: MEDIA GENERATION
         # ====================================================================
+
+        # Determine backend type + model meta BEFORE emitting stage4_start
+        import contextvars
+        import queue as queue_mod
+
+        config_obj = pipeline_executor.config_loader.get_config(output_config)
+        backend_type = (config_obj.meta.get('backend_type', 'comfyui')
+                        if config_obj and config_obj.meta else 'comfyui')
+
+        # Build model_meta for expert frontend (Steckbrief / denoising view)
+        config_meta = config_obj.meta if config_obj and config_obj.meta else {}
+        model_meta = {
+            'model': config_meta.get('model', ''),
+            'model_file': config_meta.get('model_file', ''),
+            'backend_type': backend_type,
+            'gpu_vram_mb': config_meta.get('gpu_vram_mb', 0),
+            'notes': config_meta.get('notes', ''),
+            'estimated_duration_seconds': config_meta.get('estimated_duration_seconds', ''),
+            'recommended_resolution': config_meta.get('recommended_resolution', ''),
+            'clip_models': config_meta.get('clip_models', []),
+            'vae_model': config_meta.get('vae_model', ''),
+        }
+
         yield generate_sse_event('stage4_start', {
             'name': 'Media Generation',
-            'output_config': output_config
+            'output_config': output_config,
+            'model_meta': model_meta
         })
         yield ''
 
@@ -2469,14 +2493,6 @@ def execute_generation_streaming(data: dict):
         # Save translation info
         if was_translated:
             recorder.save_entity('translation_en', translated_prompt)
-
-        # ── Determine backend type for progress strategy ──
-        import contextvars
-        import queue as queue_mod
-
-        config_obj = pipeline_executor.config_loader.get_config(output_config)
-        backend_type = (config_obj.meta.get('backend_type', 'comfyui')
-                        if config_obj and config_obj.meta else 'comfyui')
 
         # Queue used by ComfyUI callback and as sentinel for all backends
         progress_queue = queue_mod.Queue()

@@ -2,12 +2,23 @@
   <section class="pipeline-section" ref="sectionRef">
     <!-- Output Frame (Always visible) -->
     <div class="output-frame" :class="{ empty: !isExecuting && !outputImage, generating: isExecuting && !outputImage }">
-      <!-- Generation Progress Animation (random selection of 3 edutainment games) -->
+      <!-- Generation Progress Animation -->
       <div v-if="isExecuting && !outputImage" class="generation-animation-container">
-        <RandomEdutainmentAnimation :progress="progress" :estimated-seconds="estimatedSeconds" />
-        <Transition name="fade">
-          <img v-if="previewImage" :src="previewImage" alt="" class="denoising-preview" />
-        </Transition>
+        <!-- Expert mode: Full denoising view with model Steckbrief -->
+        <DenoisingProgressView
+          v-if="uiMode === 'expert'"
+          :progress="progress"
+          :preview-image="previewImage"
+          :model-meta="modelMeta"
+          :estimated-seconds="estimatedSeconds"
+        />
+        <!-- Kids/Youth mode: Edutainment games with small preview overlay -->
+        <template v-else>
+          <RandomEdutainmentAnimation :progress="progress" :estimated-seconds="estimatedSeconds" />
+          <Transition name="fade">
+            <img v-if="previewImage" :src="previewImage" alt="" class="denoising-preview" />
+          </Transition>
+        </template>
       </div>
 
       <!-- Empty State with inactive Actions -->
@@ -253,6 +264,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import RandomEdutainmentAnimation from '@/components/edutainment/RandomEdutainmentAnimation.vue'
+import DenoisingProgressView from '@/components/edutainment/DenoisingProgressView.vue'
 
 // Template ref for autoscroll functionality
 const sectionRef = ref<HTMLElement | null>(null)
@@ -278,6 +290,9 @@ interface Props {
   // Favorites support
   runId?: string | null
   isFavorited?: boolean
+  // Expert denoising view
+  modelMeta?: Record<string, any> | null
+  uiMode?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -290,7 +305,9 @@ const props = withDefaults(defineProps<Props>(), {
   analysisData: null,
   forwardButtonTitle: 'Weiterreichen',
   runId: null,
-  isFavorited: false
+  isFavorited: false,
+  modelMeta: null,
+  uiMode: 'youth'
 })
 
 defineEmits<{

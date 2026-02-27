@@ -155,6 +155,8 @@
         :analysis-data="imageAnalysis"
         :run-id="currentRunId"
         :is-favorited="isFavorited"
+        :model-meta="modelMeta"
+        :ui-mode="uiModeStore.mode"
         forward-button-title="Erneut Transformieren"
         @save="saveMedia"
         @print="printImage"
@@ -203,6 +205,7 @@ import { useAppClipboard } from '@/composables/useAppClipboard'
 import { useDeviceId } from '@/composables/useDeviceId'
 import { getModelAvailability, type ModelAvailability } from '@/services/api'
 import { usePageContextStore } from '@/stores/pageContext'
+import { useUiModeStore } from '@/stores/uiMode'
 import { useGenerationStream } from '@/composables/useGenerationStream'
 import { useI18n } from 'vue-i18n'
 import type { SupportedLanguage } from '@/i18n'
@@ -214,6 +217,9 @@ import type { PageContext, FocusHint } from '@/composables/usePageContext'
 
 // Global clipboard (shared across all views)
 const { copy: copyToClipboard, paste: pasteFromClipboard } = useAppClipboard()
+
+// UI mode for expert denoising view
+const uiModeStore = useUiModeStore()
 
 // Image upload
 const uploadedImage = ref<string | undefined>(undefined)  // Base64 preview URL or server URL
@@ -260,6 +266,7 @@ const {
   generationProgress,
   previewImage,
   currentStage,
+  modelMeta,
   executeWithStreaming,
   reset: resetGenerationStream
 } = useGenerationStream()

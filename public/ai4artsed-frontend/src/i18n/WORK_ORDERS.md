@@ -6,6 +6,25 @@ each processed work order to **Completed** with a date stamp.
 
 ## Pending
 
+### WO-2026-02-27-denoising-progress-view
+- **Session**: 220
+- **Scope**: en.ts
+- **Changed keys** (new or modified):
+  - `edutainment.denoising.modelLoading` (NEW)
+  - `edutainment.denoising.modelCard` (NEW)
+  - `edutainment.denoising.publisher` (NEW)
+  - `edutainment.denoising.architecture` (NEW)
+  - `edutainment.denoising.parameters` (NEW)
+  - `edutainment.denoising.textEncoders` (NEW)
+  - `edutainment.denoising.quantization` (NEW)
+  - `edutainment.denoising.vramRequired` (NEW)
+  - `edutainment.denoising.resolution` (NEW)
+  - `edutainment.denoising.license` (NEW)
+  - `edutainment.denoising.fairCulture` (NEW)
+  - `edutainment.denoising.safetyByDesign` (NEW)
+  - `edutainment.denoising.denoisingActive` (NEW)
+- **Context**: Labels for expert-mode denoising progress view. Shows model "Steckbrief" (identity card) during VRAM loading and live denoising stats during generation. Technical/educational terms, keep short.
+
 <!-- Add new work orders here. Format:
 
 ### WO-YYYY-MM-DD-short-description
