@@ -375,20 +375,20 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: clamp(1.5rem, 3vh, 2rem);
+  /* Stable height: image max-height (40vh) + 2×padding (6vh), clamped */
+  min-height: clamp(350px, 46vh, 570px);
   background: rgba(30, 30, 30, 0.9);
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: clamp(12px, 2vw, 20px);
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .output-frame.empty {
-  min-height: clamp(320px, 40vh, 450px);
   border: 2px dashed rgba(255, 255, 255, 0.2);
   background: rgba(20, 20, 20, 0.5);
 }
 
 .output-frame.generating {
-  min-height: clamp(320px, 40vh, 450px);
   border: 2px solid rgba(76, 175, 80, 0.6);
   background: rgba(30, 30, 30, 0.9);
   box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);

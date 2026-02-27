@@ -698,9 +698,6 @@ async function startGeneration() {
         outputMediaType.value = mediaType
         outputImage.value = `/api/media/${mediaType}/${runId}/${mediaIndex}`
         executionPhase.value = 'generation_done'
-
-        await nextTick()
-        setTimeout(() => scrollDownOnly(pipelineSectionRef.value?.sectionRef, 'start'), 150)
       }
     } else if (result.status === 'blocked') {
       // safetyStore.reportBlock now handled centrally in useGenerationStream

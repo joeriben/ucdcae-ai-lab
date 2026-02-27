@@ -1603,8 +1603,6 @@ async function executePipeline() {
           configName: selectedConfig.value || 'unknown'
         })
 
-        await nextTick()
-        setTimeout(() => scrollDownOnly(pipelineSectionRef.value?.sectionRef, 'start'), 150)
       }
     } else if (result.status === 'blocked') {
       // safetyStore.reportBlock now handled centrally in useGenerationStream

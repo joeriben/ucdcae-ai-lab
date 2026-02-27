@@ -1,92 +1,95 @@
 <template>
   <div dir="ltr" class="denoising-progress-view">
-    <!-- Phase A: Model Loading
-         Diffusers: progress stays 0 during loading (only reports during inference)
-         ComfyUI: sends progress during loading nodes, but no preview until denoising -->
-    <div v-if="isModelLoading" class="model-loading-phase">
-      <div class="model-card">
-        <div class="model-card-header">
-          <span class="model-icon">{{ profileIcon }}</span>
-          <span class="model-name">{{ profileName }}</span>
-          <span class="model-card-label">{{ t('edutainment.denoising.modelCard') }}</span>
+    <!-- Phase A/B crossfade transition -->
+    <Transition name="phase-switch" mode="out-in">
+      <!-- Phase A: Model Loading
+           Diffusers: progress stays 0 during loading (only reports during inference)
+           ComfyUI: sends progress during loading nodes, but no preview until denoising -->
+      <div v-if="isModelLoading" key="loading" class="model-loading-phase">
+        <div class="model-card">
+          <div class="model-card-header">
+            <span class="model-icon">{{ profileIcon }}</span>
+            <span class="model-name">{{ profileName }}</span>
+            <span class="model-card-label">{{ t('edutainment.denoising.modelCard') }}</span>
+          </div>
+
+          <div class="model-specs">
+            <div v-if="modelMeta?.publisher" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.publisher') }}</span>
+              <span class="spec-value">{{ modelMeta.publisher }}</span>
+            </div>
+            <div v-if="modelMeta?.architecture" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.architecture') }}</span>
+              <span class="spec-value">{{ modelMeta.architecture }}</span>
+            </div>
+            <div v-if="modelMeta?.params" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.parameters') }}</span>
+              <span class="spec-value">{{ modelMeta.params }}</span>
+            </div>
+            <div v-if="modelMeta?.text_encoders?.length" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.textEncoders') }}</span>
+              <span class="spec-value">{{ modelMeta.text_encoders.join(', ') }}</span>
+            </div>
+            <div v-if="modelMeta?.quantization" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.quantization') }}</span>
+              <span class="spec-value">{{ modelMeta.quantization }}</span>
+            </div>
+            <div v-if="vramDisplay" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.vramRequired') }}</span>
+              <span class="spec-value">{{ vramDisplay }}</span>
+            </div>
+            <div v-if="resolutionDisplay" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.resolution') }}</span>
+              <span class="spec-value">{{ resolutionDisplay }}</span>
+            </div>
+            <div v-if="modelMeta?.license" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.license') }}</span>
+              <span class="spec-value">{{ modelMeta.license }}</span>
+            </div>
+            <div v-if="modelMeta?.fair_culture" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.fairCulture') }}</span>
+              <span class="spec-value">{{ modelMeta.fair_culture }}</span>
+            </div>
+            <div v-if="modelMeta?.safety_by_design" class="spec-row">
+              <span class="spec-label">{{ t('edutainment.denoising.safetyByDesign') }}</span>
+              <span class="spec-value">{{ modelMeta.safety_by_design }}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="model-specs">
-          <div v-if="modelMeta?.publisher" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.publisher') }}</span>
-            <span class="spec-value">{{ modelMeta.publisher }}</span>
+        <div class="loading-bar-section">
+          <div class="loading-bar-track">
+            <div class="loading-bar-fill loading-bar-indeterminate"></div>
           </div>
-          <div v-if="modelMeta?.architecture" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.architecture') }}</span>
-            <span class="spec-value">{{ modelMeta.architecture }}</span>
+          <span class="loading-label">{{ t('edutainment.denoising.modelLoading') }}</span>
+        </div>
+
+        <!-- Rotating fact -->
+        <div v-if="currentFact" class="expert-fact">
+          {{ currentFact.text }}
+        </div>
+      </div>
+
+      <!-- Phase B: Denoising Active (progress > 0 = model loaded) -->
+      <div v-else key="denoising" class="denoising-active-phase">
+        <div v-if="previewImage" class="preview-container">
+          <img :src="previewImage" alt="" class="denoising-preview-large" />
+        </div>
+
+        <div class="denoising-compact">
+          <div class="step-bar-track">
+            <div class="step-bar-fill" :style="{ width: progress + '%' }"></div>
           </div>
-          <div v-if="modelMeta?.params" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.parameters') }}</span>
-            <span class="spec-value">{{ modelMeta.params }}</span>
-          </div>
-          <div v-if="modelMeta?.text_encoders?.length" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.textEncoders') }}</span>
-            <span class="spec-value">{{ modelMeta.text_encoders.join(', ') }}</span>
-          </div>
-          <div v-if="modelMeta?.quantization" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.quantization') }}</span>
-            <span class="spec-value">{{ modelMeta.quantization }}</span>
-          </div>
-          <div v-if="vramDisplay" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.vramRequired') }}</span>
-            <span class="spec-value">{{ vramDisplay }}</span>
-          </div>
-          <div v-if="resolutionDisplay" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.resolution') }}</span>
-            <span class="spec-value">{{ resolutionDisplay }}</span>
-          </div>
-          <div v-if="modelMeta?.license" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.license') }}</span>
-            <span class="spec-value">{{ modelMeta.license }}</span>
-          </div>
-          <div v-if="modelMeta?.fair_culture" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.fairCulture') }}</span>
-            <span class="spec-value">{{ modelMeta.fair_culture }}</span>
-          </div>
-          <div v-if="modelMeta?.safety_by_design" class="spec-row">
-            <span class="spec-label">{{ t('edutainment.denoising.safetyByDesign') }}</span>
-            <span class="spec-value">{{ modelMeta.safety_by_design }}</span>
+          <div class="stats-line-compact">
+            <span v-if="gpuStats.available && gpuStats.power_draw_watts" class="stat-seg">{{ Math.round(gpuStats.power_draw_watts) }}W · {{ totalKwh }} kWh</span>
+            <span class="stat-sep" v-if="gpuStats.available && gpuStats.power_draw_watts">|</span>
+            <span v-if="gpuStats.available" class="stat-seg">GPU {{ gpuStats.utilization_percent ?? 0 }}%<template v-if="gpuStats.memory_used_mb && gpuStats.memory_total_mb"> · {{ (gpuStats.memory_used_mb / 1024).toFixed(1) }}/{{ (gpuStats.memory_total_mb / 1024).toFixed(0) }}GB</template></span>
+            <span class="stat-sep" v-if="gpuStats.available">|</span>
+            <span class="stat-seg"><template v-if="modelMeta?.seed != null">seed:{{ modelMeta.seed }}</template><template v-if="modelMeta?.cfg != null"> · CFG:{{ modelMeta.cfg }}</template><template v-if="stepTotal"> · {{ stepCurrent }}/{{ stepTotal }}</template></span>
           </div>
         </div>
       </div>
-
-      <div class="loading-bar-section">
-        <div class="loading-bar-track">
-          <div class="loading-bar-fill loading-bar-indeterminate"></div>
-        </div>
-        <span class="loading-label">{{ t('edutainment.denoising.modelLoading') }}</span>
-      </div>
-
-      <!-- Rotating fact -->
-      <div v-if="currentFact" class="expert-fact">
-        {{ currentFact.text }}
-      </div>
-    </div>
-
-    <!-- Phase B: Denoising Active (progress > 0 = model loaded) -->
-    <div v-else class="denoising-active-phase">
-      <div v-if="previewImage" class="preview-container">
-        <img :src="previewImage" alt="" class="denoising-preview-large" />
-      </div>
-
-      <div class="denoising-compact">
-        <div class="step-bar-track">
-          <div class="step-bar-fill" :style="{ width: progress + '%' }"></div>
-        </div>
-        <div class="stats-line-compact">
-          <span v-if="gpuStats.available && gpuStats.power_draw_watts" class="stat-seg">{{ Math.round(gpuStats.power_draw_watts) }}W · {{ totalKwh }} kWh</span>
-          <span class="stat-sep" v-if="gpuStats.available && gpuStats.power_draw_watts">|</span>
-          <span v-if="gpuStats.available" class="stat-seg">GPU {{ gpuStats.utilization_percent ?? 0 }}%<template v-if="gpuStats.memory_used_mb && gpuStats.memory_total_mb"> · {{ (gpuStats.memory_used_mb / 1024).toFixed(1) }}/{{ (gpuStats.memory_total_mb / 1024).toFixed(0) }}GB</template></span>
-          <span class="stat-sep" v-if="gpuStats.available">|</span>
-          <span class="stat-seg"><template v-if="modelMeta?.seed != null">seed:{{ modelMeta.seed }}</template><template v-if="modelMeta?.cfg != null"> · CFG:{{ modelMeta.cfg }}</template><template v-if="stepTotal"> · {{ stepCurrent }}/{{ stepTotal }}</template></span>
-        </div>
-      </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -357,6 +360,17 @@ onUnmounted(() => stopRotation())
   line-height: 1.4;
   min-height: 2.5rem;
   transition: opacity 0.3s ease;
+}
+
+/* Phase A→B crossfade transition */
+.phase-switch-enter-active,
+.phase-switch-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.phase-switch-enter-from,
+.phase-switch-leave-to {
+  opacity: 0;
 }
 
 /* Responsive */
