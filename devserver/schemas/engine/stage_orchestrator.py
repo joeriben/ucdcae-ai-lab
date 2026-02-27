@@ -464,39 +464,73 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
 # ============================================================================
 
 # Cache for filter terms (loaded once at module level)
-_FILTER_TERMS_CACHE: Optional[Dict[str, List[str]]] = None
-_BILINGUAL_86A_CACHE: Optional[List[str]] = None
+# kids/youth: Dict[lang, List[term]], stage1: List[term] (EN-only, unchanged)
+_FILTER_TERMS_CACHE: Optional[Dict] = None
+_BILINGUAL_86A_CACHE: Optional[Dict[str, List[str]]] = None
 
-def load_filter_terms() -> Dict[str, List[str]]:
-    """Load all filter terms from JSON files (cached)"""
+
+def _detect_input_language(text: str, user_language: str = 'de') -> str:
+    """Detect input language. Unicode-script for non-Latin, frontend hint for Latin."""
+    for ch in text:
+        if '\uAC00' <= ch <= '\uD7AF' or '\u1100' <= ch <= '\u11FF':
+            return 'ko'
+        if '\u0400' <= ch <= '\u04FF':
+            return 'uk'
+        if '\u0590' <= ch <= '\u05FF':
+            return 'he'
+        if '\u0600' <= ch <= '\u06FF':
+            return 'ar'
+    return user_language  # Latin script → trust frontend
+
+
+def _get_active_terms(terms_by_lang: Dict[str, List[str]], language: str) -> Tuple[List[str], str]:
+    """Get terms for detected language + EN. Returns (terms, lang_key) for logging."""
+    active = list(terms_by_lang.get('en', []))
+    lang_key = 'en'
+    if language != 'en' and language in terms_by_lang:
+        active.extend(terms_by_lang[language])
+        lang_key = f'{language}+en'
+    return active, lang_key
+
+
+def load_filter_terms() -> Dict:
+    """Load all filter terms from JSON files (cached).
+    Returns: {'kids': {lang: [terms]}, 'youth': {lang: [terms]}, 'stage1': [terms]}
+    """
     global _FILTER_TERMS_CACHE
 
     if _FILTER_TERMS_CACHE is None:
         try:
-            # Load Stage 3 filters (Youth/Kids)
+            # Load Stage 3 filters (Youth/Kids) — structured by language
             stage3_path = Path(__file__).parent.parent / "youth_kids_safety_filters.json"
             with open(stage3_path, 'r', encoding='utf-8') as f:
                 stage3_data = json.load(f)
 
-            # Load Stage 1 filters (CSAM/Violence/Hate)
+            # Load Stage 1 filters (CSAM/Violence/Hate) — flat EN-only list
             stage1_path = Path(__file__).parent.parent / "stage1_safety_filters.json"
             with open(stage1_path, 'r', encoding='utf-8') as f:
                 stage1_data = json.load(f)
 
+            kids_by_lang = stage3_data['filters']['kids']['terms_by_language']
+            youth_by_lang = stage3_data['filters']['youth']['terms_by_language']
+            kids_total = sum(len(v) for v in kids_by_lang.values())
+            youth_total = sum(len(v) for v in youth_by_lang.values())
+
             _FILTER_TERMS_CACHE = {
-                'kids': stage3_data['filters']['kids']['terms'],
-                'youth': stage3_data['filters']['youth']['terms'],
+                'kids': kids_by_lang,
+                'youth': youth_by_lang,
                 'stage1': stage1_data['filters']['stage1']['terms']
             }
-            logger.info(f"Loaded filter terms: stage1={len(_FILTER_TERMS_CACHE['stage1'])}, kids={len(_FILTER_TERMS_CACHE['kids'])}, youth={len(_FILTER_TERMS_CACHE['youth'])}")
+            logger.info(f"Loaded filter terms: stage1={len(_FILTER_TERMS_CACHE['stage1'])}, kids={kids_total} ({len(kids_by_lang)} langs), youth={youth_total} ({len(youth_by_lang)} langs)")
         except Exception as e:
             logger.error(f"Failed to load filter terms: {e}")
-            _FILTER_TERMS_CACHE = {'kids': [], 'youth': [], 'stage1': []}
+            _FILTER_TERMS_CACHE = {'kids': {}, 'youth': {}, 'stage1': []}
 
     return _FILTER_TERMS_CACHE
 
-def load_bilingual_86a_terms() -> List[str]:
-    """Load bilingual §86a critical terms for pre/post safety filtering (cached)"""
+
+def load_bilingual_86a_terms() -> Dict[str, List[str]]:
+    """Load §86a critical terms structured by language (cached)."""
     global _BILINGUAL_86A_CACHE
 
     if _BILINGUAL_86A_CACHE is None:
@@ -505,24 +539,31 @@ def load_bilingual_86a_terms() -> List[str]:
             with open(bilingual_path, 'r', encoding='utf-8') as f:
                 bilingual_data = json.load(f)
 
-            _BILINGUAL_86A_CACHE = bilingual_data['filters']['stage1_critical_86a']['terms']
-            logger.info(f"Loaded bilingual §86a critical terms: {len(_BILINGUAL_86A_CACHE)} terms")
+            _BILINGUAL_86A_CACHE = bilingual_data['filters']['stage1_critical_86a']['terms_by_language']
+            total = sum(len(v) for v in _BILINGUAL_86A_CACHE.values())
+            logger.info(f"Loaded §86a critical terms: {total} terms ({len(_BILINGUAL_86A_CACHE)} langs)")
         except Exception as e:
             logger.error(f"Failed to load bilingual §86a terms: {e}")
-            _BILINGUAL_86A_CACHE = []
+            _BILINGUAL_86A_CACHE = {}
 
     return _BILINGUAL_86A_CACHE
 
-def fast_filter_bilingual_86a(text: str) -> Tuple[bool, List[str]]:
+def fast_filter_bilingual_86a(text: str, user_language: str = 'de') -> Tuple[bool, List[str]]:
     """
-    Fuzzy bilingual matching for critical §86a terms (~1-5ms)
+    Fuzzy language-aware matching for critical §86a terms (~1-5ms)
     Uses Levenshtein distance for terms >= 6 chars to catch misspellings.
-    Works on both German (pre-translation) and English (post-translation) text.
+    Only checks terms for detected input language + EN.
 
     Returns:
         (has_terms, found_terms) - True if §86a critical terms found
     """
-    terms_list = load_bilingual_86a_terms()
+    terms_by_lang = load_bilingual_86a_terms()
+
+    if not terms_by_lang:
+        return (False, [])
+
+    detected_lang = _detect_input_language(text, user_language)
+    terms_list, lang_key = _get_active_terms(terms_by_lang, detected_lang)
 
     if not terms_list:
         return (False, [])
@@ -546,21 +587,38 @@ def fast_filter_bilingual_86a(text: str) -> Tuple[bool, List[str]]:
                 if term_lower in text_lower:
                     found_terms.append(term)
 
+    if found_terms:
+        logger.info(f"[§86a] found {found_terms[:3]}... (lang={lang_key}, checked {len(terms_list)} of {sum(len(v) for v in terms_by_lang.values())})")
+    else:
+        logger.debug(f"[§86a] CLEAR (lang={lang_key}, checked {len(terms_list)})")
+
     return (len(found_terms) > 0, found_terms)
 
-def fast_filter_check(prompt: str, safety_level: str) -> Tuple[bool, List[str]]:
+def fast_filter_check(prompt: str, safety_level: str, user_language: str = 'de') -> Tuple[bool, List[str]]:
     """
-    Fuzzy matching against filter lists (~1-5ms)
+    Fuzzy language-aware matching against filter lists (~1-5ms)
     Uses Levenshtein distance for terms >= 6 chars to catch misspellings.
+    Only checks terms for detected input language + EN.
 
     Returns:
         (has_terms, found_terms) - True if problematic terms found
     """
     filter_terms = load_filter_terms()
-    terms_list = filter_terms.get(safety_level, [])
+    terms_by_lang = filter_terms.get(safety_level)
+
+    # stage1 is still a flat list (EN-only), not language-structured
+    if safety_level == 'stage1':
+        terms_list = terms_by_lang if isinstance(terms_by_lang, list) else []
+        lang_key = 'en'
+    elif isinstance(terms_by_lang, dict):
+        detected_lang = _detect_input_language(prompt, user_language)
+        terms_list, lang_key = _get_active_terms(terms_by_lang, detected_lang)
+    else:
+        logger.warning(f"No filter terms for safety_level '{safety_level}'")
+        return (False, [])
 
     if not terms_list:
-        logger.warning(f"No filter terms for safety_level '{safety_level}'")
+        logger.warning(f"No filter terms for safety_level '{safety_level}' (lang={lang_key})")
         return (False, [])
 
     prompt_lower = prompt.lower()
@@ -582,6 +640,10 @@ def fast_filter_check(prompt: str, safety_level: str) -> Tuple[bool, List[str]]:
             else:
                 if term_lower in prompt_lower:
                     found_terms.append(term)
+
+    if found_terms:
+        total = sum(len(v) for v in terms_by_lang.values()) if isinstance(terms_by_lang, dict) else len(terms_list)
+        logger.info(f"[FILTER-{safety_level.upper()}] found {found_terms[:3]}... (lang={lang_key}, checked {len(terms_list)} of {total})")
 
     return (len(found_terms) > 0, found_terms)
 
@@ -791,15 +853,16 @@ async def execute_stage1_safety(
 async def execute_stage1_safety_unified(
     text: str,
     safety_level: str,
-    pipeline_executor
+    pipeline_executor,
+    user_language: str = 'de'
 ) -> Tuple[bool, str, Optional[str], List[str]]:
     """
     Execute Stage 1: Fast-Filter-First Safety Check (NO Translation)
 
     New Flow (eliminates LLM call in 95%+ of cases):
-    1. §86a Fast-Filter bilingual (~0.001s)
+    1. §86a Fast-Filter (language-aware, ~0.001s)
        → Hit? → BLOCK immediately (§86a is unambiguous)
-    2. Age-appropriate Fast-Filter (~0.001s)
+    2. Age-appropriate Fast-Filter (language-aware, ~0.001s)
        → No hit? → continue to step 3
        → Hit? → LLM Context-Check (e.g. "cute vampire" vs "scary vampire")
     3. DSGVO SpaCy NER (~50-100ms)
@@ -811,6 +874,7 @@ async def execute_stage1_safety_unified(
         text: Input text to safety-check (in original language)
         safety_level: 'kids', 'youth', 'adult', or 'research'
         pipeline_executor: PipelineExecutor instance
+        user_language: Frontend interface language (fallback for Latin-script detection)
 
     Returns:
         (is_safe, original_text, error_message, checks_passed)
@@ -822,10 +886,10 @@ async def execute_stage1_safety_unified(
         logger.info(f"[STAGE1] SKIPPED (safety_level=research)")
         return (True, text, None, [])
 
-    # ── STEP 1: §86a Fast-Filter (bilingual, ~0.001s) ──────────────────
+    # ── STEP 1: §86a Fast-Filter (language-aware, ~0.001s) ─────────────
     # §86a violations are unambiguous — no LLM context check needed
     s86a_start = _time.time()
-    has_86a_terms, found_86a_terms = fast_filter_bilingual_86a(text)
+    has_86a_terms, found_86a_terms = fast_filter_bilingual_86a(text, user_language)
     s86a_time = _time.time() - s86a_start
 
     if has_86a_terms:
@@ -844,7 +908,7 @@ async def execute_stage1_safety_unified(
     # Skip for 'adult' and 'research' — only §86a and DSGVO apply
     if safety_level not in ('research', 'adult'):
         age_start = _time.time()
-        has_age_terms, found_age_terms = fast_filter_check(text, safety_level)
+        has_age_terms, found_age_terms = fast_filter_check(text, safety_level, user_language)
         age_time = _time.time() - age_start
 
         if has_age_terms:
@@ -991,7 +1055,8 @@ async def execute_stage3_safety(
     prompt: str,
     safety_level: str,
     media_type: str,
-    pipeline_executor
+    pipeline_executor,
+    user_language: str = 'de'
 ) -> Dict[str, Any]:
     """
     Execute Stage 3: Pre-Output Safety Check (Jugendschutz)
@@ -1017,6 +1082,7 @@ async def execute_stage3_safety(
         safety_level: 'kids', 'youth', 'adult', or 'research'
         media_type: Type of media being generated (for logging)
         pipeline_executor: PipelineExecutor instance
+        user_language: Frontend interface language (fallback for Latin-script detection)
 
     Returns:
         {
@@ -1064,8 +1130,8 @@ async def execute_stage3_safety(
             translated_prompt = prompt
             logger.warning(f"[STAGE3-TRANSLATION] Translation failed, using original prompt")
 
-    # STEP 3: §86a fast-filter — instant block (no LLM needed)
-    has_86a, found_86a = fast_filter_bilingual_86a(translated_prompt)
+    # STEP 3: §86a fast-filter on translated text — use 'en' (text is already English)
+    has_86a, found_86a = fast_filter_bilingual_86a(translated_prompt, 'en')
     if has_86a:
         logger.warning(f"[STAGE3-SAFETY] §86a BLOCKED: {found_86a[:3]}")
         return {
@@ -1079,8 +1145,8 @@ async def execute_stage3_safety(
 
     # STEP 3b: Age-appropriate fast-filter on ORIGINAL (pre-translation) text
     # Translation models sanitize violence ("erschlägt"→"strikes", "erschiessen"→"arrest"),
-    # so the fast-filter MUST run on the German input, not the translated output.
-    has_age_terms, found_age_terms = fast_filter_check(prompt, safety_level)
+    # so the fast-filter MUST run on the original input, not the translated output.
+    has_age_terms, found_age_terms = fast_filter_check(prompt, safety_level, user_language)
     if has_age_terms:
         filter_name = 'Kids-Filter' if safety_level == 'kids' else 'Youth-Filter'
         logger.info(f"[STAGE3-SAFETY] {filter_name} fast-filter hit on original text: {found_age_terms[:3]} → LLM context check")

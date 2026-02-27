@@ -153,7 +153,7 @@ import ImageUploadWidget from '@/components/ImageUploadWidget.vue'
 import SketchCanvas from '@/components/SketchCanvas.vue'
 import { useSafetyEventStore } from '@/stores/safetyEvent'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const safetyStore = useSafetyEventStore()
 
 // Template refs for parent access (like MediaOutputBox sectionRef)
@@ -325,7 +325,7 @@ async function checkSafety() {
     const res = await fetch(`${baseUrl}/api/schema/pipeline/safety/quick`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text, user_language: locale.value })
     })
     const data = await res.json()
     safetyResult.value = {

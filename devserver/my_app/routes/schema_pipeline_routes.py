@@ -896,7 +896,8 @@ def execute_stage2():
             is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
                 input_text,
                 safety_level,
-                pipeline_executor
+                pipeline_executor,
+                user_language=user_language
             ))
         logger.info(f"[OLLAMA-QUEUE] Stage 2 Endpoint: Released slot")
 
@@ -1270,7 +1271,8 @@ def execute_stage3_4():
             stage2_result,
             safety_level,
             media_type,
-            pipeline_executor
+            pipeline_executor,
+            user_language=user_language
         ))
 
         stage3_time = (time.time() - stage3_start) * 1000  # ms
@@ -1443,6 +1445,7 @@ def execute_pipeline_streaming(data: dict):
     input_text = data.get('input_text', '')
     context_prompt = data.get('context_prompt', '')
     safety_level = DEFAULT_SAFETY_LEVEL
+    user_language = data.get('user_language', 'de')
     device_id = data.get('device_id')  # Session 129: For folder structure
 
     # Session 130: Simplified - always use run_xxx from the start
@@ -1492,8 +1495,8 @@ def execute_pipeline_streaming(data: dict):
         # (e.g. page refresh, cached text, Enter without blur). This server-side
         # check is the authoritative safety gate — it MUST run before Stage 2.
         if safety_level != 'research':
-            # §86a fast-filter
-            has_86a, found_86a = fast_filter_bilingual_86a(input_text)
+            # §86a fast-filter (language-aware)
+            has_86a, found_86a = fast_filter_bilingual_86a(input_text, user_language)
             if has_86a:
                 logger.warning(f"[UNIFIED-STREAMING] §86a BLOCKED: {found_86a[:3]}")
                 yield generate_sse_event('blocked', {
@@ -1503,10 +1506,10 @@ def execute_pipeline_streaming(data: dict):
                 yield ''
                 return
 
-            # Age-appropriate fast-filter (kids/youth only)
+            # Age-appropriate fast-filter (kids/youth only, language-aware)
             # Fast filter triggers → LLM context check (prevents false positives)
             if safety_level in ('kids', 'youth'):
-                has_age, found_age = fast_filter_check(input_text, safety_level)
+                has_age, found_age = fast_filter_check(input_text, safety_level, user_language)
                 if has_age:
                     filter_name = 'Kids-Filter' if safety_level == 'kids' else 'Youth-Filter'
                     logger.info(f"[UNIFIED-STREAMING] {filter_name} hit: {found_age[:3]} → LLM context check")
@@ -1938,6 +1941,7 @@ def safety_check():
         text = data.get('text', '')
         safety_level = config.DEFAULT_SAFETY_LEVEL
         check_type = data.get('check_type', 'input')  # 'input' or 'output'
+        user_language = data.get('user_language', 'de')
 
         if not text:
             return jsonify({'status': 'error', 'error': 'text ist erforderlich'}), 400
@@ -1952,7 +1956,8 @@ def safety_check():
             is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
                 text,
                 safety_level,
-                pipeline_executor
+                pipeline_executor,
+                user_language=user_language
             ))
 
             return jsonify({
@@ -1967,7 +1972,7 @@ def safety_check():
             # Stage 3 style: Pre-output content safety (without translation)
             from schemas.engine.stage_orchestrator import fast_filter_check
 
-            has_terms, found_terms = fast_filter_check(text, safety_level)
+            has_terms, found_terms = fast_filter_check(text, safety_level, user_language)
 
             if not has_terms:
                 # Fast path: No problematic terms
@@ -2051,6 +2056,7 @@ def safety_check_quick():
 
         # TEXT MODE: §86a fast-filter + DSGVO NER
         text = data.get('text', '').strip()
+        user_language = data.get('user_language', 'de')
         if not text:
             return jsonify({'safe': True, 'checks_passed': [], 'error_message': None})
 
@@ -2061,8 +2067,8 @@ def safety_check_quick():
         checks_passed = []
         safety_level = config.DEFAULT_SAFETY_LEVEL
 
-        # STEP 1: §86a fast-filter — instant block
-        has_86a, found_86a = fast_filter_bilingual_86a(text)
+        # STEP 1: §86a fast-filter — instant block (language-aware)
+        has_86a, found_86a = fast_filter_bilingual_86a(text, user_language)
         if has_86a:
             logger.warning(f"[SAFETY-QUICK] §86a BLOCKED: {found_86a[:3]}")
             return jsonify({
@@ -2072,10 +2078,10 @@ def safety_check_quick():
             })
         checks_passed.append('§86a')
 
-        # STEP 2: Age-appropriate fast-filter (kids/youth only)
+        # STEP 2: Age-appropriate fast-filter (kids/youth only, language-aware)
         # Fast filter triggers → LLM context check (prevents false positives like "schlägt zum Ritter")
         if safety_level in ('kids', 'youth'):
-            has_age_terms, found_age_terms = fast_filter_check(text, safety_level)
+            has_age_terms, found_age_terms = fast_filter_check(text, safety_level, user_language)
             if has_age_terms:
                 filter_name = 'Kids-Filter' if safety_level == 'kids' else 'Youth-Filter'
                 logger.info(f"[SAFETY-QUICK] {filter_name} hit: {found_age_terms[:3]} → LLM context check")
@@ -2324,6 +2330,7 @@ def execute_generation_streaming(data: dict):
     output_config = data.get('output_config')
     seed = data.get('seed')
     safety_level = config.DEFAULT_SAFETY_LEVEL
+    user_language = data.get('user_language', 'de')
     alpha_factor = data.get('alpha_factor')
     input_image = data.get('input_image')
     input_image1 = data.get('input_image1')
@@ -2409,7 +2416,8 @@ def execute_generation_streaming(data: dict):
             prompt,
             safety_level,
             media_type,
-            pipeline_executor
+            pipeline_executor,
+            user_language=user_language
         ))
 
         # Check if translation occurred
@@ -2738,6 +2746,7 @@ def generation_endpoint():
         interception_config = data.get('interception_config', '')
         device_id = data.get('device_id') or f"api_{uuid.uuid4().hex[:12]}"
         provided_run_id = data.get('run_id')
+        user_language = data.get('user_language', 'de')
 
         if not prompt or not output_config:
             return jsonify({'status': 'error', 'error': 'prompt und output_config sind erforderlich'}), 400
@@ -2786,6 +2795,7 @@ def generation_endpoint():
             input_image2=input_image2,
             input_image3=input_image3,
             alpha_factor=alpha_factor,
+            user_language=user_language,
             # Session 155: Parameter Injection (replicate seed pattern)
             width=data.get('width'),
             height=data.get('height'),
@@ -3338,6 +3348,7 @@ async def execute_generation_stage4(
     input_image3: str = None,
     alpha_factor = None,
     skip_stage3: bool = False,
+    user_language: str = 'de',
     **kwargs
 ):
     """
@@ -3421,7 +3432,8 @@ async def execute_generation_stage4(
                 prompt,
                 safety_level,
                 media_type,
-                pipeline_executor
+                pipeline_executor,
+                user_language=user_language
             )
 
             if not safety_result['safe']:
@@ -3543,6 +3555,7 @@ def legacy_workflow():
         alpha_factor = data.get('alpha_factor')
         expand_prompt = data.get('expand_prompt', False)
         safety_level = config.DEFAULT_SAFETY_LEVEL
+        user_language = data.get('user_language', 'de')
 
         # Surrealizer-specific parameters
         negative_prompt = data.get('negative_prompt')
@@ -3590,7 +3603,8 @@ def legacy_workflow():
         is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
             prompt,
             safety_level,
-            pipeline_executor
+            pipeline_executor,
+            user_language=user_language
         ))
 
         if not is_safe:
@@ -4257,7 +4271,8 @@ def interception_pipeline():
                     is_safe, checked_text, error_message, checks_passed = asyncio.run(execute_stage1_safety_unified(
                         input_text,
                         safety_level,
-                        pipeline_executor
+                        pipeline_executor,
+                        user_language=user_language
                     ))
                 logger.info(f"[OLLAMA-QUEUE] Unified Pipeline: Released slot")
 
@@ -4603,7 +4618,8 @@ def interception_pipeline():
                             result.final_output,
                             safety_level,
                             media_type,
-                            pipeline_executor
+                            pipeline_executor,
+                            user_language=user_language
                         ))
 
                     # Log Stage 3 safety check
