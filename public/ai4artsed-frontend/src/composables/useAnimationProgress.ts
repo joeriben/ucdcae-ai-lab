@@ -111,6 +111,7 @@ export function useAnimationProgress(options: UseAnimationProgressOptions) {
   // ==================== Animation Loop State ====================
   let animationFrameId: number | null = null
   let animationStartTime: number = 0
+  let lastRefUpdateTime: number = 0
 
   // ==================== Consolidated Timer ====================
   let consolidatedInterval: number | null = null
@@ -184,10 +185,17 @@ export function useAnimationProgress(options: UseAnimationProgressOptions) {
   function animationLoop(currentTime: number): void {
     if (!isActive.value) return
 
+    // Throttle reactive ref updates to ~10fps (every 100ms) to avoid
+    // triggering Vue re-renders 60 times per second on weak GPUs
+    const shouldUpdateRef = currentTime - lastRefUpdateTime >= 100
+
     if (backendProgress.value.active && backendProgress.value.total_steps > 0) {
       // Real Diffusers progress — use step/total_steps directly
       hasSeenBackendProgress = true
-      internalProgress.value = (backendProgress.value.step / backendProgress.value.total_steps) * 100
+      if (shouldUpdateRef) {
+        internalProgress.value = (backendProgress.value.step / backendProgress.value.total_steps) * 100
+        lastRefUpdateTime = currentTime
+      }
     } else if (hasSeenBackendProgress) {
       // Inference finished (active→false) but generation SSE not yet complete
       // (safety check running). Hold at last value — don't reset or loop.
@@ -202,11 +210,15 @@ export function useAnimationProgress(options: UseAnimationProgressOptions) {
 
       if (progress >= 100) {
         // Loop: reset to 0 and continue
-        internalProgress.value = 0
         cycleCount.value++
         animationStartTime = currentTime
-      } else {
+        if (shouldUpdateRef) {
+          internalProgress.value = 0
+          lastRefUpdateTime = currentTime
+        }
+      } else if (shouldUpdateRef) {
         internalProgress.value = progress
+        lastRefUpdateTime = currentTime
       }
     }
 

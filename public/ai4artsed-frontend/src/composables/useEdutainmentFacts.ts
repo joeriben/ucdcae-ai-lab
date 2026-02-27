@@ -81,10 +81,9 @@ export function useEdutainmentFacts(uiMode: UiMode = 'youth') {
   const totalEnergyWh = ref(0)
   const totalCo2Grams = ref(0)
 
-  // Internal
-  let rotationInterval: number | null = null
-  let pollingInterval: number | null = null
-  let energyInterval: number | null = null
+  // Internal — single consolidated interval replaces 3 separate timers
+  let consolidatedInterval: number | null = null
+  let tickCount = 0
   let factIndex = 0
   let categoryIndex = 0
 
@@ -210,6 +209,7 @@ export function useEdutainmentFacts(uiMode: UiMode = 'youth') {
 
   /**
    * Start fact rotation and GPU polling
+   * Uses a single 1s interval instead of 3 separate timers
    */
   function startRotation(): void {
     if (isPolling.value) return
@@ -217,6 +217,7 @@ export function useEdutainmentFacts(uiMode: UiMode = 'youth') {
     isPolling.value = true
     factIndex = 0
     categoryIndex = 0
+    tickCount = 0
     elapsedSeconds.value = 0
     totalEnergyWh.value = 0
     totalCo2Grams.value = 0
@@ -226,39 +227,32 @@ export function useEdutainmentFacts(uiMode: UiMode = 'youth') {
       rotateFact()
     })
 
-    // Poll GPU stats every 2 seconds
-    pollingInterval = window.setInterval(() => {
-      fetchGpuStats()
-    }, 2000)
-
-    // Rotate facts based on UI mode
-    rotationInterval = window.setInterval(() => {
-      rotateFact()
-    }, rotationDelay.value)
-
-    // Update energy every second
-    energyInterval = window.setInterval(() => {
+    // Single consolidated 1s interval handles all concerns:
+    // - Energy update: every tick (1s)
+    // - GPU polling: every 2nd tick (2s)
+    // - Fact rotation: every Nth tick (based on rotationDelay)
+    const rotationTicks = Math.round(rotationDelay.value / 1000)
+    consolidatedInterval = window.setInterval(() => {
+      tickCount++
       updateEnergy()
+      if (tickCount % 2 === 0) {
+        fetchGpuStats()
+      }
+      if (tickCount % rotationTicks === 0) {
+        rotateFact()
+      }
     }, 1000)
   }
 
   /**
-   * Stop all intervals
+   * Stop consolidated interval
    */
   function stopRotation(): void {
     isPolling.value = false
 
-    if (pollingInterval !== null) {
-      clearInterval(pollingInterval)
-      pollingInterval = null
-    }
-    if (rotationInterval !== null) {
-      clearInterval(rotationInterval)
-      rotationInterval = null
-    }
-    if (energyInterval !== null) {
-      clearInterval(energyInterval)
-      energyInterval = null
+    if (consolidatedInterval !== null) {
+      clearInterval(consolidatedInterval)
+      consolidatedInterval = null
     }
   }
 
