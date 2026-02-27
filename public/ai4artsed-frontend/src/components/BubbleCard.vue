@@ -62,12 +62,8 @@ withDefaults(defineProps<Props>(), {
 }
 
 @keyframes pulse-required {
-  0%, 100% {
-    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
-  }
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 .bubble-header {

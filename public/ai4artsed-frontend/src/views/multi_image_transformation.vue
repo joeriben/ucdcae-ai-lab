@@ -1328,12 +1328,8 @@ watch(uploadedImagePath3, (newVal) => {
 }
 
 @keyframes pulse-required {
-  0%, 100% {
-    border-color: rgba(255, 193, 7, 0.6);
-  }
-  50% {
-    border-color: rgba(255, 193, 7, 0.9);
-  }
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 .bubble-header {

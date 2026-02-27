@@ -552,9 +552,9 @@ watch(() => props.progress, (newProgress, oldProgress) => {
 
 @keyframes pixel-dissolve {
   0% { transform: scale(1); opacity: 1; }
-  30% { transform: scale(1.3) rotate(90deg); filter: hue-rotate(120deg) brightness(1.5); }
-  60% { transform: scale(1.5) rotate(200deg); filter: hue-rotate(240deg) brightness(2); opacity: 0.8; }
-  100% { transform: scale(0) rotate(360deg); filter: hue-rotate(360deg); opacity: 0; }
+  30% { transform: scale(1.3) rotate(90deg); opacity: 0.9; }
+  60% { transform: scale(1.5) rotate(200deg); opacity: 0.5; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
 }
 
 @keyframes pixel-fly-from-left {
@@ -732,7 +732,7 @@ watch(() => props.progress, (newProgress, oldProgress) => {
 .progress-shine {
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
@@ -740,8 +740,8 @@ watch(() => props.progress, (newProgress, oldProgress) => {
 }
 
 @keyframes shine-move {
-  0% { left: -100%; }
-  100% { left: 200%; }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 
