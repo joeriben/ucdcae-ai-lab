@@ -50,7 +50,17 @@
     "recommended_frames": 121,
     "supported_fps": [24, 25, 30],
     "notes": "Wan 2.2 TI2V 5B model via ComfyUI. High-quality text-to-video generation at 720P. Uses uni_pc sampler with 20 steps. Generates ~5 second videos. Chinese negative prompt optimized for better quality. Requires ~20GB VRAM.",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "Wan 2.2 TI2V 5B",
+    "icon": "\uD83C\uDFAC",
+    "publisher": "Wan-AI (Alibaba)",
+    "architecture": "Diffusion Transformer (TI2V, dense)",
+    "params": "~5B",
+    "text_encoders": ["uMT5 (multilingual)"],
+    "quantization": "FP16",
+    "license": "Apache 2.0",
+    "fair_culture": "Trained on ~1.5B videos + 10B images (sources undisclosed)",
+    "safety_by_design": "Optional safety checker in pipeline"
   },
 
   "display": {

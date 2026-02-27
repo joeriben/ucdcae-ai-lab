@@ -48,7 +48,16 @@
     "recommended_frames": 121,
     "supported_fps": [24, 30],
     "notes": "LTX-Video via ComfyUI. Fast video generation optimized for speed. Generates 4-second 30fps videos in ~5-10 seconds on RTX 4090. Best quality at 1216x704 resolution.",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "LTX Video",
+    "icon": "\u26A1",
+    "publisher": "Lightricks",
+    "architecture": "Transformer-based Video Diffusion",
+    "params": "~2B",
+    "quantization": "FP16",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "Platform 4-stage safety pipeline"
   },
 
   "display": {

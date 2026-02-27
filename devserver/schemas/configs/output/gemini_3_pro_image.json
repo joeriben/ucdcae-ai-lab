@@ -39,7 +39,15 @@
     "modalities": ["image", "text"],
     "features": ["multimodal", "text_rendering", "long_context"],
     "notes": "Google Gemini 3 Pro Image via OpenRouter. Multimodal chat model with image generation. Requires OPENROUTER_API_KEY.",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "Gemini 3 Pro Image",
+    "icon": "\uD83D\uDD37",
+    "publisher": "Google DeepMind",
+    "architecture": "Multimodal Transformer (Gemini)",
+    "params": "Undisclosed",
+    "license": "Commercial API (usage-based via OpenRouter)",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "Google Safety Filters, OpenRouter content policy"
   },
 
   "display": {

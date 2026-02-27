@@ -50,6 +50,16 @@
       "768x1024"
     ],
     "notes": "Adversarial Diffusion Distillation from SD3.5 Large. 4 steps, CFG 0.0. Same MMDiT architecture and text encoders.",
+    "display_name": "SD 3.5 Large Turbo",
+    "icon": "\u26A1",
+    "publisher": "Stability AI",
+    "architecture": "Rectified Flow + MMDiT (Adversarial Distillation)",
+    "params": "~8.1B",
+    "text_encoders": ["CLIP-L", "OpenCLIP-G", "T5-XXL"],
+    "quantization": "FP16",
+    "license": "Stability Community License (<$1M)",
+    "fair_culture": "Training data undisclosed (\"synthetic + filtered public\")",
+    "safety_by_design": "Filtered training data, structured red-teaming",
     "optimization_instruction": "YOUR OUTPUT WILL BE IN THE LANGUAGE OF THE INPUT!\n\n=== CORE TRANSFORMATION: SCENE TO 2D IMAGE ===\nTransform scenic/narrative descriptions into a FLAT 2D IMAGE specification.\nKEY: A 2D image has no story, no before/after - only WHAT IS VISIBLE in ONE FROZEN FRAME.\n\nTRANSFORMATION RULES:\n1. Remove temporal language (before, after, then, suddenly, while)\n2. Remove causality (because, therefore, which causes)\n3. Convert actions to static poses (running → runner mid-stride)\n4. Convert atmosphere to visible elements (mysterious → fog, dim lighting, shadow patterns)\n\n=== TOKEN ARCHITECTURE (SD3.5 Triple CLIP) ===\nFirst 20-30 tokens = 70% of image determination. Order matters exponentially.\n- Tokens 1-10: SUBJECT (main focus)\n- Tokens 11-25: POSE/STATE + STYLE/MEDIUM\n- Tokens 26-50: CONTEXT/SETTING + KEY ATTRIBUTES\n- Tokens 51-75: TECHNICAL (lighting, camera) - CLIP hard cutoff\n- Tokens 76-512: T5 expansion (atmospheric depth)\n\n=== ADVANCED CLIP TECHNIQUES ===\n\nKEYWORD WEIGHTING:\n- (keyword:1.2) = 20% more emphasis\n- (keyword:0.8) = 20% less emphasis\n- ((keyword)) = ~1.21x emphasis (stacks)\n- Example: \"(dramatic side lighting:1.3), figure in doorway\"\n\nKEYWORD BLENDING:\n- [keyword1:keyword2:0.5] = blend at 50% of sampling\n- Example: \"[rough sketch:finished drawing:0.6]\" = loose to refined\n\nASSOCIATION EFFECTS (culturally neutral descriptors ONLY):\n- FORBIDDEN: \"style of [artist]\" or art-historical technique names from any tradition\n- Light: \"dramatic side lighting\", \"soft diffused light\", \"backlit silhouette\"\n- Texture: \"visible grain\", \"smooth gradation\", \"rough surface\", \"glossy finish\"\n- Space: \"shallow depth of field\", \"atmospheric perspective\", \"layered planes\"\n- Color: \"muted earth tones\", \"high contrast\", \"saturated primaries\"\n\nNEGATIVE PROMPTS: NEVER in main prompt (CLIP reads \"no dog\" as \"dog\"). Handle separately.\n\n=== FORMATTING ===\nDO: comma-separated tokens, concrete nouns, (keyword:1.2) emphasis, neutral visual descriptors\nDON'T: negative constructions, abstract adjectives (beautiful, epic), artist names, art-historical terms\n\n=== EXAMPLE ===\nINPUT: \"A mysterious forest where ancient trees whisper secrets to travelers at twilight\"\nOUTPUT: \"ancient forest, massive gnarled trees, twilight sky, orange-purple light through canopy, solitary figure on winding path, mist between trees, dramatic backlighting, deep shadows\"\n\nSingle paragraph output, no headers. First 75 tokens = all critical visual info.",
     "version": "1.0"
   },

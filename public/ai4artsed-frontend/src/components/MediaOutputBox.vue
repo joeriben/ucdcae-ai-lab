@@ -342,16 +342,11 @@ defineEmits<{
 }>()
 
 /**
- * Resolve a human-readable model name from meta
+ * Resolve a human-readable model name from meta (reads display_name from config)
  */
 function resolveModelName(meta: Record<string, any> | null): string {
   if (!meta) return 'Model'
-  const f = (meta.model_file || '') as string
-  if (f.includes('flux2')) return 'FLUX.2 [dev]'
-  if (f.includes('sd3.5') || f.includes('sd35')) return 'Stable Diffusion 3.5 Large'
-  if (meta.backend_type === 'heartmula') return 'HeartMuLa'
-  if (meta.backend_type === 'openai') return 'GPT-Image-1'
-  return f || meta.backend_type || 'Model'
+  return meta.display_name || meta.model_file || meta.backend_type || 'Model'
 }
 
 // Expose the section element for autoscroll functionality

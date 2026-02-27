@@ -49,7 +49,17 @@
       "1344x768"
     ],
     "notes": "Flux 2 Dev via ComfyUI (FP8, ~7GB VRAM). Dual CLIP encoding (Mistral 3 + CLIP-G).",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "FLUX.2 [dev]",
+    "icon": "\u26A1",
+    "publisher": "Black Forest Labs",
+    "architecture": "Rectified Flow + MMDiT (32B)",
+    "params": "~32B",
+    "text_encoders": ["Mistral-Small-3.2-24B"],
+    "quantization": "FP8 mixed precision",
+    "license": "Non-Commercial (BFL Dev License)",
+    "fair_culture": "Training data undisclosed, NSFW-filtered",
+    "safety_by_design": "NSFW filter + IWF CSAM filtering"
   },
 
   "display": {

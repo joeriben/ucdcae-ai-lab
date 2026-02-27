@@ -42,7 +42,15 @@
       "1536x1024"
     ],
     "notes": "GPT-Image-1 via Direct OpenAI API. API key in OPENAI_API_KEY environment variable. High quality image generation with advanced text rendering and instruction following.",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "GPT-Image-1",
+    "icon": "\uD83E\uDDE0",
+    "publisher": "OpenAI",
+    "architecture": "Autoregressive + Diffusion",
+    "params": "Undisclosed",
+    "license": "Commercial API (usage-based)",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "Integrated content moderation, C2PA metadata"
   },
 
   "display": {

@@ -12,25 +12,25 @@
         </div>
 
         <div class="model-specs">
-          <div v-if="profile.publisher" class="spec-row">
+          <div v-if="modelMeta?.publisher" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.publisher') }}</span>
-            <span class="spec-value">{{ profile.publisher }}</span>
+            <span class="spec-value">{{ modelMeta.publisher }}</span>
           </div>
-          <div v-if="profile.architecture" class="spec-row">
+          <div v-if="modelMeta?.architecture" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.architecture') }}</span>
-            <span class="spec-value">{{ profile.architecture }}</span>
+            <span class="spec-value">{{ modelMeta.architecture }}</span>
           </div>
-          <div v-if="profile.params" class="spec-row">
+          <div v-if="modelMeta?.params" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.parameters') }}</span>
-            <span class="spec-value">{{ profile.params }}</span>
+            <span class="spec-value">{{ modelMeta.params }}</span>
           </div>
-          <div v-if="profile.textEncoders && profile.textEncoders.length" class="spec-row">
+          <div v-if="modelMeta?.text_encoders?.length" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.textEncoders') }}</span>
-            <span class="spec-value">{{ profile.textEncoders.join(', ') }}</span>
+            <span class="spec-value">{{ modelMeta.text_encoders.join(', ') }}</span>
           </div>
-          <div v-if="profile.quantization" class="spec-row">
+          <div v-if="modelMeta?.quantization" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.quantization') }}</span>
-            <span class="spec-value">{{ profile.quantization }}</span>
+            <span class="spec-value">{{ modelMeta.quantization }}</span>
           </div>
           <div v-if="vramDisplay" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.vramRequired') }}</span>
@@ -40,17 +40,17 @@
             <span class="spec-label">{{ t('edutainment.denoising.resolution') }}</span>
             <span class="spec-value">{{ resolutionDisplay }}</span>
           </div>
-          <div v-if="profile.license" class="spec-row">
+          <div v-if="modelMeta?.license" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.license') }}</span>
-            <span class="spec-value">{{ profile.license }}</span>
+            <span class="spec-value">{{ modelMeta.license }}</span>
           </div>
-          <div v-if="profile.fairCulture" class="spec-row">
+          <div v-if="modelMeta?.fair_culture" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.fairCulture') }}</span>
-            <span class="spec-value">{{ profile.fairCulture }}</span>
+            <span class="spec-value">{{ modelMeta.fair_culture }}</span>
           </div>
-          <div v-if="profile.safetyByDesign" class="spec-row">
+          <div v-if="modelMeta?.safety_by_design" class="spec-row">
             <span class="spec-label">{{ t('edutainment.denoising.safetyByDesign') }}</span>
-            <span class="spec-value">{{ profile.safetyByDesign }}</span>
+            <span class="spec-value">{{ modelMeta.safety_by_design }}</span>
           </div>
         </div>
       </div>
@@ -115,156 +115,13 @@ const emit = defineEmits<{
   'stats-snapshot': [stats: { energyWh: number, co2Grams: number }]
 }>()
 
-// --- Model Profiles (static lookup) ---
-interface ModelProfile {
-  publisher: string
-  architecture: string
-  params: string
-  textEncoders?: string[]
-  quantization?: string
-  license?: string
-  fairCulture?: string
-  safetyByDesign?: string
-}
-
-// Sources for model profile data:
-// Flux 2 Dev:  https://huggingface.co/black-forest-labs/FLUX.2-dev
-//              https://github.com/black-forest-labs/flux2
-//              https://deepwiki.com/black-forest-labs/flux2/3.1-text-encoder-(mistral-small-3.2-24b)
-// SD 3.5:      https://huggingface.co/stabilityai/stable-diffusion-3.5-large
-//              https://stability.ai/news/introducing-stable-diffusion-3-5
-// Wan 2.2:     https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B
-//              https://github.com/Wan-Video/Wan2.2
-// GPT-Image-1: https://platform.openai.com/docs/guides/image-generation
-// HeartMuLa:   https://arxiv.org/abs/2601.10547
-//              https://huggingface.co/HeartMuLa/HeartMuLa-oss-3B
-// StableAudio:  https://huggingface.co/stabilityai/stable-audio-open-1.0
-//              https://arxiv.org/html/2407.14358v1
-//              Training data attribution: https://info.stability.ai/attributions
-const MODEL_PROFILES: Record<string, ModelProfile> = {
-  'flux2': {
-    // 32B total (24B Mistral encoder + 8B DiT). Released Nov 2025.
-    publisher: 'Black Forest Labs',
-    architecture: 'Rectified Flow + MMDiT (32B)',
-    params: '~32B',
-    textEncoders: ['Mistral-Small-3.2-24B'],
-    quantization: 'FP8 mixed precision',
-    license: 'Non-Commercial (BFL Dev License)',
-    fairCulture: 'Training data undisclosed, NSFW-filtered',
-    safetyByDesign: 'NSFW filter + IWF CSAM filtering',
-  },
-  'sd35_large': {
-    // 8.1B MMDiT, triple text encoder
-    publisher: 'Stability AI',
-    architecture: 'Rectified Flow + MMDiT',
-    params: '~8.1B',
-    textEncoders: ['CLIP-L', 'OpenCLIP-G', 'T5-XXL'],
-    quantization: 'FP16',
-    license: 'Stability Community License (<$1M)',
-    fairCulture: 'Training data undisclosed ("synthetic + filtered public")',
-    safetyByDesign: 'Filtered training data, structured red-teaming',
-  },
-  'wan22_t2v': {
-    // 5B dense TI2V transformer (Wan 2.2, not 2.1)
-    publisher: 'Wan-AI (Alibaba)',
-    architecture: 'Diffusion Transformer (TI2V, dense)',
-    params: '~5B',
-    textEncoders: ['uMT5 (multilingual)'],
-    quantization: 'BF16 (VAE: FP32)',
-    license: 'Apache 2.0',
-    fairCulture: 'Trained on ~1.5B videos + 10B images (sources undisclosed)',
-    safetyByDesign: 'Optional safety checker in pipeline',
-  },
-  'gpt_image_1': {
-    publisher: 'OpenAI',
-    architecture: 'Autoregressive + Diffusion',
-    params: 'Undisclosed',
-    license: 'Commercial API (usage-based)',
-    fairCulture: 'Training data undisclosed',
-    safetyByDesign: 'Integrated content moderation, C2PA metadata',
-  },
-  'heartmula': {
-    // arxiv 2601.10547, 3B released open-source
-    publisher: 'HeartMuLa Research',
-    architecture: 'Flow Matching + MuLa Codec (Global+Local Transformer)',
-    params: '~3B',
-    textEncoders: ['Internal tokenizer (lyrics + tags)'],
-    quantization: 'FP16 / FP32 codec',
-    license: 'Apache 2.0',
-    fairCulture: '~600K songs + TTS corpora (song sources undisclosed)',
-  },
-  'stableaudio': {
-    // Best provenance: 486K CC recordings, full attribution published
-    publisher: 'Stability AI',
-    architecture: 'Latent Diffusion + DiT (Audio)',
-    params: '~1.2B',
-    textEncoders: ['T5-Base (768d)'],
-    quantization: 'FP32',
-    license: 'Stability Community License (<$1M)',
-    fairCulture: '486K CC recordings (Freesound + FMA), full attribution',
-    safetyByDesign: 'PANNs + Audible Magic copyright filtering',
-  },
-  'surrealization': {
-    // Custom: CLIP-L extrapolation on top of SD3.5
-    publisher: 'AI4ArtsEd (Custom)',
-    architecture: 'CLIP-L/T5 Extrapolation + SD3.5 MMDiT',
-    params: '~8.1B (base) + extrapolation layer',
-    textEncoders: ['CLIP-L (768d)', 'T5-XXL'],
-    quantization: 'FP16',
-    license: 'Research (SD3.5 Community License)',
-    fairCulture: 'Based on SD3.5 training data (see above)',
-    safetyByDesign: 'Platform 4-stage safety pipeline',
-  },
-}
-
-/**
- * Match output_config name to a model profile key
- */
-function resolveProfileKey(meta: Record<string, any> | null): string {
-  if (!meta) return ''
-  const modelFile = (meta.model_file || '') as string
-  const backendType = (meta.backend_type || '') as string
-
-  // Match by model_file first (most specific)
-  if (modelFile.includes('flux2') || modelFile.includes('flux_dev')) return 'flux2'
-  if (modelFile.includes('sd3.5') || modelFile.includes('sd35')) return 'sd35_large'
-
-  // Match by backend_type
-  if (backendType === 'heartmula') return 'heartmula'
-  if (backendType === 'openai') return 'gpt_image_1'
-
-  return ''
-}
-
-const profileKey = computed(() => resolveProfileKey(props.modelMeta))
-const profile = computed<ModelProfile>(() => MODEL_PROFILES[profileKey.value] || {
-  publisher: 'Unknown',
-  architecture: props.modelMeta?.backend_type || 'Unknown',
-  params: '',
-})
-
-const profileName = computed(() => {
-  if (props.modelMeta?.model_file) {
-    const f = props.modelMeta.model_file as string
-    if (f.includes('flux2')) return 'FLUX.2 [dev]'
-    if (f.includes('sd3.5')) return 'Stable Diffusion 3.5 Large'
-  }
-  if (props.modelMeta?.backend_type === 'heartmula') return 'HeartMuLa'
-  if (props.modelMeta?.backend_type === 'openai') return 'GPT-Image-1'
-  return props.modelMeta?.model_file || 'Model'
-})
-
-const profileIcon = computed(() => {
-  const key = profileKey.value
-  if (key === 'flux2') return '\u26A1'
-  if (key === 'sd35_large') return '\uD83C\uDFA8'
-  if (key === 'wan22_t2v') return '\uD83C\uDFAC'
-  if (key === 'heartmula') return '\uD83C\uDFB5'
-  if (key === 'stableaudio') return '\uD83C\uDFB6'
-  if (key === 'gpt_image_1') return '\uD83E\uDDE0'
-  if (key === 'surrealization') return '\uD83C\uDF00'
-  return '\uD83E\uDD16'
-})
+// --- Model profile: read directly from config meta (single source of truth) ---
+const profileName = computed(() =>
+  props.modelMeta?.display_name || props.modelMeta?.model_file || 'Model'
+)
+const profileIcon = computed(() =>
+  props.modelMeta?.icon || '\uD83E\uDD16'
+)
 
 const vramDisplay = computed(() => {
   const vram = props.modelMeta?.gpu_vram_mb

@@ -42,7 +42,17 @@
     "max_duration": 47,
     "quality_note": "Experimental quality - lower than ACE Step. Good for short sound effects and ambient audio.",
     "notes": "Stable Audio Open 1.0 via ComfyUI. Text-to-audio generation for sound effects and ambient audio. Max 47 seconds output. Download model from Hugging Face: https://huggingface.co/stabilityai/stable-audio-open-1.0",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "Stable Audio Open",
+    "icon": "\uD83D\uDD0A",
+    "publisher": "Stability AI",
+    "architecture": "Latent Diffusion + DiT (Audio)",
+    "params": "~1.2B",
+    "text_encoders": ["T5-Base (768d)"],
+    "quantization": "FP32",
+    "license": "Stability Community License (<$1M)",
+    "fair_culture": "486K CC recordings (Freesound + FMA), full attribution",
+    "safety_by_design": "PANNs + Audible Magic copyright filtering"
   },
 
   "display": {

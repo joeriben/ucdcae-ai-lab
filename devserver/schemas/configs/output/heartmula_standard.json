@@ -29,7 +29,16 @@
     "backend": "heartmula",
     "backend_type": "heartmula",
     "requires_dual_input": true,
-    "supported_languages": ["en", "zh", "ja", "ko", "es"]
+    "supported_languages": ["en", "zh", "ja", "ko", "es"],
+    "display_name": "HeartMuLa",
+    "icon": "\uD83C\uDFB5",
+    "publisher": "HeartMuLa Research",
+    "architecture": "Flow Matching + MuLa Codec (Global+Local Transformer)",
+    "params": "~3B",
+    "text_encoders": ["Internal tokenizer (lyrics + tags)"],
+    "quantization": "FP16 / FP32 codec",
+    "license": "Apache 2.0",
+    "fair_culture": "~600K songs + TTS corpora (song sources undisclosed)"
   },
   "display": {
     "icon": "music_note",

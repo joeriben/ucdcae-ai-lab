@@ -2463,23 +2463,17 @@ def execute_generation_streaming(data: dict):
                         if config_obj and config_obj.meta else 'comfyui')
 
         # Build model_meta for expert frontend (Steckbrief / denoising view)
+        # Forward all meta fields except internal-only keys, add runtime overrides
         config_meta = config_obj.meta if config_obj and config_obj.meta else {}
         config_params = config_obj.parameters if config_obj and config_obj.parameters else {}
-        model_meta = {
-            'model': config_meta.get('model', ''),
-            'model_file': config_meta.get('model_file', ''),
+        INTERNAL_META_KEYS = {'optimization_instruction', 'stage'}
+        model_meta = {k: v for k, v in config_meta.items() if k not in INTERNAL_META_KEYS}
+        model_meta.update({
             'backend_type': backend_type,
-            'gpu_vram_mb': config_meta.get('gpu_vram_mb', 0),
-            'notes': config_meta.get('notes', ''),
-            'estimated_duration_seconds': config_meta.get('estimated_duration_seconds', ''),
-            'recommended_resolution': config_meta.get('recommended_resolution', ''),
-            'clip_models': config_meta.get('clip_models', []),
-            'vae_model': config_meta.get('vae_model', ''),
-            # Generation params for expert stats line
             'seed': seed,
             'cfg': cfg if cfg is not None else config_params.get('CFG', config_params.get('cfg', config_params.get('cfg_scale'))),
             'steps': steps if steps is not None else config_params.get('STEPS', config_params.get('steps')),
-        }
+        })
 
         yield generate_sse_event('stage4_start', {
             'name': 'Media Generation',

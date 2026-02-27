@@ -55,7 +55,17 @@
       "1328x1328"
     ],
     "notes": "Qwen Image uses Qwen 2.5 VL 7B multimodal model for text encoding with AuraFlow-based sampling. Optimized with FP8 precision for efficient generation.",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "Qwen Image",
+    "icon": "\uD83C\uDFAF",
+    "publisher": "Alibaba / Tongyi",
+    "architecture": "AuraFlow + Qwen 2.5 VL Encoder",
+    "params": "~7B (encoder) + AuraFlow",
+    "text_encoders": ["Qwen 2.5 VL 7B"],
+    "quantization": "FP8",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "Platform 4-stage safety pipeline"
   },
 
   "display": {
