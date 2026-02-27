@@ -335,7 +335,7 @@ defineEmits<{
 function resolveModelName(meta: Record<string, any> | null): string {
   if (!meta) return 'Model'
   const f = (meta.model_file || '') as string
-  if (f.includes('flux2')) return 'Flux 2 Dev'
+  if (f.includes('flux2')) return 'FLUX.2 [dev]'
   if (f.includes('sd3.5') || f.includes('sd35')) return 'Stable Diffusion 3.5 Large'
   if (meta.backend_type === 'heartmula') return 'HeartMuLa'
   if (meta.backend_type === 'openai') return 'GPT-Image-1'
@@ -364,6 +364,7 @@ defineExpose({
   max-width: 1000px;
   margin: clamp(1rem, 3vh, 2rem) auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: clamp(1.5rem, 3vh, 2rem);

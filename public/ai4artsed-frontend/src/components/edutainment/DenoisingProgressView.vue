@@ -135,71 +135,93 @@ interface ModelProfile {
   safetyByDesign?: string
 }
 
+// Sources for model profile data:
+// Flux 2 Dev:  https://huggingface.co/black-forest-labs/FLUX.2-dev
+//              https://github.com/black-forest-labs/flux2
+//              https://deepwiki.com/black-forest-labs/flux2/3.1-text-encoder-(mistral-small-3.2-24b)
+// SD 3.5:      https://huggingface.co/stabilityai/stable-diffusion-3.5-large
+//              https://stability.ai/news/introducing-stable-diffusion-3-5
+// Wan 2.2:     https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B
+//              https://github.com/Wan-Video/Wan2.2
+// GPT-Image-1: https://platform.openai.com/docs/guides/image-generation
+// HeartMuLa:   https://arxiv.org/abs/2601.10547
+//              https://huggingface.co/HeartMuLa/HeartMuLa-oss-3B
+// StableAudio:  https://huggingface.co/stabilityai/stable-audio-open-1.0
+//              https://arxiv.org/html/2407.14358v1
+//              Training data attribution: https://info.stability.ai/attributions
 const MODEL_PROFILES: Record<string, ModelProfile> = {
   'flux2': {
+    // 32B total (24B Mistral encoder + 8B DiT). Released Nov 2025.
     publisher: 'Black Forest Labs',
-    architecture: 'Rectified Flow + MMDiT',
-    params: '~12B',
-    textEncoders: ['Mistral 3 (NanoLM)', 'CLIP-G'],
+    architecture: 'Rectified Flow + MMDiT (32B)',
+    params: '~32B',
+    textEncoders: ['Mistral-Small-3.2-24B'],
     quantization: 'FP8 mixed precision',
-    license: 'Apache 2.0 (dev)',
-    fairCulture: 'Curated + licensed training data',
-    safetyByDesign: 'Built-in NSFW classifier',
+    license: 'Non-Commercial (BFL Dev License)',
+    fairCulture: 'Training data undisclosed, NSFW-filtered',
+    safetyByDesign: 'NSFW filter + IWF CSAM filtering',
   },
   'sd35_large': {
+    // 8.1B MMDiT, triple text encoder
     publisher: 'Stability AI',
     architecture: 'Rectified Flow + MMDiT',
-    params: '~8B',
-    textEncoders: ['CLIP-G', 'T5-XXL'],
+    params: '~8.1B',
+    textEncoders: ['CLIP-L', 'OpenCLIP-G', 'T5-XXL'],
     quantization: 'FP16',
-    license: 'Stability Community License',
-    fairCulture: 'LAION-filtered + Stability curated',
-    safetyByDesign: 'Safety filter in pipeline',
+    license: 'Stability Community License (<$1M)',
+    fairCulture: 'Training data undisclosed ("synthetic + filtered public")',
+    safetyByDesign: 'Filtered training data, structured red-teaming',
   },
   'wan22_t2v': {
+    // 5B dense TI2V transformer (Wan 2.2, not 2.1)
     publisher: 'Wan-AI (Alibaba)',
-    architecture: 'Diffusion Transformer (T2V)',
+    architecture: 'Diffusion Transformer (TI2V, dense)',
     params: '~5B',
-    textEncoders: ['T5-XXL'],
+    textEncoders: ['uMT5 (multilingual)'],
     quantization: 'BF16 (VAE: FP32)',
     license: 'Apache 2.0',
-    fairCulture: 'Research dataset',
-    safetyByDesign: 'Content moderation recommended',
+    fairCulture: 'Trained on ~1.5B videos + 10B images (sources undisclosed)',
+    safetyByDesign: 'Optional safety checker in pipeline',
   },
   'gpt_image_1': {
     publisher: 'OpenAI',
     architecture: 'Autoregressive + Diffusion',
     params: 'Undisclosed',
-    license: 'Commercial API',
-    fairCulture: 'Proprietary curated data',
-    safetyByDesign: 'Integrated safety system',
+    license: 'Commercial API (usage-based)',
+    fairCulture: 'Training data undisclosed',
+    safetyByDesign: 'Integrated content moderation, C2PA metadata',
   },
   'heartmula': {
+    // arxiv 2601.10547, 3B released open-source
     publisher: 'HeartMuLa Research',
-    architecture: 'Flow Matching + MuLa Codec',
+    architecture: 'Flow Matching + MuLa Codec (Global+Local Transformer)',
     params: '~3B',
-    textEncoders: ['Internal tokenizer'],
+    textEncoders: ['Internal tokenizer (lyrics + tags)'],
     quantization: 'FP16 / FP32 codec',
-    license: 'Research',
-    fairCulture: 'MusicCaps + research data',
+    license: 'Apache 2.0',
+    fairCulture: '~600K songs + TTS corpora (song sources undisclosed)',
   },
   'stableaudio': {
+    // Best provenance: 486K CC recordings, full attribution published
     publisher: 'Stability AI',
-    architecture: 'Latent Diffusion (Audio)',
-    params: '~1.1B',
-    textEncoders: ['T5-Base'],
+    architecture: 'Latent Diffusion + DiT (Audio)',
+    params: '~1.2B',
+    textEncoders: ['T5-Base (768d)'],
     quantization: 'FP32',
-    license: 'Stability Community License',
+    license: 'Stability Community License (<$1M)',
+    fairCulture: '486K CC recordings (Freesound + FMA), full attribution',
+    safetyByDesign: 'PANNs + Audible Magic copyright filtering',
   },
   'surrealization': {
+    // Custom: CLIP-L extrapolation on top of SD3.5
     publisher: 'AI4ArtsEd (Custom)',
-    architecture: 'CLIP-L/T5 Extrapolation + SD3.5',
-    params: '~8B (base) + extrapolation',
+    architecture: 'CLIP-L/T5 Extrapolation + SD3.5 MMDiT',
+    params: '~8.1B (base) + extrapolation layer',
     textEncoders: ['CLIP-L (768d)', 'T5-XXL'],
     quantization: 'FP16',
-    license: 'Research / Apache 2.0',
-    fairCulture: 'Based on SD3.5 training data',
-    safetyByDesign: 'Platform safety pipeline',
+    license: 'Research (SD3.5 Community License)',
+    fairCulture: 'Based on SD3.5 training data (see above)',
+    safetyByDesign: 'Platform 4-stage safety pipeline',
   },
 }
 
@@ -232,7 +254,7 @@ const profile = computed<ModelProfile>(() => MODEL_PROFILES[profileKey.value] ||
 const profileName = computed(() => {
   if (props.modelMeta?.model_file) {
     const f = props.modelMeta.model_file as string
-    if (f.includes('flux2')) return 'Flux 2 Dev'
+    if (f.includes('flux2')) return 'FLUX.2 [dev]'
     if (f.includes('sd3.5')) return 'Stable Diffusion 3.5 Large'
   }
   if (props.modelMeta?.backend_type === 'heartmula') return 'HeartMuLa'

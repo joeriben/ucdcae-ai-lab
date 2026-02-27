@@ -1346,7 +1346,7 @@ export const en = {
       youth_1: '⚡ A GPU uses {watts}W while generating – like a small space heater!',
       youth_2: '🔋 One image uses about 0.01-0.02 kWh – sounds little, but adds up!',
       youth_3: '🌡️ The GPU is getting {temp}°C hot right now – that\'s why it needs cooling!',
-      expert_1: '📊 Realtime: {watts}W at {util}% utilization = {kwh} kWh so far',
+      expert_1: '📊 Current draw: {watts} W | GPU load: {util}% | Accumulated: {kwh} kWh (integrated over time)',
       expert_2: '🔥 TDP limit: {tdp}W | Current: {watts}W ({percent}% of limit)',
       expert_3: '💾 VRAM: {used}/{total} GB ({percent}%) – model + activations'
     },
