@@ -44,7 +44,7 @@ CURATED_TOP_MODELS = [
     # Google
     {'id': 'google/gemini-3-pro', 'name': 'Gemini 3 Pro', 'provider': 'google', 'dsgvo': False},
     # Mistral (DSGVO-compliant - EU-based)
-    {'id': 'mistral/mistral-large-latest', 'name': 'Mistral Large', 'provider': 'mistral', 'dsgvo': True},
+    {'id': 'mistral/mistral-large-2411', 'name': 'Mistral Large', 'provider': 'mistral', 'dsgvo': True},
     # Meta
     {'id': 'meta/llama-4-maverick', 'name': 'Llama 4 Maverick', 'provider': 'meta', 'dsgvo': False},
 ]

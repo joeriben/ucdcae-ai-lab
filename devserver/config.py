@@ -132,7 +132,7 @@ STAGE2_OPTIMIZATION_MODEL = LOCAL_DEFAULT_MODEL           # Stage 2: Prompt opti
 STAGE3_MODEL = LOCAL_DEFAULT_MODEL                        # Stage 3: Translation and final safety check (simple task)
 STAGE4_LEGACY_MODEL = LOCAL_DEFAULT_MODEL                 # For legacy workflow execution
 CHAT_HELPER_MODEL = LOCAL_DEFAULT_MODEL                   # Chat overlay: Interactive help system
-CODING_MODEL = "mistral/codestral-latest"                 # Code generation (Tone.js, p5.js) - specialized for precise syntax
+CODING_MODEL = "mistral/codestral-2501"                    # Code generation (Tone.js, p5.js) - pinned, no floating aliases
 
 # Local Safety Model (Ollama only — DSGVO: personal data must never leave local system)
 # Available safety models: llama-guard3:1b, llama-guard3:latest, llama-guard3:8b

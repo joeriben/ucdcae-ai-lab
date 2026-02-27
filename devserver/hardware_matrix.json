@@ -31,13 +31,13 @@
       "EXTERNAL_LLM_PROVIDER": "mistral",
       "DSGVO_CONFORMITY": true,
       "models": {
-        "STAGE1_TEXT_MODEL": "mistral/mistral-large-latest",
-        "STAGE2_INTERCEPTION_MODEL": "mistral/mistral-large-latest",
-        "STAGE2_OPTIMIZATION_MODEL": "mistral/mistral-large-latest",
-        "STAGE3_MODEL": "mistral/mistral-large-latest",
-        "STAGE4_LEGACY_MODEL": "mistral/mistral-large-latest",
-        "CHAT_HELPER_MODEL": "mistral/mistral-large-latest",
-        "CODING_MODEL": "mistral/codestral-latest"
+        "STAGE1_TEXT_MODEL": "mistral/mistral-large-2411",
+        "STAGE2_INTERCEPTION_MODEL": "mistral/mistral-large-2411",
+        "STAGE2_OPTIMIZATION_MODEL": "mistral/mistral-large-2411",
+        "STAGE3_MODEL": "mistral/mistral-large-2411",
+        "STAGE4_LEGACY_MODEL": "mistral/mistral-large-2411",
+        "CHAT_HELPER_MODEL": "mistral/mistral-large-2411",
+        "CODING_MODEL": "mistral/codestral-2501"
       }
     },
     "anthropic": {
@@ -79,7 +79,7 @@
         "STAGE3_MODEL": "openrouter/anthropic/claude-haiku-4.5",
         "STAGE4_LEGACY_MODEL": "openrouter/anthropic/claude-haiku-4.5",
         "CHAT_HELPER_MODEL": "openrouter/anthropic/claude-haiku-4.5",
-        "CODING_MODEL": "openrouter/mistralai/codestral-latest"
+        "CODING_MODEL": "openrouter/mistralai/codestral-2501"
       }
     }
   },

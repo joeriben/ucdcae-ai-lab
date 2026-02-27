@@ -264,7 +264,7 @@ def _load_model_from_output_config(output_config_name: str) -> str | None:
     - meta.model: DEPRECATED for LLM override, kept for backward compatibility
 
     Returns:
-        Model string (e.g., "mistral/codestral-latest"), "DEFAULT", or None if not found
+        Model string (e.g., "mistral/codestral-2501"), "DEFAULT", or None if not found
     """
     try:
         if pipeline_executor is None:
