@@ -43,9 +43,6 @@ def create_app():
     from routes.stable_audio_routes import stable_audio_bp
     from routes.cross_aesthetic_routes import cross_aesthetic_bp
     from routes.mmaudio_routes import mmaudio_bp
-    # LLM inference routes DISABLED — Ollama-model names incompatible with
-    # HuggingFace AutoTokenizer. LLM calls go direct to Ollama via LLMClient.
-    # from routes.llm_inference_routes import llm_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(diffusers_bp)
@@ -54,7 +51,6 @@ def create_app():
     app.register_blueprint(stable_audio_bp)
     app.register_blueprint(cross_aesthetic_bp)
     app.register_blueprint(mmaudio_bp)
-    # app.register_blueprint(llm_bp)
 
     logger.info("[GPU-SERVICE] Flask app created with all route blueprints")
     return app

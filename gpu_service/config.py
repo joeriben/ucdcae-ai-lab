@@ -1,9 +1,10 @@
 """
 GPU Service Configuration
 
-Shared GPU inference service for Diffusers + HeartMuLa.
+Shared GPU inference service for media generation (Diffusers, HeartMuLa, StableAudio).
 Runs as a standalone Flask/Waitress process on port 17803.
 Both dev (17802) and prod (17801) backends call this via HTTP REST.
+LLM inference is handled directly by Ollama via LLMClient — NOT by GPU Service.
 """
 
 import os
@@ -105,26 +106,3 @@ TEXT_QUANT_MULTIPLIERS = {
     "nf4": 0.25,  # bitsandbytes NormalFloat4
 }
 
-# --- LLM Inference (Production inference for DevServer) ---
-LLM_INFERENCE_ENABLED = os.environ.get("LLM_INFERENCE_ENABLED", "true").lower() == "true"
-LLM_DEVICE = os.environ.get("LLM_DEVICE", "cuda")
-LLM_DEFAULT_QUANTIZATION = os.environ.get("LLM_DEFAULT_QUANTIZATION", "bf16")
-
-# Ollama model name → HuggingFace model ID mapping
-LLM_MODEL_MAP = {
-    # Safety
-    "llama-guard3:1b": "meta-llama/Llama-Guard-3-1B",
-    "llama-guard3:latest": "meta-llama/Llama-Guard-3-8B",
-    "llama-guard3:8b": "meta-llama/Llama-Guard-3-8B",
-    # General purpose
-    "qwen3:1.7b": "Qwen/Qwen3-1.7B",
-    "qwen3:4b": "Qwen/Qwen3-4B",
-    # Trans-Aktion: deliberately insufficient model for productive failure
-    "qwen2.5:0.5b": "Qwen/Qwen2.5-0.5B-Instruct",
-    # Vision
-    "qwen3-vl:2b": "Qwen/Qwen2.5-VL-3B-Instruct",
-    "llama3.2-vision:latest": "meta-llama/Llama-3.2-11B-Vision-Instruct",
-}
-
-# Reuse TEXT_QUANT_MULTIPLIERS for LLM inference quantization
-LLM_QUANT_MULTIPLIERS = TEXT_QUANT_MULTIPLIERS

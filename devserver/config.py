@@ -390,18 +390,13 @@ HEARTMULA_LAZY_LOAD = os.environ.get("HEARTMULA_LAZY_LOAD", "true").lower() == "
 HEARTMULA_DEVICE = os.environ.get("HEARTMULA_DEVICE", "cuda")  # cuda, cpu
 
 # ============================================================================
-# GPU SERVICE (Shared Diffusers + HeartMuLa inference)
+# GPU SERVICE (Media inference only: Diffusers, HeartMuLa, StableAudio)
 # ============================================================================
-# When GPU_SERVICE_URL is set, Flask backends use the shared GPU service
-# instead of loading models in-process. This avoids double VRAM usage
-# when both dev (17802) and prod (17801) backends run simultaneously.
+# GPU Service handles media generation only. LLM inference goes directly
+# to Ollama via LLMClient — NOT through GPU Service.
 #
 GPU_SERVICE_URL = os.environ.get("GPU_SERVICE_URL", "http://localhost:17803")
 GPU_SERVICE_TIMEOUT = int(os.environ.get("GPU_SERVICE_TIMEOUT", "1500"))  # 25 min for video generation (14B ~20 min)
-
-# LLM inference routing: "gpu_service" (primary) with Ollama fallback
-# The LLMClient always tries GPU Service first and falls back to Ollama on ConnectionError
-LLM_SERVICE_PROVIDER = os.environ.get("LLM_SERVICE_PROVIDER", "gpu_service")
 
 # Feature Flags
 ENABLE_VALIDATION_PIPELINE = True
