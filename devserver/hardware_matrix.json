@@ -31,12 +31,12 @@
       "EXTERNAL_LLM_PROVIDER": "mistral",
       "DSGVO_CONFORMITY": true,
       "models": {
-        "STAGE1_TEXT_MODEL": "mistral/mistral-large-2411",
-        "STAGE2_INTERCEPTION_MODEL": "mistral/mistral-large-2411",
-        "STAGE2_OPTIMIZATION_MODEL": "mistral/mistral-large-2411",
-        "STAGE3_MODEL": "mistral/mistral-large-2411",
-        "STAGE4_LEGACY_MODEL": "mistral/mistral-large-2411",
-        "CHAT_HELPER_MODEL": "mistral/mistral-large-2411",
+        "STAGE1_TEXT_MODEL": "mistral/mistral-large-2512",
+        "STAGE2_INTERCEPTION_MODEL": "mistral/mistral-large-2512",
+        "STAGE2_OPTIMIZATION_MODEL": "mistral/mistral-large-2512",
+        "STAGE3_MODEL": "mistral/mistral-large-2512",
+        "STAGE4_LEGACY_MODEL": "mistral/mistral-large-2512",
+        "CHAT_HELPER_MODEL": "mistral/mistral-large-2512",
         "CODING_MODEL": "mistral/codestral-2501"
       }
     },

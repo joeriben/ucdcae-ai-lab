@@ -126,6 +126,15 @@ Stage 3 generiert Negative Prompts basierend auf Safety Level (kids/youth), aber
 
 ## 🟡 MEDIUM Priority
 
+### ✅ Mistral Large 2411 → 2512 Upgrade
+
+**Datum:** 2026-02-27 — **Erledigt**
+
+Live-Benchmark: 2411 vs 2512 bei Interception-Prompts → gleiche Latenz (~6s), bessere Output-Qualität (kompakter, englisch, stop statt length-cutoff). Upgrade durchgeführt:
+- `devserver/hardware_matrix.json` (6 Einträge)
+- `devserver/schemas/configs/interception/*.json` (4 Configs: lyrics_from_theme, lyrics_refinement, tag_suggestion_from_lyrics, tags_generation)
+- `devserver/my_app/routes/canvas_routes.py` (Canvas Model-Liste)
+
 ### source_view in Favorites für korrektes Restore-Routing
 
 **Status:** Implementiert, funktioniert noch nicht — Debugging nötig
