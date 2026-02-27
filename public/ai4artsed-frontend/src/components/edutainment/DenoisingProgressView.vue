@@ -286,6 +286,7 @@ const {
   gpuStats,
   currentFact,
   totalEnergyWh,
+  totalCo2Grams,
   startRotation,
   stopRotation,
 } = useEdutainmentFacts('expert')
