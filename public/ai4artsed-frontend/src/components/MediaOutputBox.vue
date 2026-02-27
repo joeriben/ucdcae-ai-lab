@@ -6,7 +6,7 @@
       <div v-if="isExecuting && !outputImage" class="generation-animation-container">
         <!-- Expert mode: Full denoising view with model Steckbrief -->
         <DenoisingProgressView
-          v-if="uiMode === 'expert'"
+          v-if="uiMode === 'expert' && modelMeta"
           :progress="progress"
           :preview-image="previewImage"
           :model-meta="modelMeta"

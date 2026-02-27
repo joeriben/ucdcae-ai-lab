@@ -1,7 +1,9 @@
 <template>
   <div dir="ltr" class="denoising-progress-view">
-    <!-- Phase A: Model Loading (no denoising progress yet) -->
-    <div v-if="progress === 0" class="model-loading-phase">
+    <!-- Phase A: Model Loading
+         Diffusers: progress stays 0 during loading (only reports during inference)
+         ComfyUI: sends progress during loading nodes, but no preview until denoising -->
+    <div v-if="isModelLoading" class="model-loading-phase">
       <div class="model-card">
         <div class="model-card-header">
           <span class="model-icon">{{ profileIcon }}</span>
@@ -272,6 +274,19 @@ const vramDisplay = computed(() => {
 
 const resolutionDisplay = computed(() => {
   return props.modelMeta?.recommended_resolution || ''
+})
+
+/**
+ * Detect model loading phase based on backend type:
+ * - Diffusers: only reports progress during actual inference → progress === 0 means loading
+ * - ComfyUI: reports progress across ALL nodes (including loading) → no preview means loading
+ */
+const isModelLoading = computed(() => {
+  if (props.modelMeta?.backend_type === 'diffusers') {
+    return props.progress === 0
+  }
+  // ComfyUI and other backends: preview image is the definitive denoising signal
+  return !props.previewImage
 })
 
 // Derive step info from progress + meta.steps

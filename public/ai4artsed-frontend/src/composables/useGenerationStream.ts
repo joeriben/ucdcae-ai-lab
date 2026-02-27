@@ -173,6 +173,9 @@ export function useGenerationStream() {
 
     isExecuting.value = true
     currentStage.value = 'stage3'
+    generationProgress.value = 0
+    previewImage.value = null
+    modelMeta.value = null
 
     return new Promise((resolve, reject) => {
       const eventSource = new EventSource(url)
