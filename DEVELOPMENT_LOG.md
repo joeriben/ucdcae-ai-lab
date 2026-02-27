@@ -1,5 +1,48 @@
 # Development Log
 
+## Session 219 - Real-Time Generation Progress via SSE (ComfyUI + Diffusers)
+**Date:** 2026-02-27
+**Focus:** Replace fake progress simulation with real backend-driven SSE progress events
+**Commit:** `ad0d4d0` - feat(streaming): real-time generation progress via SSE (ComfyUI + Diffusers)
+
+### Problem
+Frontend faked generation progress with `setInterval` (100ms, linear to 90%). Users saw a smooth but meaningless animation that had no connection to actual backend state. During Stage 4, the SSE generator was blocked by `asyncio.run()` — no events could be emitted until generation completed.
+
+### Solution: Thread + Dual-Source Polling
+Generation now runs in a background thread. The main SSE generator thread emits real progress events based on the backend type:
+
+| Backend | Mechanism | Preview | Data Source |
+|---------|-----------|---------|-------------|
+| ComfyUI | Push (WS callback → Queue) | Denoising JPEG | `on_progress` callback via ContextVar |
+| Diffusers | Poll (HTTP, 1s interval) | None | `GET /api/diffusers/progress` |
+| Others (HeartMuLa, StableAudio, OpenAI) | Heartbeat only | None | — |
+
+### Changes
+
+**Backend (Python):**
+- **NEW** `devserver/schemas/engine/progress_callback.py` — ContextVar module for injecting ComfyUI's `on_progress` callback through the async call chain
+- `backend_router.py` — All 3 `submit_and_track()` calls now pass `on_progress=get_progress_callback()`
+- `schema_pipeline_routes.py` — Replaced blocking `asyncio.run()` with background thread + dual-source SSE event loop. Uses `contextvars.copy_context()` to propagate the callback into the thread.
+
+**Frontend (TypeScript/Vue):**
+- `useGenerationStream.ts` — Added `previewImage` ref + `generation_progress` event listener
+- `MediaOutputBox.vue` — Added `previewImage` prop + 120x120 denoising preview thumbnail (bottom-right, fade transition, ComfyUI only)
+- `text_transformation.vue`, `image_transformation.vue`, `multi_image_transformation.vue` — Removed ~40 lines of fake `setInterval` progress simulation each
+
+### SSE Event Format
+```
+event: generation_progress
+data: {"percent": 45, "preview": "data:image/jpeg;base64,/9j/...", "node": "KSampler"}
+```
+
+### Architecture Notes
+- ContextVar propagation: `set_progress_callback()` in SSE generator → `contextvars.copy_context()` → thread → `get_progress_callback()` in backend_router → `submit_and_track(on_progress=...)`
+- ComfyUI WS client already had `on_progress` parameter on `submit_and_track()` but it was never wired up
+- Diffusers GPU service already had `/api/diffusers/progress` endpoint with step-level tracking
+- Non-streaming code paths unaffected (ContextVar defaults to None, `on_progress=None` is safely ignored)
+
+---
+
 ## Session 216 - Standalone ComfyUI Installation (SwarmUI-Abloesung)
 **Date:** 2026-02-26
 **Focus:** Replace SwarmUI's embedded ComfyUI with a standalone installation; fix WebSocket race condition and model availability fallback

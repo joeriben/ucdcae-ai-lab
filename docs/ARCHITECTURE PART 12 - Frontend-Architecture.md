@@ -10,7 +10,7 @@
 **Status:** ✅ Complete migration (2025-10-28), v2.0.0-alpha.1 (2025-11-09)
 **Architecture:** 100% Backend-abstracted - Frontend NEVER accesses ComfyUI directly
 
-**SSE Streaming Status:** ⏸ POSTPONED (Session 39) - SpriteProgressAnimation used instead
+**SSE Streaming Status:** ✅ ACTIVE (Session 148: badges, Session 219: real-time generation progress)
 
 The Frontend implements a clean separation between UI and Backend services, using Backend API exclusively for all operations.
 
@@ -96,7 +96,7 @@ initializeApp()
   → initSSEConnection()  // DEPRECATED: SSE streaming postponed (Session 39)
 ```
 
-**Note:** SSE (Server-Sent Events) streaming was attempted in Session 37 but postponed in Session 39. v2.0.0-alpha.1 uses SpriteProgressAnimation for progress indication instead.
+**Note:** SSE streaming was reactivated in Session 148 (real-time safety badges) and enhanced in Session 219 (real-time generation progress from ComfyUI/Diffusers backends). The `useGenerationStream` composable handles all SSE events: `connected`, `stage3_start`, `stage3_complete`, `blocked`, `stage4_start`, `generation_progress`, `complete`, `error`. Progress is now backend-driven (not simulated). ComfyUI sends denoising preview thumbnails via `generation_progress` events.
 
 #### 4. SpriteProgressAnimation Component (`SpriteProgressAnimation.vue`)
 
@@ -1159,7 +1159,7 @@ schema: pipelineStore.selectedConfig?.pipeline  // Causes 404 error!
 
 2. **3 States**
    - **Empty:** Inactive toolbar visible, no media
-   - **Generating:** Progress animation (SpriteProgressAnimation)
+   - **Generating:** Edutainment animation + real-time progress (+ denoising preview for ComfyUI)
    - **Final:** Active toolbar + media display
 
 3. **All Media Types**
@@ -1185,11 +1185,15 @@ interface Props {
   outputImage: string | null       // Media URL
   mediaType: string                // 'image', 'video', 'audio', 'music', '3d'
   isExecuting: boolean             // Generating state
-  progress: number                 // 0-100 for progress bar
+  progress: number                 // 0-100 for progress bar (real backend data since Session 219)
+  estimatedSeconds?: number        // Estimated duration (for edutainment animation pacing)
+  previewImage?: string | null     // Denoising preview (base64 data URI, ComfyUI only, Session 219)
   isAnalyzing?: boolean            // Analyzing state (button shows ⏳)
   showAnalysis?: boolean           // Show/hide analysis section
   analysisData?: AnalysisData | null  // Analysis results
   forwardButtonTitle?: string      // Custom tooltip for ➡️ button
+  runId?: string | null            // For favorites support
+  isFavorited?: boolean            // Favorite state
 }
 
 interface AnalysisData {
