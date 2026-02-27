@@ -1555,7 +1555,6 @@ def get_backend_status():
         ("stable_audio", "/api/stable_audio/available"),
         ("cross_aesthetic", "/api/cross_aesthetic/available"),
         ("mmaudio", "/api/cross_aesthetic/mmaudio/available"),
-        ("llm_inference", "/api/llm/available"),
     ]
 
     with ThreadPoolExecutor(max_workers=10) as executor:
