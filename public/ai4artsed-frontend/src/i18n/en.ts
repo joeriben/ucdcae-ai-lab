@@ -537,7 +537,47 @@ export const en = {
     privacy: {
       title: 'Privacy Policy',
       notice: 'Notice: Generated content is stored on the server for research purposes. No user or IP data is collected. Uploaded images are not stored.',
-      usage: 'Use of this platform is exclusively permitted for registered cooperation partners of the UCDCAE AI LAB. The data protection agreements made in this context apply. If you have any questions, please contact vanessa.baumann@fau.de.'
+      usage: 'Use of this platform is exclusively permitted for registered cooperation partners of the UCDCAE AI LAB. The data protection agreements made in this context apply. If you have any questions, please contact:',
+      controller: {
+        title: 'Controller',
+        content: 'Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg (FAU), represented by the President. Responsible for content: Prof. Dr. Benjamin J\u00f6rissen, Bismarckstra\u00dfe 1a, 91054 Erlangen.'
+      },
+      dataProcessing: {
+        title: 'Data Processing',
+        content: 'This platform processes the following data for educational research purposes: your text inputs (prompts), all intermediate transformation steps (translations, pedagogical transformations, safety checks), and the generated media outputs (images, audio, video, code). This data is stored on the server in pseudonymized form and used exclusively for research in the field of digital cultural arts education.'
+      },
+      deviceId: {
+        title: 'Device Identification',
+        content: 'A random device identifier is generated and stored locally in your browser (localStorage). This identifier is combined with the current date to organize workshop sessions by day. It identifies the device only \u2014 not the person using it. Multiple and changing users may use the same device. The daily rotation ensures that generated content is correctly grouped per workshop session. No personal data is associated with this identifier.'
+      },
+      uploads: {
+        title: 'Uploaded Images',
+        content: 'Images uploaded for image-to-image transformations are temporarily stored on the server for processing. They are not included in the permanent research dataset and are periodically cleared.'
+      },
+      cookies: {
+        title: 'Cookies',
+        content: 'This platform uses a single technically necessary session cookie (valid for 24 hours) to maintain the session initiated by a device. No tracking cookies, analytics cookies, or third-party cookies are used.'
+      },
+      externalServices: {
+        title: 'External Services',
+        content: 'Image generation, safety checks (image safety, GDPR/DSGVO checks), and most AI processing run locally on the server \u2014 no data leaves the institution for these tasks. For text-based AI processing (prompt transformation, pedagogical interception), the platform uses Mistral AI (EU-based). Mistral is contractually configured so that inputs are not used for model training. Additionally, read-only lookups to Wikipedia may occur during prompt transformation. No personal data or device identifiers are included in external API requests. GDPR name protection: At all standard safety levels (kids, youth, adult), a multi-stage GDPR filter runs on every input field and at defined points in the processing pipeline. Stage 1 uses local NER (Named Entity Recognition) models to detect potential personal names. Stage 2 applies POS-tag pre-filtering to discard false positives (e.g. common nouns misidentified as names). Stage 3 verifies remaining candidates via a local LLM that assesses whether a detected entity is actually a personal name. The system operates fail-closed: if any stage is uncertain, the input is blocked rather than passed through. This represents a maximum-effort multi-stage approach to GDPR compliance. However, as with any technical system, errors in individual cases cannot be entirely excluded. Note: The Canvas workflow is a research-oriented feature (locked for children and youth). Canvas workflows may use external LLM APIs; GDPR compliance when using Canvas is the responsibility of the user.'
+      },
+      legalBasis: {
+        title: 'Legal Basis',
+        content: 'Data processing is based on Art. 6(1)(f) GDPR (legitimate interest in educational research). Access to this platform is restricted to registered cooperation partners of the UCDCAE AI LAB, governed by separate data protection agreements.'
+      },
+      retention: {
+        title: 'Data Retention',
+        content: 'Generated content and associated metadata are retained for the duration of the research project. There is no automatic deletion. You may request deletion of your data at any time.'
+      },
+      rights: {
+        title: 'Your Rights',
+        content: 'Under the GDPR, you have the right to access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20), and objection (Art. 21). You also have the right to lodge a complaint with a supervisory authority.'
+      },
+      fauReference: {
+        title: 'FAU Privacy Policy',
+        content: 'The general privacy policy of Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg applies in addition to this platform-specific notice. You can find it at:'
+      }
     }
   },
   docs: {

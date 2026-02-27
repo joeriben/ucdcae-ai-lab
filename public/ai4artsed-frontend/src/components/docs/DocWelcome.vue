@@ -31,7 +31,7 @@
     <h3>{{ currentLanguage === 'de' ? 'Kontakt' : 'Contact' }}</h3>
     <p>{{ currentLanguage === 'de'
       ? 'Frag Träshy direkt in der Anwendung, oder schreibe an: '
-      : 'Ask Träshy directly in the application, or write to: ' }}<a href="mailto:vanessa.baumann@fau.de">vanessa.baumann@fau.de</a></p>
+      : 'Ask Träshy directly in the application, or write to: ' }}<a href="mailto:ucdcae@fau.de">ucdcae@fau.de</a></p>
   </section>
 </template>
 

@@ -537,7 +537,7 @@ export const tr = {
     privacy: {
       title: 'Gizlilik Politikası',
       notice: 'Bildirim: Oluşturulan içerik araştırma amaçlı sunucuda saklanmaktadır. Kullanıcı veya IP verisi toplanmamaktadır. Yüklenen görseller saklanmamaktadır.',
-      usage: 'Bu platformun kullanımı yalnızca UCDCAE AI LAB\'ın kayıtlı iş birliği ortakları için izin verilmektedir. Bu bağlamda yapılan veri koruma anlaşmaları geçerlidir. Sorularınız için lütfen vanessa.baumann@fau.de adresiyle iletişime geçin.'
+      usage: 'Bu platformun kullanımı yalnızca UCDCAE AI LAB\'ın kayıtlı iş birliği ortakları için izin verilmektedir. Bu bağlamda yapılan veri koruma anlaşmaları geçerlidir. Sorularınız için lütfen iletişime geçin:'
     }
   },
   docs: {

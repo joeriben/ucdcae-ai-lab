@@ -40,6 +40,32 @@ each processed work order to **Completed** with a date stamp.
   - `edutainment.denoising.denoisingActive` (NEW)
 - **Context**: Labels for expert-mode denoising progress view. Shows model "Steckbrief" (identity card) during VRAM loading and live denoising stats during generation. Technical/educational terms, keep short.
 
+### WO-2026-02-27-privacy-policy
+- **Session**: 221
+- **Scope**: en.ts
+- **Changed keys** (new or modified):
+  - `legal.privacy.controller.title` (NEW)
+  - `legal.privacy.controller.content` (NEW)
+  - `legal.privacy.dataProcessing.title` (NEW)
+  - `legal.privacy.dataProcessing.content` (NEW)
+  - `legal.privacy.deviceId.title` (NEW)
+  - `legal.privacy.deviceId.content` (NEW)
+  - `legal.privacy.uploads.title` (NEW)
+  - `legal.privacy.uploads.content` (NEW)
+  - `legal.privacy.cookies.title` (NEW)
+  - `legal.privacy.cookies.content` (NEW)
+  - `legal.privacy.externalServices.title` (NEW)
+  - `legal.privacy.externalServices.content` (NEW)
+  - `legal.privacy.legalBasis.title` (NEW)
+  - `legal.privacy.legalBasis.content` (NEW)
+  - `legal.privacy.retention.title` (NEW)
+  - `legal.privacy.retention.content` (NEW)
+  - `legal.privacy.rights.title` (NEW)
+  - `legal.privacy.rights.content` (NEW)
+  - `legal.privacy.fauReference.title` (NEW)
+  - `legal.privacy.fauReference.content` (NEW)
+- **Context**: Full GDPR-compliant privacy policy for the platform. Legal terminology — use correct GDPR/DSGVO terms per language (e.g. "Betroffenenrechte" in DE, "Droits de la personne concernée" in FR). Keep Art. references (Art. 15, 16, 17, etc.) as-is. FAU address and contact email stay untranslated. The "controller" section is the GDPR "Verantwortlicher". Important: these are legal texts that should be linguistically precise.
+
 <!-- Add new work orders here. Format:
 
 ### WO-YYYY-MM-DD-short-description

@@ -537,7 +537,7 @@ export const es = {
     privacy: {
       title: 'Política de privacidad',
       notice: 'Aviso: El contenido generado se almacena en el servidor con fines de investigación. No se recopilan datos de usuario ni de IP. Las imágenes subidas no se almacenan.',
-      usage: 'El uso de esta plataforma está exclusivamente permitido para socios de cooperación registrados del UCDCAE AI LAB. Se aplican los acuerdos de protección de datos realizados en este contexto. Si tienes preguntas, contacta a vanessa.baumann@fau.de.'
+      usage: 'El uso de esta plataforma está exclusivamente permitido para socios de cooperación registrados del UCDCAE AI LAB. Se aplican los acuerdos de protección de datos realizados en este contexto. Si tienes preguntas, contacta:'
     }
   },
   docs: {

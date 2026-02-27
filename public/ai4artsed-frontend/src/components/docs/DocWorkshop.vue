@@ -93,7 +93,7 @@
       <p>{{ currentLanguage === 'de'
         ? 'Für Fragen zur Nutzung in Bildungskontexten:'
         : 'For questions about use in educational contexts:' }}</p>
-      <a href="mailto:vanessa.baumann@fau.de">vanessa.baumann@fau.de</a>
+      <a href="mailto:ucdcae@fau.de">ucdcae@fau.de</a>
       <p style="margin-top: 0.5rem">{{ currentLanguage === 'de'
         ? 'Für Lizenzfragen, kommerzielle Anfragen und Autorisierungen:'
         : 'For license inquiries, commercial requests, and authorizations:' }}</p>

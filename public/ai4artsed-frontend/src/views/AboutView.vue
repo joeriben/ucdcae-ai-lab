@@ -42,7 +42,7 @@
           <p>{{ $t('about.team.researcherInstitute') }}<br>
           {{ $t('about.team.researcherChair') }}<br>
           {{ $t('about.team.researcherUnesco') }}</p>
-          <p>E-Mail: <a href="mailto:vanessa.baumann@fau.de">vanessa.baumann@fau.de</a></p>
+          <p>E-Mail: <a href="mailto:ucdcae@fau.de">ucdcae@fau.de</a></p>
         </div>
       </section>
 

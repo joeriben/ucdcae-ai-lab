@@ -536,7 +536,7 @@ export const fr = {
     privacy: {
       title: 'Politique de confidentialité',
       notice: 'Avis : Le contenu généré est stocké sur le serveur à des fins de recherche. Aucune donnée utilisateur ou IP n\'est collectée. Les images téléchargées ne sont pas stockées.',
-      usage: 'L\'utilisation de cette plateforme est exclusivement réservée aux partenaires de coopération enregistrés du UCDCAE AI LAB. Les accords de protection des données conclus dans ce cadre s\'appliquent. Pour toute question, veuillez contacter vanessa.baumann@fau.de.'
+      usage: 'L\'utilisation de cette plateforme est exclusivement réservée aux partenaires de coopération enregistrés du UCDCAE AI LAB. Les accords de protection des données conclus dans ce cadre s\'appliquent. Pour toute question, veuillez contacter :'
     }
   },
   docs: {

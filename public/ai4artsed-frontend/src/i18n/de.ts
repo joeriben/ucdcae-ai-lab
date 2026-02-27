@@ -537,7 +537,47 @@ export const de = {
     privacy: {
       title: 'Datenschutzerklärung',
       notice: 'Hinweis: Generierte Inhalte werden zu Forschungszwecken auf dem Server gespeichert. Es werden keine User- oder IP-Daten erfasst. Hochgeladene Bilder werden nicht gespeichert.',
-      usage: 'Die Nutzung dieser Plattform ist ausschließlich eingetragenen Kooperationspartnern des UCDCAE AI LAB erlaubt. Es gelten die in diesem Rahmen vereinbarten datenschutzbezogenen Absprachen. Haben Sie hierzu Fragen, melden Sie sich bitte bei vanessa.baumann@fau.de.'
+      usage: 'Die Nutzung dieser Plattform ist ausschließlich eingetragenen Kooperationspartnern des UCDCAE AI LAB erlaubt. Es gelten die in diesem Rahmen vereinbarten datenschutzbezogenen Absprachen. Haben Sie hierzu Fragen, melden Sie sich bitte bei:',
+      controller: {
+        title: 'Verantwortlicher',
+        content: 'Friedrich-Alexander-Universität Erlangen-Nürnberg (FAU), vertreten durch den Präsidenten. Inhaltlich verantwortlich: Prof. Dr. Benjamin Jörissen, Bismarckstraße 1a, 91054 Erlangen.'
+      },
+      dataProcessing: {
+        title: 'Datenverarbeitung',
+        content: 'Diese Plattform verarbeitet folgende Daten zu bildungswissenschaftlichen Forschungszwecken: Ihre Texteingaben (Prompts), alle Zwischenschritte der Transformation (Übersetzungen, pädagogische Transformationen, Sicherheitsprüfungen) sowie die erzeugten Medienausgaben (Bilder, Audio, Video, Code). Diese Daten werden pseudonymisiert auf dem Server gespeichert und ausschließlich für die Forschung im Bereich digitaler kultureller Kunstbildung verwendet.'
+      },
+      deviceId: {
+        title: 'Geräteerkennung',
+        content: 'Ein zufälliger Geräte-Identifikator wird erzeugt und lokal in Ihrem Browser (localStorage) gespeichert. Dieser wird mit dem aktuellen Datum kombiniert, um Workshop-Sitzungen tageweise zu organisieren. Er identifiziert ausschließlich das Gerät \u2014 nicht die Person, die es bedient. Mehrere und wechselnde Nutzer können dasselbe Gerät verwenden. Die tägliche Rotation stellt sicher, dass erzeugte Inhalte korrekt der jeweiligen Workshop-Sitzung zugeordnet werden. Mit diesem Identifikator sind keine personenbezogenen Daten verknüpft.'
+      },
+      uploads: {
+        title: 'Hochgeladene Bilder',
+        content: 'Bilder, die für Bild-zu-Bild-Transformationen hochgeladen werden, werden temporär auf dem Server zur Verarbeitung gespeichert. Sie sind nicht Teil des permanenten Forschungsdatensatzes und werden regelmäßig gelöscht.'
+      },
+      cookies: {
+        title: 'Cookies',
+        content: 'Diese Plattform verwendet einen einzigen technisch notwendigen Session-Cookie (gültig für 24 Stunden) zur Aufrechterhaltung der vom Gerät initiierten Sitzung. Es werden keine Tracking-Cookies, Analyse-Cookies oder Drittanbieter-Cookies verwendet.'
+      },
+      externalServices: {
+        title: 'Externe Dienste',
+        content: 'Bilderzeugung, Sicherheitsprüfungen (Bildsicherheit, DSGVO-Prüfungen) und der Großteil der KI-Verarbeitung laufen lokal auf dem Server \u2014 für diese Aufgaben verlassen keine Daten die Institution. Für textbasierte KI-Verarbeitung (Prompt-Transformation, pädagogische Interception) nutzt die Plattform Mistral AI (EU-basiert). Mistral ist vertraglich so konfiguriert, dass Eingaben nicht zum Modelltraining verwendet werden. Zusätzlich können während der Prompt-Transformation schreibgeschützte Abfragen an Wikipedia erfolgen. Keine personenbezogenen Daten oder Gerätekennungen werden in externen API-Anfragen übermittelt. DSGVO-Namensschutz: Auf allen Standard-Sicherheitsstufen (Kids, Youth, Adult) läuft ein mehrstufiger DSGVO-Filter auf jedem Eingabefeld und an definierten Stellen in der Verarbeitungspipeline. Stufe 1 nutzt lokale NER-Modelle (Named Entity Recognition) zur Erkennung potenzieller Personennamen. Stufe 2 wendet POS-Tag-Vorfilterung an, um Fehlerkennungen auszuschließen (z.\u00a0B. Substantive, die fälschlich als Namen erkannt wurden). Stufe 3 verifiziert verbleibende Kandidaten über ein lokales LLM, das bewertet, ob eine erkannte Entität tatsächlich ein Personenname ist. Das System arbeitet fail-closed: Bei Unsicherheit in einer Stufe wird die Eingabe blockiert statt weitergeleitet. Dies stellt einen maximalen mehrstufigen Ansatz zur DSGVO-Konformität dar. Wie bei jedem technischen System können Fehler in Einzelfällen jedoch nicht vollständig ausgeschlossen werden. Hinweis: Der Canvas-Workflow ist eine forschungsorientierte Funktion (für Kinder und Jugendliche gesperrt). Canvas-Workflows können externe LLM-APIs nutzen; die DSGVO-Konformität bei der Canvas-Nutzung liegt in der Eigenverantwortung des Nutzers.'
+      },
+      legalBasis: {
+        title: 'Rechtsgrundlage',
+        content: 'Die Datenverarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an bildungswissenschaftlicher Forschung). Der Zugang zu dieser Plattform ist auf eingetragene Kooperationspartner des UCDCAE AI LAB beschränkt, für die gesonderte Datenschutzvereinbarungen gelten.'
+      },
+      retention: {
+        title: 'Speicherdauer',
+        content: 'Erzeugte Inhalte und zugehörige Metadaten werden für die Dauer des Forschungsprojekts aufbewahrt. Es erfolgt keine automatische Löschung. Sie können jederzeit die Löschung Ihrer Daten beantragen.'
+      },
+      rights: {
+        title: 'Ihre Rechte',
+        content: 'Nach der DSGVO haben Sie das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21). Ihnen steht zudem das Recht auf Beschwerde bei einer Aufsichtsbehörde zu.'
+      },
+      fauReference: {
+        title: 'Datenschutzerklärung der FAU',
+        content: 'Ergänzend zu dieser plattformspezifischen Erklärung gilt die allgemeine Datenschutzerklärung der Friedrich-Alexander-Universität Erlangen-Nürnberg. Sie finden diese unter:'
+      }
     }
   },
   docs: {

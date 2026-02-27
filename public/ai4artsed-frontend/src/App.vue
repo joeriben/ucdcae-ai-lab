@@ -105,6 +105,7 @@
               </div>
             </div>
             <button @click="openImpressum" class="nav-link nav-link-text">{{ $t('nav.impressum') }}</button>
+            <button @click="openDatenschutz" class="nav-link nav-link-text">{{ $t('nav.privacy') }}</button>
           </nav>
         </div>
       </div>
@@ -121,6 +122,7 @@
     <AboutModal v-model="showAbout" />
     <DokumentationModal v-model="showDokumentation" />
     <ImpressumModal v-model="showImpressum" />
+    <DatenschutzModal v-model="showDatenschutz" />
     <SettingsAuthModal v-model="showSettingsAuth" @authenticated="onSettingsAuthenticated" />
   </div>
 </template>
@@ -145,6 +147,7 @@ import FooterGallery from './components/FooterGallery.vue'
 import AboutModal from './components/AboutModal.vue'
 import DokumentationModal from './components/DokumentationModal.vue'
 import ImpressumModal from './components/ImpressumModal.vue'
+import DatenschutzModal from './components/DatenschutzModal.vue'
 import SettingsAuthModal from './components/SettingsAuthModal.vue'
 import { useUserPreferencesStore } from './stores/userPreferences'
 import { useSafetyLevelStore } from './stores/safetyLevel'
@@ -163,6 +166,7 @@ const currentLanguage = computed(() => locale.value)
 const showAbout = ref(false)
 const showDokumentation = ref(false)
 const showImpressum = ref(false)
+const showDatenschutz = ref(false)
 const showSettingsAuth = ref(false)
 
 // Language dropdown
@@ -193,6 +197,10 @@ function openDokumentation() {
 
 function openImpressum() {
   showImpressum.value = true
+}
+
+function openDatenschutz() {
+  showDatenschutz.value = true
 }
 
 // Prevent navigation to advanced-only routes in kids/youth mode
@@ -245,8 +253,7 @@ html, body {
 
 /* Header */
 .app-header {
-  background: rgba(10, 10, 10, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgba(10, 10, 10, 0.97);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.5rem 0;
   z-index: 1000;
