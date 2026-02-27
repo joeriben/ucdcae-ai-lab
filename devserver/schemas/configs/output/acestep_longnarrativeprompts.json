@@ -29,7 +29,16 @@
     "backend_type": "comfyui",
     "legacy_source": "workflows_legacy/sound/ai4artsed_AceStep_LongNarrativePrompts_2508101232.json",
     "extracted_date": "2025-10-19",
-    "original_model": "openrouter/google/gemma-3-27b-it [translator / $0.10/$0.18]"
+    "original_model": "openrouter/google/gemma-3-27b-it [translator / $0.10/$0.18]",
+    "display_name": "ACE-Step Long Narrative",
+    "publisher": "StepFun / ACE Studio (Beijing, CN)",
+    "architecture": "Diffusion Transformer (latent audio)",
+    "params": "~3.5B",
+    "text_encoders": ["T5-Large (lyrics + tags)"],
+    "quantization": "FP32",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "None documented by manufacturer"
   },
   "display": {
     "icon": "🎵",

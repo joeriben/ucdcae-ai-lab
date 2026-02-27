@@ -91,6 +91,17 @@
     "lightning_optimized": true,
     "multi_image_support": true,
     "dsgvo_compliant": true,
-    "local_only": true
+    "local_only": true,
+    "display_name": "Qwen 2511 Multi",
+    "publisher": "Alibaba Qwen Team (Hangzhou, CN)",
+    "architecture": "MMDiT (Multimodal Diffusion Transformer)",
+    "params": "~20B",
+    "text_encoders": ["Qwen 2.5 VL 7B (multimodal)"],
+    "quantization": "FP8 (e4m3fn)",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "Platform 4-stage safety pipeline",
+    "gpu_vram_mb": 12000,
+    "recommended_resolution": "1328x1328"
   }
 }

@@ -31,6 +31,15 @@
       "Produces 3 images via multiple SaveImage nodes",
       "Prompt injection via title-based node search (ai4artsed_text_prompt)",
       "Mode parameter: average, random, invert, zero_out"
-    ]
+    ],
+    "display_name": "Partial Elimination (Legacy)",
+    "publisher": "Stability AI (London, UK)",
+    "architecture": "Rectified Flow + MMDiT (triple text encoder)",
+    "params": "~8.1B (MMDiT) + ~4.7B T5-XXL + ~0.4B CLIP",
+    "text_encoders": ["CLIP-L (124M)", "OpenCLIP-G (354M)", "T5-XXL (4.7B)"],
+    "quantization": "FP16",
+    "license": "Stability Community License (<$1M)",
+    "fair_culture": "Training data undisclosed (\"synthetic + filtered public\")",
+    "safety_by_design": "Filtered training data, structured red-teaming"
   }
 }

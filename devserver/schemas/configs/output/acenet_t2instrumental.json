@@ -43,7 +43,14 @@
     "recommended_duration": 30,
     "supported_durations": [15, 30, 45, 60],
     "notes": "ACE Step v1.3.5b via ComfyUI. Text-to-audio generation for instrumental music. Generates 30-second instrumental tracks. The 'tags' field describes the musical style, genre, instruments, mood, and tempo.",
-    "version": "1.0"
+    "version": "1.0",
+    "display_name": "ACE-Net",
+    "publisher": "StepFun / ACE Studio (Beijing, CN)",
+    "architecture": "Neural Audio Codec + Transformer",
+    "params": "~1B",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "None documented by manufacturer"
   },
 
   "display": {

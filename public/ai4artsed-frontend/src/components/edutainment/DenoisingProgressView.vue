@@ -8,7 +8,6 @@
       <div v-if="isModelLoading" key="loading" class="model-loading-phase">
         <div class="model-card">
           <div class="model-card-header">
-            <span class="model-icon">{{ profileIcon }}</span>
             <span class="model-name">{{ profileName }}</span>
             <span class="model-card-label">{{ t('edutainment.denoising.modelCard') }}</span>
           </div>
@@ -122,10 +121,6 @@ const emit = defineEmits<{
 const profileName = computed(() =>
   props.modelMeta?.display_name || props.modelMeta?.model_file || 'Model'
 )
-const profileIcon = computed(() =>
-  props.modelMeta?.icon || '\uD83E\uDD16'
-)
-
 const vramDisplay = computed(() => {
   const vram = props.modelMeta?.gpu_vram_mb
   if (!vram) return ''
@@ -208,11 +203,6 @@ onUnmounted(() => stopRotation())
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.model-icon {
-  font-size: 1.5rem;
-  line-height: 1;
 }
 
 .model-name {

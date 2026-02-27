@@ -82,6 +82,17 @@
     "model_type": "flux2_dev",
     "lightning_optimized": false,
     "dsgvo_compliant": true,
-    "local_only": true
+    "local_only": true,
+    "display_name": "FLUX.2 [dev] img2img",
+    "publisher": "Black Forest Labs (Freiburg, DE)",
+    "architecture": "Rectified Flow + MMDiT (56 transformer blocks)",
+    "params": "~56B total (32B DiT + 24B text encoder)",
+    "text_encoders": ["Mistral-Small-3.2-24B (24B)"],
+    "quantization": "FP8 mixed precision",
+    "license": "Non-Commercial (BFL Dev License)",
+    "fair_culture": "Training data undisclosed, NSFW-filtered",
+    "safety_by_design": "NSFW filter + IWF CSAM filtering",
+    "gpu_vram_mb": 18000,
+    "recommended_resolution": "1024x1024"
   }
 }

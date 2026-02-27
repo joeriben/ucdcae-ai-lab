@@ -29,7 +29,16 @@
     "backend_type": "comfyui",
     "legacy_source": "workflows_legacy/sound/ai4artsed_AceStep_Simple_2508101234.json",
     "extracted_date": "2025-10-19",
-    "original_model": "local/mistral-nemo:latest [local / $0.00]"
+    "original_model": "local/mistral-nemo:latest [local / $0.00]",
+    "display_name": "ACE-Step Simple",
+    "publisher": "StepFun / ACE Studio (Beijing, CN)",
+    "architecture": "Diffusion Transformer (latent audio)",
+    "params": "~3.5B",
+    "text_encoders": ["T5-Large (lyrics + tags)"],
+    "quantization": "FP32",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "None documented by manufacturer"
   },
   "display": {
     "icon": "🎵",

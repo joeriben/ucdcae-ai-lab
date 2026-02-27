@@ -41,7 +41,16 @@
     "requires_gpu": true,
     "estimated_time_seconds": 180,
     "source_workflow": "ai4artsed_AceStep_Instrumental_2511161409.json",
-    "note": "Simplified workflow with single text input"
+    "note": "Simplified workflow with single text input",
+    "display_name": "ACE-Step",
+    "publisher": "StepFun / ACE Studio (Beijing, CN)",
+    "architecture": "Diffusion Transformer (latent audio)",
+    "params": "~3.5B",
+    "text_encoders": ["T5-Large (lyrics + tags)"],
+    "quantization": "FP32",
+    "license": "Apache 2.0",
+    "fair_culture": "Training data undisclosed",
+    "safety_by_design": "None documented by manufacturer"
   },
   "display": {
     "icon": "🎵",
