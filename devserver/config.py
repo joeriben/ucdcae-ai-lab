@@ -396,7 +396,16 @@ HEARTMULA_DEVICE = os.environ.get("HEARTMULA_DEVICE", "cuda")  # cuda, cpu
 # to Ollama via LLMClient — NOT through GPU Service.
 #
 GPU_SERVICE_URL = os.environ.get("GPU_SERVICE_URL", "http://localhost:17803")
-GPU_SERVICE_TIMEOUT = int(os.environ.get("GPU_SERVICE_TIMEOUT", "1500"))  # 25 min for video generation (14B ~20 min)
+GPU_SERVICE_TIMEOUT_DEFAULT = 60      # Health checks, status
+GPU_SERVICE_TIMEOUT_IMAGE = 120       # SD3.5, SDXL
+GPU_SERVICE_TIMEOUT_VIDEO = 1500      # Wan 2.1 14B (~20 min)
+GPU_SERVICE_TIMEOUT_MUSIC = 300       # HeartMuLa
+GPU_SERVICE_TIMEOUT_AUDIO = 300       # Stable Audio
+GPU_SERVICE_TIMEOUT = GPU_SERVICE_TIMEOUT_DEFAULT  # Backward compat
+
+# Ollama LLM timeouts
+OLLAMA_TIMEOUT_SAFETY = 30            # Safety verify (small model, short prompt)
+OLLAMA_TIMEOUT_DEFAULT = 120          # Standard LLM calls
 
 # Feature Flags
 ENABLE_VALIDATION_PIPELINE = True

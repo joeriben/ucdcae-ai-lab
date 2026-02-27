@@ -217,6 +217,7 @@ def llm_verify_person_name(text: str, ner_entities: list) -> Optional[bool]:
 
     try:
         from my_app.services.llm_backend import get_llm_backend
+        from config import OLLAMA_TIMEOUT_SAFETY
 
         start = _time.time()
         llm_result = get_llm_backend().chat(
@@ -224,6 +225,7 @@ def llm_verify_person_name(text: str, ner_entities: list) -> Optional[bool]:
             messages=messages,
             temperature=0.0,
             max_new_tokens=500,
+            timeout=OLLAMA_TIMEOUT_SAFETY,
         )
         duration_ms = (_time.time() - start) * 1000
 
@@ -305,6 +307,7 @@ def llm_dsgvo_fallback_check(text: str) -> Optional[bool]:
 
     try:
         from my_app.services.llm_backend import get_llm_backend
+        from config import OLLAMA_TIMEOUT_SAFETY
 
         start = _time.time()
         llm_result = get_llm_backend().chat(
@@ -312,6 +315,7 @@ def llm_dsgvo_fallback_check(text: str) -> Optional[bool]:
             messages=messages,
             temperature=0.0,
             max_new_tokens=500,
+            timeout=OLLAMA_TIMEOUT_SAFETY,
         )
         duration_ms = (_time.time() - start) * 1000
 
@@ -413,6 +417,7 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
 
     try:
         from my_app.services.llm_backend import get_llm_backend
+        from config import OLLAMA_TIMEOUT_SAFETY
 
         start = _time.time()
         llm_result = get_llm_backend().chat(
@@ -420,6 +425,7 @@ def llm_verify_age_filter_context(text: str, found_terms: list, safety_level: st
             messages=messages,
             temperature=0.0,
             max_new_tokens=500,
+            timeout=OLLAMA_TIMEOUT_SAFETY,
         )
         duration_ms = (_time.time() - start) * 1000
 

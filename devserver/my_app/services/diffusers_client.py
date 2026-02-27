@@ -23,24 +23,26 @@ class DiffusersClient:
     """
 
     def __init__(self):
-        from config import GPU_SERVICE_URL, GPU_SERVICE_TIMEOUT
+        from config import GPU_SERVICE_URL, GPU_SERVICE_TIMEOUT_IMAGE, GPU_SERVICE_TIMEOUT_VIDEO
         self.base_url = GPU_SERVICE_URL.rstrip('/')
-        self.timeout = GPU_SERVICE_TIMEOUT
-        logger.info(f"[DIFFUSERS-CLIENT] Initialized: url={self.base_url}, timeout={self.timeout}s")
+        self.timeout_image = GPU_SERVICE_TIMEOUT_IMAGE
+        self.timeout_video = GPU_SERVICE_TIMEOUT_VIDEO
+        logger.info(f"[DIFFUSERS-CLIENT] Initialized: url={self.base_url}, image={self.timeout_image}s, video={self.timeout_video}s")
 
-    def _post(self, path: str, data: dict) -> Optional[dict]:
+    def _post(self, path: str, data: dict, timeout: Optional[int] = None) -> Optional[dict]:
         """Synchronous POST to GPU service. Returns JSON response or None."""
         import requests
+        t = timeout or self.timeout_image
         url = f"{self.base_url}{path}"
         try:
-            resp = requests.post(url, json=data, timeout=self.timeout)
+            resp = requests.post(url, json=data, timeout=t)
             resp.raise_for_status()
             return resp.json()
         except requests.ConnectionError:
             logger.error(f"[DIFFUSERS-CLIENT] GPU service unreachable at {url}")
             return None
         except requests.Timeout:
-            logger.error(f"[DIFFUSERS-CLIENT] Request timed out after {self.timeout}s: {path}")
+            logger.error(f"[DIFFUSERS-CLIENT] Request timed out after {t}s: {path}")
             return None
         except Exception as e:
             logger.error(f"[DIFFUSERS-CLIENT] Request failed: {e}")
@@ -161,7 +163,7 @@ class DiffusersClient:
             'fps': fps,
             'seed': seed,
             'pipeline_class': pipeline_class,
-        })
+        }, self.timeout_video)
 
         if result is None or not result.get('success'):
             return None

@@ -20,9 +20,9 @@ class HeartMuLaClient:
     """
 
     def __init__(self):
-        from config import GPU_SERVICE_URL, GPU_SERVICE_TIMEOUT
+        from config import GPU_SERVICE_URL, GPU_SERVICE_TIMEOUT_MUSIC
         self.base_url = GPU_SERVICE_URL.rstrip('/')
-        self.timeout = GPU_SERVICE_TIMEOUT
+        self.timeout = GPU_SERVICE_TIMEOUT_MUSIC
         logger.info(f"[HEARTMULA-CLIENT] Initialized: url={self.base_url}, timeout={self.timeout}s")
 
     def _post(self, path: str, data: dict) -> Optional[dict]:

@@ -16,9 +16,9 @@ class StableAudioClient:
     """HTTP client for Stable Audio on the local GPU service."""
 
     def __init__(self):
-        from config import GPU_SERVICE_URL, GPU_SERVICE_TIMEOUT
+        from config import GPU_SERVICE_URL, GPU_SERVICE_TIMEOUT_AUDIO
         self.base_url = GPU_SERVICE_URL.rstrip('/')
-        self.timeout = GPU_SERVICE_TIMEOUT
+        self.timeout = GPU_SERVICE_TIMEOUT_AUDIO
 
     def _post(self, path: str, data: dict) -> Optional[dict]:
         import requests
