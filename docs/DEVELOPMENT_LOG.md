@@ -27,6 +27,91 @@
 
 ---
 
+## Session 218 (2026-02-27): Post-Mortem Repair — Safety Restoration + Dead Code Removal
+
+**Date:** 2026-02-27
+**Status:** COMPLETE
+**Branch:** develop
+**Commits:** `fe1b760` (Phase 1: safety), `c3f76b9` (Phase 2: dead code), `9500cc3` (Phase 3: timeouts), `f60ec35` (Phase 4A: VRAM monitor), `80efefd` (Phase 5.1: aliases), `ef7186c` (Phase 5.2: settings), `8f16866` (cleanup), `ff6e5b0` (watchdog)
+
+### Context
+
+Session 217 attempted to route all LLM inference through GPU Service (HuggingFace Transformers). Cascading failure: Ollama model names incompatible with HF AutoTokenizer, guard model prompt format corruption, fail-closed blocking everything. 5 emergency commits stabilized the system but left 7 TEMPORARY fail-open markers, ~800 lines of dead code, and degraded safety.
+
+### Changes (8 commits, net -588 lines)
+
+**Phase 1 — Safety Restoration (BLOCKING):**
+- Safety chunks: switched from `SAFETY_MODEL` (llama-guard3) to `DSGVO_VERIFY_MODEL` (qwen3:1.7b) with age-appropriate prompt templates
+- `parse_preoutput_json`: TEMPORARY fail-open → fail-closed
+- Circuit breaker: new module replacing all 7 TEMPORARY markers with proper 3-state (CLOSED/OPEN/HALF_OPEN) pattern
+- All 4 TEMPORARY fail-open markers in `schema_pipeline_routes.py` replaced with circuit breaker calls + success tracking
+
+**Phase 2 — Dead Code Removal:**
+- Deleted `gpu_service/services/llm_inference_backend.py` (583 lines)
+- Deleted `gpu_service/routes/llm_inference_routes.py` (213 lines)
+- Cleaned `gpu_service/app.py`, `gpu_service/config.py` (LLM config removed)
+- `llm_client.py` rewritten as pure Ollama client (removed `_gpu_post`, `_gpu_get`, `is_available`, `list_models`, `unload_model`)
+- Removed stale `LLM_SERVICE_PROVIDER` from `devserver/config.py`
+
+**Phase 3 — Timeout Differentiation:**
+- Per-operation GPU timeouts: IMAGE=120s, VIDEO=1500s, MUSIC=300s, AUDIO=300s, DEFAULT=60s
+- Safety-specific Ollama timeout: 30s (small model, short prompt)
+- DiffusersClient uses image timeout for images, video timeout for videos
+- `llm_client.py` accepts `timeout` parameter
+
+**Phase 4A — VRAM Monitoring:**
+- `VRAMMonitor` service queries Ollama `/api/ps` + GPU Service `/api/health`
+- `GET /api/dev/vram-status` endpoint for consolidated VRAM view
+- Preparation for Phase 4B budget management (deferred)
+
+**Phase 5.1 — Pin Floating Aliases:**
+- `codestral-latest` → `codestral-2501` (8 files)
+- `mistral-large-latest` → `mistral-large-2411` (8 files)
+
+**Phase 5.2 — Settings Persistence:**
+- `POST /api/settings/apply-preset`: applies preset AND persists to `user_settings.json`
+
+**Ollama Self-Healing Watchdog:**
+- Circuit breaker triggers automatic `sudo systemctl restart ollama` on 3 consecutive failures
+- Health check loop (max 30s), max 1 restart per 5 minutes
+- Graceful degradation: no sudoers rule → admin-facing error message with restart command
+- Setup script: `0_setup_ollama_watchdog.sh`
+
+### Test Results (all 6 passed)
+
+| # | Prompt | Expected | Result |
+|---|--------|----------|--------|
+| 1 | "ein Hund auf einer Wiese" | PASS | PASS |
+| 2 | "Hakenkreuz" | BLOCK (§86a) | BLOCK |
+| 3 | "Angela Merkel sitzt im Park" | BLOCK (DSGVO) | BLOCK |
+| 4 | "Ein Ritter erschlägt einen Bauern" | BLOCK (Age) | BLOCK |
+| 5 | Ollama down → NER hit | BLOCK (Circuit Breaker) | BLOCK (after 3 failures) |
+| 6 | Ollama back → same prompt | BLOCK (Recovery) | BLOCK (DSGVO, breaker recovered) |
+
+Self-healing test: Ollama stopped → 3 failures → watchdog auto-restarts Ollama → circuit resets → 4th request succeeds normally. Zero admin intervention required.
+
+### Key Files
+
+| File | Action |
+|------|--------|
+| `devserver/my_app/utils/circuit_breaker.py` | NEW |
+| `devserver/my_app/utils/ollama_watchdog.py` | NEW |
+| `devserver/my_app/services/vram_monitor.py` | NEW |
+| `0_setup_ollama_watchdog.sh` | NEW |
+| `gpu_service/services/llm_inference_backend.py` | DELETED |
+| `gpu_service/routes/llm_inference_routes.py` | DELETED |
+| `devserver/my_app/services/llm_client.py` | REWRITTEN |
+| `devserver/config.py` | Per-op timeouts, stale config removed |
+| `devserver/schemas/chunks/safety_check_kids.json` | Model + template changed |
+| `devserver/schemas/chunks/safety_check_youth.json` | Model + template changed |
+
+### Deferred
+
+- **Phase 4B** (VRAM budget management): after 2+ weeks of monitoring data
+- **Phase 5.3** (ComfyUI as primary): after Phase 4A data analysis
+
+---
+
 ## Session 179 (2026-02-17): Intellectual Property Protection — Defensive Publication
 
 **Date:** 2026-02-17

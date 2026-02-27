@@ -1,7 +1,7 @@
 # ARCHITECTURE PART 29 — Safety System
 
 **Status:** Authoritative
-**Last Updated:** 2026-02-18 (Session 181)
+**Last Updated:** 2026-02-27 (Session 218)
 **Scope:** Complete safety architecture — levels, filters, enforcement points, legal basis
 
 ---
@@ -163,13 +163,13 @@ Only 2 SpaCy models loaded (prevents cross-language false positives):
 
 2. **LLM verification** (`llm_verify_person_name()`): Remaining PER entities (those with at least one PROPN token) are verified by a local LLM. The prompt asks: "Are these flagged words actually person names, or false positives?" Response: `SAFE` (false positive) or `UNSAFE` (actual name → block).
 
-**Dedicated model:** `config.DSGVO_VERIFY_MODEL` (configurable in Settings UI, default: `gpt-OSS:20b`). Must be a **general-purpose model** — guard models (llama-guard) classify content safety categories, not "is this a name?". Recommended VRAM-efficient options: qwen3:1.7b, gemma3:1b, qwen2.5:1.5b, llama3.2:1b.
+**Dedicated model:** `config.DSGVO_VERIFY_MODEL` (configurable in Settings UI, default: `qwen3:1.7b`). Must be a **general-purpose model** — guard models (llama-guard) classify content safety categories, not "is this a name?". Recommended VRAM-efficient options: qwen3:1.7b, gemma3:1b, qwen2.5:1.5b, llama3.2:1b.
 
 **CRITICAL: Local-only.** The `llm_verify_person_name()` function ALWAYS runs via local Ollama — never external APIs. Sending detected personal names to Mistral/Anthropic/OpenAI for verification would itself be a DSGVO violation.
 
 **Thinking model support:** Some models use thinking mode — reasoning in `message.thinking`, answer in `message.content`. Under VRAM pressure, `content` may be empty while the answer exists only in `thinking`. The code checks both fields: first `content`, then falls back to extracting SAFE/UNSAFE from `thinking`. `num_predict: 500` minimum.
 
-**Fail-closed:** If neither `content` nor `thinking` yields a SAFE/UNSAFE answer, the system blocks with an admin-contact error message. Safety verification must never fail-open.
+**Fail-closed with Circuit Breaker (Session 218):** If neither `content` nor `thinking` yields a SAFE/UNSAFE answer, the system blocks. A circuit breaker (`my_app/utils/circuit_breaker.py`) tracks consecutive failures — after 3 failures, it triggers the Ollama watchdog for automatic restart before falling back to a human-readable error message. See Section 4.5 for details.
 
 **Lesson learned (Session 175):** Running all 12 SpaCy models causes cross-language confusion (e.g., `en_core_web_lg` flags "Der Eiffelturm" as PERSON).
 
@@ -184,6 +184,52 @@ Post-generation visual analysis. Different prompts per safety level:
 - Youth (14-18): Adapted thresholds for teenagers
 
 **Fail-open:** VLM errors never block generation.
+
+### 4.5 Circuit Breaker + Ollama Self-Healing (Session 218)
+
+**Problem:** When Ollama becomes unresponsive, all LLM verification calls (DSGVO NER, age filter) return None. Without mitigation, this either blocks all workshop activity (hard fail-closed) or lets unsafe content through (fail-open).
+
+**Solution:** Three-layer defense:
+
+```
+LLM call returns None
+  │
+  ├─ Record failure in CircuitBreaker
+  │   └─ Counter < 3 → log + continue (transient tolerance)
+  │   └─ Counter ≥ 3 → Circuit OPEN
+  │         │
+  │         ├─ Attempt auto-restart (Ollama Watchdog)
+  │         │   └─ sudo systemctl restart ollama
+  │         │   └─ Health check loop (max 30s)
+  │         │   └─ Success → Circuit CLOSED, proceed normally
+  │         │
+  │         └─ Restart failed → fail-closed with admin message:
+  │             "Sicherheitsprüfung nicht verfügbar.
+  │              Bitte Ollama neustarten: sudo systemctl restart ollama"
+  │
+  └─ LLM responds (SAFE/UNSAFE) → record_success() → reset counter
+```
+
+**Circuit Breaker states:**
+- **CLOSED** (normal): LLM calls pass through
+- **OPEN** (3+ failures): triggers self-healing, then fail-closed if healing fails
+- **HALF_OPEN** (after 30s cooldown): one probe call tests recovery
+
+**Watchdog constraints:**
+- Max 1 restart per 5 minutes (prevents crash loops)
+- Thread-safe (lock prevents concurrent restarts)
+- Graceful degradation: if passwordless sudo is not configured, falls back to admin message
+
+**Setup (one-time):**
+```bash
+sudo ./0_setup_ollama_watchdog.sh
+```
+This creates `/etc/sudoers.d/ai4artsed-ollama` granting passwordless `systemctl restart/start/stop ollama`.
+
+**Key files:**
+- `devserver/my_app/utils/circuit_breaker.py` — Circuit breaker with self-healing integration
+- `devserver/my_app/utils/ollama_watchdog.py` — Ollama restart + health check
+- `0_setup_ollama_watchdog.sh` — Sudoers setup script
 
 ---
 
@@ -222,11 +268,14 @@ Canvas routes (`/api/canvas/execute`, `/execute-stream`, `/execute-batch`) have 
 
 ```python
 DEFAULT_SAFETY_LEVEL = 'kids'          # Default, overridden by user_settings.json
-SAFETY_MODEL = 'gpt-OSS:20b'          # Guard model for content safety (§86a, Jugendschutz)
-DSGVO_VERIFY_MODEL = 'gpt-OSS:20b'    # General-purpose model for NER verification (NOT guard)
+SAFETY_MODEL = 'llama-guard3:1b'       # Guard model for Stage 3 content safety (S1-S13 categories)
+DSGVO_VERIFY_MODEL = 'qwen3:1.7b'     # General-purpose model for NER + age verification (NOT guard)
 VLM_SAFETY_MODEL = 'qwen3-vl:2b'      # Ollama model for image checks
-STAGE1_TEXT_MODEL = '...'              # Model for Stage 1 LLM checks
+OLLAMA_TIMEOUT_SAFETY = 30             # Short timeout for safety verification
+OLLAMA_TIMEOUT_DEFAULT = 120           # Standard LLM calls
 ```
+
+**Session 218 change:** Safety chunks (`safety_check_kids.json`, `safety_check_youth.json`) now use `DSGVO_VERIFY_MODEL` instead of `SAFETY_MODEL`. Guard models (llama-guard3) cannot do contextual age assessment — they only classify against trained S1-S13 categories. A general-purpose model (qwen3:1.7b) can understand context like "is a medieval battle appropriate for 6-year-olds?".
 
 ### user_settings.json
 
@@ -259,12 +308,17 @@ The research mode restriction is codified in `LICENSE.md` §3(e):
 
 | File | Role |
 |------|------|
-| `devserver/config.py` | Safety level defaults, VLM model config |
+| `devserver/config.py` | Safety level defaults, VLM model config, timeouts |
 | `devserver/my_app/__init__.py` | Legacy "off" → "research" normalization |
 | `devserver/schemas/engine/stage_orchestrator.py` | Stage 1 + Stage 3 safety logic |
 | `devserver/my_app/routes/schema_pipeline_routes.py` | SAFETY-QUICK endpoint, VLM post-gen check |
 | `devserver/my_app/utils/vlm_safety.py` | VLM image analysis |
+| `devserver/my_app/utils/circuit_breaker.py` | Circuit breaker with Ollama self-healing |
+| `devserver/my_app/utils/ollama_watchdog.py` | Automatic Ollama restart on failure |
+| `devserver/schemas/chunks/safety_check_kids.json` | Stage 3 kids template (DSGVO_VERIFY_MODEL) |
+| `devserver/schemas/chunks/safety_check_youth.json` | Stage 3 youth template (DSGVO_VERIFY_MODEL) |
 | `devserver/schemas/data/stage1_safety_filters_*.json` | Filter term lists |
+| `0_setup_ollama_watchdog.sh` | Passwordless sudo setup for self-healing |
 | `public/.../views/SettingsView.vue` | Safety level dropdown UI |
 | `LICENSE.md` §3(e) | Research mode legal restrictions |
 
@@ -282,6 +336,8 @@ The research mode restriction is codified in `LICENSE.md` §3(e):
 | 170 | 2026-02-12 | Safety-level centralization ("off" → "research"), LICENSE.md §3(e) |
 | 181 | 2026-02-18 | DSGVO NER rewrite: POS-tag pre-filter, SAFE/UNSAFE prompt, dedicated DSGVO_VERIFY_MODEL |
 | 183 | 2026-02-19 | Tiered translation: auto for kids, optional for youth+, none for adult/research |
+| 217 | 2026-02-26 | DISASTER: GPU Service LLM routing broke everything. Emergency fail-open patches |
+| 218 | 2026-02-27 | Full repair: circuit breaker, self-healing watchdog, dead code removal, timeout differentiation |
 
 ---
 

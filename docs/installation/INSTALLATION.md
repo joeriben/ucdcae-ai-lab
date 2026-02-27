@@ -703,6 +703,21 @@ sudo systemctl enable ai4artsed-backend
 systemctl list-unit-files | grep ai4artsed
 ```
 
+### Ollama Self-Healing (Recommended)
+
+The safety system depends on Ollama for LLM verification. If Ollama becomes unresponsive during a workshop, the system can automatically restart it — but only if passwordless sudo is configured:
+
+```bash
+# Run the setup script (one-time, as root)
+sudo ./0_setup_ollama_watchdog.sh
+```
+
+This creates `/etc/sudoers.d/ai4artsed-ollama` granting the service user passwordless access to `systemctl restart/start/stop ollama` only. No other sudo rights are granted.
+
+**What it does:** When the safety circuit breaker detects 3 consecutive Ollama failures, it automatically restarts Ollama and waits for recovery (max 30s). If the restart succeeds, the user never sees an error.
+
+**Without this setup:** The system falls back to a human-readable error message asking the admin to restart Ollama manually.
+
 ---
 
 ## Starting Services

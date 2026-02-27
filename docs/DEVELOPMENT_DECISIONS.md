@@ -29,6 +29,60 @@
 
 ---
 
+## Session 218 Post-Mortem Repair: 7 Architectural Decisions (2026-02-27)
+
+**Context:** Session 217 attempted to route ALL LLM inference through GPU Service (HuggingFace Transformers). Cascading failure: Ollama model names incompatible with HF AutoTokenizer, guard model prompt format issues, fail-closed blocked everything. 5 emergency commits left 7 TEMPORARY fail-open markers, dead code, and degraded safety.
+
+### Decision 1: Two-Model Safety Architecture for Stage 3
+
+**Problem:** Stage 3 safety chunks used `SAFETY_MODEL` (llama-guard3) with bare `{{INPUT_TEXT}}`. llama-guard3 only checks trained S1-S13 categories — a medieval battlefield passes all categories but is inappropriate for 6-year-olds. Custom system prompts with words like "violence" cause guard models to flag the *instructions* as unsafe.
+
+**Decision:** Safety chunks (`safety_check_kids.json`, `safety_check_youth.json`) use `DSGVO_VERIFY_MODEL` (qwen3:1.7b) with age-appropriate prompts. llama-guard3 remains for general S1-S13 content classification only. General-purpose models can understand contextual age assessment.
+
+### Decision 2: Circuit Breaker over Hard Fail-Closed
+
+**Problem:** When Ollama is unavailable, safety verification returns None. Hard fail-closed blocks the entire workshop for every NER false positive until Ollama recovers. Hard fail-open is a safety violation.
+
+**Decision:** Circuit breaker (3 states: CLOSED/OPEN/HALF_OPEN). First 2 failures are tolerated (transient Ollama restarts). After 3 consecutive failures, circuit opens → triggers self-healing → fail-closed only if healing fails.
+
+**File:** `devserver/my_app/utils/circuit_breaker.py`
+
+### Decision 3: Ollama Self-Healing Watchdog
+
+**Problem:** On a dedicated workshop PC, Ollama hangs occasionally. The admin may be a teacher, not a sysadmin.
+
+**Decision:** When the circuit breaker trips, automatically attempt `sudo systemctl restart ollama` with health check loop (max 30s). Requires one-time passwordless sudo setup (`0_setup_ollama_watchdog.sh`). Max 1 restart per 5 minutes. Graceful degradation if sudoers rule is missing.
+
+**File:** `devserver/my_app/utils/ollama_watchdog.py`
+
+### Decision 4: LLM Inference Stays on Ollama Permanently
+
+**Problem:** Session 217 proved that routing LLM inference through GPU Service (HuggingFace) is architecturally incompatible — Ollama model names don't work with HF AutoTokenizer.
+
+**Decision:** Remove all GPU Service LLM code (~800 lines). `LLMClient` is a pure Ollama client. GPU Service handles media inference only (Diffusers, HeartMuLa, StableAudio, MMAudio).
+
+**Affected:** `gpu_service/services/llm_inference_backend.py` (DELETED), `gpu_service/routes/llm_inference_routes.py` (DELETED), `devserver/my_app/services/llm_client.py` (cleaned)
+
+### Decision 5: Per-Operation Timeouts
+
+**Problem:** Single 1500s timeout for everything. Health checks wait 25 minutes on failure.
+
+**Decision:** Differentiated timeouts: GPU_SERVICE_TIMEOUT_IMAGE=120s, _VIDEO=1500s, _MUSIC=300s, _AUDIO=300s, _DEFAULT=60s. OLLAMA_TIMEOUT_SAFETY=30s for safety verification (small model, short prompt).
+
+### Decision 6: Pin Cloud Model Aliases
+
+**Problem:** `mistral-large-latest` silently changed to a 675B MoE model with 85s latency. Floating aliases are dangerous in production.
+
+**Decision:** All cloud model references pinned to versioned IDs. `codestral-latest` → `codestral-2501`, `mistral-large-latest` → `mistral-large-2411`. Rule: no floating aliases in production config.
+
+### Decision 7: Settings Preset Persistence
+
+**Problem:** Switching presets in the UI updated runtime config (`setattr`) but never wrote to `user_settings.json`. Changes lost on restart.
+
+**Decision:** New `POST /api/settings/apply-preset` endpoint applies preset AND persists to `user_settings.json` atomically.
+
+---
+
 ## 🖼️ Auto-Captioning im LoRA-Training: VLM-Pipeline mit Thinking-Cleanup (2026-02-26)
 
 **Kontext:** LoRA-Training auf SD3.5 Large mit Kohya SS. Trainingsbilder werden über die Web-UI hochgeladen. Bisher verwendete Kohya nur den Ordner-Trigger (`40_impphoto`) als Beschreibung — alle Bilder erhielten dieselbe einzige Caption. Detaillierte Per-Image-Captions verbessern die LoRA-Qualität erheblich.
