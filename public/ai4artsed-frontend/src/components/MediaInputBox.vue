@@ -448,8 +448,16 @@ function startStreaming() {
       emit('stream-started')
     }
 
-    // Add chunk to buffer for smooth display
-    chunkBuffer.value.push(...data.text_chunk.split(''))
+    // Add chunk to buffer for smooth word-by-word display
+    // Split on word boundaries, preserving whitespace with each word
+    const text = data.text_chunk
+    const words = text.match(/\S+\s*/g) || []
+    // If chunk starts with whitespace before first word, capture it
+    const leadingSpace = text.match(/^\s+/)
+    if (leadingSpace) {
+      chunkBuffer.value.push(leadingSpace[0])
+    }
+    chunkBuffer.value.push(...words)
   })
 
   eventSource.value.addEventListener('complete', (event) => {
@@ -510,12 +518,13 @@ function startStreaming() {
 }
 
 function startBufferProcessor() {
-  // Process buffer every 30ms for smooth character-by-character effect
+  // Process buffer every 50ms, one word at a time
+  // Word-by-word is better for readability (especially kids) and drains
+  // the buffer faster than char-by-char, reducing "trickle" lag at the end
   bufferInterval = window.setInterval(() => {
     if (chunkBuffer.value.length > 0) {
-      // Take 1-3 characters at a time for smoother appearance
-      const chars = chunkBuffer.value.splice(0, Math.min(3, chunkBuffer.value.length))
-      streamedValue.value += chars.join('')
+      const word = chunkBuffer.value.shift()!
+      streamedValue.value += word
       emit('update:value', streamedValue.value)
 
       // Auto-scroll textarea to bottom during streaming
@@ -523,7 +532,7 @@ function startBufferProcessor() {
         textareaRef.value.scrollTop = textareaRef.value.scrollHeight
       }
     }
-  }, 30)
+  }, 50)
 }
 
 function stopBufferProcessor() {
