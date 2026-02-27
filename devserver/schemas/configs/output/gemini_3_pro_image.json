@@ -42,7 +42,7 @@
     "version": "1.0",
     "display_name": "Gemini 3 Pro Image",
     "icon": "\uD83D\uDD37",
-    "publisher": "Google DeepMind",
+    "publisher": "Google DeepMind (Mountain View, US)",
     "architecture": "Multimodal Transformer (Gemini)",
     "params": "Undisclosed",
     "license": "Commercial API (usage-based via OpenRouter)",

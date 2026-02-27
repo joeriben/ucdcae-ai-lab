@@ -45,7 +45,7 @@
     "version": "1.0",
     "display_name": "GPT-Image-1",
     "icon": "\uD83E\uDDE0",
-    "publisher": "OpenAI",
+    "publisher": "OpenAI (San Francisco, US)",
     "architecture": "Autoregressive + Diffusion",
     "params": "Undisclosed",
     "license": "Commercial API (usage-based)",

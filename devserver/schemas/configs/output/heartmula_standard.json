@@ -32,7 +32,7 @@
     "supported_languages": ["en", "zh", "ja", "ko", "es"],
     "display_name": "HeartMuLa",
     "icon": "\uD83C\uDFB5",
-    "publisher": "HeartMuLa Research",
+    "publisher": "HeartMuLa Research (CN)",
     "architecture": "Flow Matching + MuLa Codec (Global+Local Transformer)",
     "params": "~3B",
     "text_encoders": ["Internal tokenizer (lyrics + tags)"],
