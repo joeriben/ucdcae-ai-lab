@@ -231,6 +231,14 @@
         </div>
       </div>
 
+      <!-- Expert Generation Summary (persists after generation) -->
+      <div v-if="uiMode === 'expert' && outputImage && modelMeta" class="expert-generation-summary">
+        <span class="summary-model">{{ resolveModelName(modelMeta) }}</span>
+        <span v-if="modelMeta.backend_type" class="summary-detail">{{ modelMeta.backend_type }}</span>
+        <span v-if="modelMeta.gpu_vram_mb" class="summary-detail">~{{ Math.round(modelMeta.gpu_vram_mb / 1024) }} GB</span>
+        <span v-if="modelMeta.recommended_resolution" class="summary-detail">{{ modelMeta.recommended_resolution }}</span>
+      </div>
+
       <!-- Image Analysis Section -->
       <Transition name="analysis-expand">
         <div v-if="showAnalysis && analysisData" class="image-analysis-section">
@@ -320,6 +328,19 @@ defineEmits<{
   'close-analysis': []
   'toggle-favorite': []
 }>()
+
+/**
+ * Resolve a human-readable model name from meta
+ */
+function resolveModelName(meta: Record<string, any> | null): string {
+  if (!meta) return 'Model'
+  const f = (meta.model_file || '') as string
+  if (f.includes('flux2')) return 'Flux 2 Dev'
+  if (f.includes('sd3.5') || f.includes('sd35')) return 'Stable Diffusion 3.5 Large'
+  if (meta.backend_type === 'heartmula') return 'HeartMuLa'
+  if (meta.backend_type === 'openai') return 'GPT-Image-1'
+  return f || meta.backend_type || 'Model'
+}
 
 // Expose the section element for autoscroll functionality
 defineExpose({
@@ -565,6 +586,38 @@ defineExpose({
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.8);
   margin: 0;
+}
+
+/* ============================================================================
+   Expert Generation Summary (persists below final output)
+   ============================================================================ */
+
+.expert-generation-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 2px solid rgba(76, 175, 80, 0.3);
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.summary-model {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.summary-detail {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.summary-detail::before {
+  content: '\00B7';
+  margin-right: 0.75rem;
+  opacity: 0.4;
 }
 
 /* ============================================================================

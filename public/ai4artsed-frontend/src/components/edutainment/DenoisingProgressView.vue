@@ -415,7 +415,7 @@ watch(() => props.previewImage, () => {
 
 .denoising-preview-large {
   max-width: 100%;
-  max-height: 350px;
+  max-height: clamp(300px, 40vh, 500px);
   object-fit: contain;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -515,7 +515,7 @@ watch(() => props.previewImage, () => {
   }
 
   .denoising-preview-large {
-    max-height: 250px;
+    max-height: clamp(200px, 30vh, 350px);
   }
 }
 </style>
