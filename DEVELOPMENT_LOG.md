@@ -1,5 +1,69 @@
 # Development Log
 
+## Session 221 - Mistral Large 2411 → 2512 Upgrade + Interception Quality Benchmark
+**Date:** 2026-02-27
+**Focus:** Upgrade Mistral model pin, benchmark Prompt Interception quality across all categories
+**Commit:** `d7ebfe9`
+
+### Context
+`mistral-large-latest` had silently changed to Mistral Large 3 (675B MoE) in Dec 2025, causing 85s latency in Session 217. We pinned to `mistral-large-2411` (Large 2, 123B dense). Question: Is the newer `mistral-large-2512` viable now?
+
+### Live Latency Test
+Both models benchmarked with identical interception prompts:
+- **2411**: ~6.3s (short), no quality difference
+- **2512**: ~6.1s (short), better instruction compliance (English output when asked, proper `stop` finish)
+- **Conclusion**: Equal latency, better quality → upgrade to 2512
+
+### Interception Quality Benchmark (10 categories, Claude Opus as baseline)
+
+Tested with the **real `manipulate.json` template** (Task Instruction + Context + Input), not raw system prompts.
+
+| Category | Config | Score | Notes |
+|---|---|---|---|
+| aesthetics | overdrive | 7/10 | Physics jargon, ALL CAPS |
+| arts | confucianliterati | 9/10 | Correct Fachterminologie (bifa, pima cun, fei bai) |
+| attitudes | sensitive | 7.5/10 | Good phenomenology, slight markdown + didactic tendency |
+| critical_analysis | planetarizer | 9.5/10 | Outstanding materialist entanglement |
+| semantics | jugendsprache | 9/10 | Perfect UK slang, compact (58 tokens) |
+| technical_imaging | daguerreotype | 7/10 | Self-contradicting light description |
+| trans_aktion | yoruba_oriki | 8/10 | Oriki motifs correctly woven, could be more rhythmic |
+| aesthetics | de-kitsch | 9.5/10 | All superlatives eliminated, precise observation |
+| critical_analysis | one_world | 10/10 | Hyper-specific Caracas family scene, no stereotypes |
+
+**Average: 8.5/10**
+
+### Key Insight: Task Instruction is Critical
+- **Without** `instruction_selector.py` wrapper: Mistral scores ~4/10 (essay mode, meta-commentary, English instead of German)
+- **With** Task Instruction ("Output ONLY the transformed result. NO meta-commentary"): 8.5/10
+- The `manipulate.json` template is load-bearing — never bypass it
+
+### Systematic Patterns
+- **Strong (9+)**: Factual/analytical configs (Planetarizer, De-Kitsch, One World, Jugendsprache, Literati)
+- **Weaker (7-7.5)**: Expressive/philosophical configs (Overdrive, Sensitive, Daguerreotype)
+- Mistral tends toward pseudo-scientific jargon when a *Haltung* (attitude) is required instead of domain knowledge
+- Occasional `**markdown**` formatting in output — needs stripping before Stage 4
+
+### Mistral vs Claude (qualitative)
+- Claude: more imagistic, linguistically precise in expressive configs
+- Mistral: equally strong or stronger in factual/analytical configs
+- Both respect Task Instruction when properly formatted
+- Mistral's strategic advantage: DSGVO-compliant (EU-based, no US routing)
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `devserver/hardware_matrix.json` | 6× `mistral-large-2411` → `mistral-large-2512` |
+| `devserver/schemas/configs/interception/lyrics_from_theme.json` | model_preferences → 2512 |
+| `devserver/schemas/configs/interception/lyrics_refinement.json` | model_preferences → 2512 |
+| `devserver/schemas/configs/interception/tag_suggestion_from_lyrics.json` | model_preferences → 2512 |
+| `devserver/schemas/configs/interception/tags_generation.json` | model_preferences → 2512 |
+| `devserver/my_app/routes/canvas_routes.py` | Model list → 2512 + name "Mistral Large 3" |
+
+### API Status Note
+Mistral Completion API had unplanned degradation 26-27 Feb 2026 (not maintenance). Despite status page, API was functional during our benchmarks at ~14s/request for full interception prompts.
+
+---
+
 ## Session 220 - Language-Aware Safety Filter Terms
 **Date:** 2026-02-27
 **Focus:** Restructure flat filter term lists into per-language dicts, check only detected language + EN
