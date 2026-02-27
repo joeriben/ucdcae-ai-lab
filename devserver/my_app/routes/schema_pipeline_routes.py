@@ -2483,6 +2483,7 @@ def execute_generation_streaming(data: dict):
         SENTINEL = object()
 
         # ComfyUI: inject on_progress callback via ContextVar
+        logger.info(f"[GENERATION-STREAMING] Backend type: {backend_type}")
         if backend_type == 'comfyui':
             def _on_comfyui_progress(event):
                 progress_queue.put(event)
