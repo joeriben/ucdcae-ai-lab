@@ -296,7 +296,7 @@
   align-items: center;
   justify-content: center;
 
-  background: rgba(30, 30, 30, 0.9);
+  background: rgb(30, 30, 30);
   border: 3px solid var(--bubble-color, rgba(255, 255, 255, 0.3));
   border-radius: 50%;
 
@@ -308,7 +308,7 @@
 .config-bubble:hover:not(.disabled):not(.loading),
 .config-bubble.hovered {
   transform: scale(2.0);
-  background: rgba(20, 20, 20, 0.9);
+  background: rgb(20, 20, 20);
   box-shadow: 0 0 30px var(--bubble-color);
   z-index: 100;
 }
@@ -382,26 +382,25 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 18%; /* Slightly more padding for visual breathing room */
+  padding: 15%;
   color: white;
   z-index: 10;
   pointer-events: none;
-  gap: 0.3rem; /* Increased spacing between header and star rows */
+  gap: 0.3rem;
+  /* Sharper text rendering in scaled context */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
 }
 
 .hover-info-name {
-  /*
-   * Model name (longest: "Stable Diffusion 3.5 Large" = 30 chars)
-   * Target: 2-3 lines max within 64% of diameter
-   * Calculation: (200px × 0.64) ÷ 30 chars ÷ 1.3 line-height = ~3.3px/char → 0.55rem
-   */
-  font-size: 0.5rem; /* 8px at 16px root */
-  font-weight: 600;
+  font-size: 0.55rem;
+  font-weight: 700;
   text-align: center;
   line-height: 1.25;
   margin-bottom: 0;
-  letter-spacing: -0.01em; /* Tighter spacing for long names */
-  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: -0.01em;
+  color: white;
   max-width: 100%;
   word-wrap: break-word;
   hyphens: manual;
@@ -426,14 +425,9 @@
 }
 
 .meta-label {
-  /*
-   * Labels: "Quality" (7 chars), "Speed" (5 chars)
-   * Target: Left-aligned, ~35% of row width
-   * Font calculation: Smaller than value, but readable
-   */
-  font-size: 0.45rem; /* 7.2px at 16px root */
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: 400;
+  font-size: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
   text-align: left;
   flex-shrink: 0;
   flex-basis: 35%;
@@ -441,11 +435,7 @@
 }
 
 .meta-value {
-  /*
-   * Star values: Larger for emphasis (most important orientation)
-   * Filled stars: gold, unfilled stars: light gray
-   */
-  font-size: 0.65rem; /* Increased from 0.5rem for better visibility */
+  font-size: 0.7rem;
   font-weight: 500;
   text-align: right;
   white-space: nowrap;
@@ -463,14 +453,10 @@
 }
 
 .meta-value.duration-only {
-  /*
-   * Duration: "⏱ 12-20 sec" (~12 chars including icon)
-   * Target: Centered, full width, unified smaller font
-   */
   width: 100%;
   text-align: center;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 0.45rem;
+  font-size: 0.5rem;
   flex-basis: auto;
   margin-top: 0.25rem;
   line-height: 1;
