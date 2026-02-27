@@ -1,5 +1,45 @@
 # Development Log
 
+## Session 220 - Language-Aware Safety Filter Terms
+**Date:** 2026-02-27
+**Focus:** Restructure flat filter term lists into per-language dicts, check only detected language + EN
+**Commits:** `9f9cb2d`, `c83edf1`
+
+### Problem
+Safety filter terms were a flat list mixing all 7+ languages. Every prompt was checked against every term from every language, causing cross-language false positives — e.g. Turkish "kan" (blood) matching inside German "scharfkantige" (sharp-edged). Not debuggable: logs never showed which language triggered a match.
+
+### Solution: Language-Aware Filtering
+1. **JSON restructure**: `terms` → `terms_by_language` in `youth_kids_safety_filters.json` (kids + youth) and `stage1_86a_critical_bilingual.json` (§86a). All 9 supported languages: de, en, tr, ko, uk, fr, es, he, ar.
+2. **Hybrid language detection** (`_detect_input_language`): Unicode-script for non-Latin scripts (ko=Hangul, uk=Cyrillic, he=Hebrew, ar=Arabic) — deterministic, ~0ms. Frontend `user_language` as fallback for Latin scripts (de/en/tr/fr/es).
+3. **Selective checking** (`_get_active_terms`): Only terms for detected language + EN are checked. A DE user sees 115 terms instead of 588.
+4. **All 13 callsites** in `schema_pipeline_routes.py` updated to extract and pass `user_language`.
+5. **Frontend**: `MediaInputBox.vue` sends `locale.value` as `user_language` in `/safety/quick` requests.
+
+### Key Design Decisions
+- **No new dependencies**: No `langdetect` — unreliable for short prompts (3-10 words). Unicode ranges are deterministic.
+- **EN always checked**: English terms are always in the active set regardless of detected language.
+- **Stage 3 §86a on translated text**: Uses `user_language='en'` explicitly since text is already translated.
+- **Word-boundary for ≤3 chars stays**: Defense-in-depth, unchanged from previous session.
+- **CJK word-boundary limitation**: Known pre-existing issue — Korean terms ≤3 chars don't match with `\b` regex. Not a regression.
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `devserver/schemas/youth_kids_safety_filters.json` | `terms` → `terms_by_language` (9 langs), he/ar error_messages |
+| `devserver/schemas/stage1_86a_critical_bilingual.json` | `terms` → `terms_by_language` (6 langs) |
+| `devserver/schemas/engine/stage_orchestrator.py` | `_detect_input_language()`, `_get_active_terms()`, updated loaders + filter signatures |
+| `devserver/my_app/routes/schema_pipeline_routes.py` | All 13 callsites pass `user_language` |
+| `public/.../MediaInputBox.vue` | Sends `user_language: locale.value` |
+
+### Verification
+- `"scharfkantige Fassaden"` (DE, kids) → **safe** (TR terms not active)
+- `"kan kanlı vahşet"` (TR, kids) → **blocked** (tr+en active)
+- `"kan kanlı vahşet"` (DE, kids) → **safe** (TR terms not active)
+- `"Ein blutiger Kampf"` (DE, kids) → **hit** (Blut in de terms)
+- Hebrew/Arabic auto-detection + filtering works via Unicode ranges
+
+---
+
 ## Session 219 - Real-Time Generation Progress via SSE (ComfyUI + Diffusers)
 **Date:** 2026-02-27
 **Focus:** Replace fake progress simulation with real backend-driven SSE progress events
