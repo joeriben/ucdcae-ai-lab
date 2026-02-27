@@ -1,9 +1,9 @@
 {
   "name": "safety_check_kids",
-  "description": "Safety Check for Kids (strict filter for ages 6-12)",
-  "template": "{{INPUT_TEXT}}",
+  "description": "Safety Check for Kids (strict filter for ages 6-12) — uses general-purpose LLM, NOT guard model",
+  "template": "Is the following text appropriate as an AI image generation prompt for children ages 6-12?\nAnswer SAFE or UNSAFE (one word only).\n\nText: {{INPUT_TEXT}}",
   "backend_type": "ollama",
-  "model": "SAFETY_MODEL",
+  "model": "DSGVO_VERIFY_MODEL",
   "parameters": {
     "temperature": 0.1,
     "top_p": 0.9,

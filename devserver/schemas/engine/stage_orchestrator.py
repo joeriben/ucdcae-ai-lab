@@ -693,13 +693,12 @@ def parse_preoutput_json(output: str) -> Dict[str, Any]:
 
         return parsed
     except json.JSONDecodeError as e:
-        logger.error(f"[SAFETY] Failed to parse pre-output (fail-open TEMPORARY): {e}\nOutput: {output[:200]}")
-        # TEMPORARY fail-open: Ollama/GPU-Service broken, don't block workshop
+        logger.error(f"[SAFETY] Failed to parse pre-output (fail-closed): {e}\nOutput: {output[:200]}")
         return {
-            "safe": True,
+            "safe": False,
             "positive_prompt": None,
             "negative_prompt": None,
-            "abort_reason": None
+            "abort_reason": "Safety check returned unparseable output (fail-closed)"
         }
 
 # ============================================================================

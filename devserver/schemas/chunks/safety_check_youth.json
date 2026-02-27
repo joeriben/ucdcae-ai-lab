@@ -1,9 +1,9 @@
 {
   "name": "safety_check_youth",
-  "description": "Safety Check for Youth (moderate filter for ages 13+)",
-  "template": "{{INPUT_TEXT}}",
+  "description": "Safety Check for Youth (moderate filter for ages 13-16) — uses general-purpose LLM, NOT guard model",
+  "template": "Is the following text appropriate as an AI image generation prompt for teenagers ages 13-16?\nAnswer SAFE or UNSAFE (one word only).\n\nText: {{INPUT_TEXT}}",
   "backend_type": "ollama",
-  "model": "SAFETY_MODEL",
+  "model": "DSGVO_VERIFY_MODEL",
   "parameters": {
     "temperature": 0.1,
     "top_p": 0.9,

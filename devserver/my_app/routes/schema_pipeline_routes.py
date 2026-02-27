@@ -33,6 +33,7 @@ from schemas.engine.stage_orchestrator import (
     llm_verify_person_name,
     llm_verify_age_filter_context
 )
+from my_app.utils.circuit_breaker import safety_breaker
 
 # Execution History Tracking (OLD - DEPRECATED in Session 29)
 # from execution_history import ExecutionTracker
@@ -1510,8 +1511,16 @@ def execute_pipeline_streaming(data: dict):
                     logger.info(f"[UNIFIED-STREAMING] {filter_name} hit: {found_age[:3]} → LLM context check")
                     verify_result = llm_verify_age_filter_context(input_text, found_age, safety_level)
                     if verify_result is None:
-                        logger.warning(f"[UNIFIED-STREAMING] {filter_name} LLM unavailable — fail-open (TEMPORARY)")
+                        safety_breaker.record_failure()
+                        if safety_breaker.is_open():
+                            reason = f'{filter_name}: safety verification unavailable (fail-closed)'
+                            logger.warning(f"[UNIFIED-STREAMING] {reason}")
+                            yield generate_sse_event('blocked', {'stage': 'safety', 'reason': reason})
+                            yield ''
+                            return
+                        logger.warning(f"[UNIFIED-STREAMING] {filter_name} LLM unavailable — circuit breaker recording failure")
                     elif verify_result:
+                        safety_breaker.record_success()
                         reason = f'{filter_name}: {", ".join(found_age[:3])}'
                         logger.warning(f"[UNIFIED-STREAMING] {filter_name} BLOCKED: {reason}")
                         yield generate_sse_event('blocked', {
@@ -1521,6 +1530,7 @@ def execute_pipeline_streaming(data: dict):
                         yield ''
                         return
                     else:
+                        safety_breaker.record_success()
                         logger.info(f"[UNIFIED-STREAMING] {filter_name} false positive (LLM rejected): {found_age[:3]}")
 
             # DSGVO NER check
@@ -1528,8 +1538,16 @@ def execute_pipeline_streaming(data: dict):
             if spacy_ok and has_pii:
                 verify_result = llm_verify_person_name(input_text, found_pii)
                 if verify_result is None:
-                    logger.warning(f"[UNIFIED-STREAMING] DSGVO LLM unavailable — fail-open (TEMPORARY)")
+                    safety_breaker.record_failure()
+                    if safety_breaker.is_open():
+                        reason = 'DSGVO: safety verification unavailable (fail-closed)'
+                        logger.warning(f"[UNIFIED-STREAMING] {reason}")
+                        yield generate_sse_event('blocked', {'stage': 'safety', 'reason': reason})
+                        yield ''
+                        return
+                    logger.warning(f"[UNIFIED-STREAMING] DSGVO LLM unavailable — circuit breaker recording failure")
                 elif verify_result:
+                    safety_breaker.record_success()
                     reason = f'DSGVO: {", ".join(found_pii[:3])}'
                     logger.warning(f"[UNIFIED-STREAMING] DSGVO BLOCKED: {reason}")
                     yield generate_sse_event('blocked', {
@@ -1538,6 +1556,8 @@ def execute_pipeline_streaming(data: dict):
                     })
                     yield ''
                     return
+                else:
+                    safety_breaker.record_success()
 
         logger.info(f"[UNIFIED-STREAMING] Stage 1: Safety PASSED (fast-filters clear)")
 
@@ -2060,10 +2080,17 @@ def safety_check_quick():
                 logger.info(f"[SAFETY-QUICK] {filter_name} hit: {found_age_terms[:3]} → LLM context check")
                 verify_result = llm_verify_age_filter_context(text, found_age_terms, safety_level)
                 if verify_result is None:
-                    # LLM unavailable — fail-open (TEMPORARY)
-                    logger.warning(f"[SAFETY-QUICK] {filter_name} LLM unavailable — fail-open (TEMPORARY)")
+                    safety_breaker.record_failure()
+                    if safety_breaker.is_open():
+                        logger.warning(f"[SAFETY-QUICK] {filter_name}: safety verification unavailable (fail-closed)")
+                        return jsonify({
+                            'safe': False,
+                            'checks_passed': checks_passed + ['age_filter'],
+                            'error_message': f'{filter_name}: safety verification unavailable (fail-closed)'
+                        })
+                    logger.warning(f"[SAFETY-QUICK] {filter_name} LLM unavailable — circuit breaker recording failure")
                 elif verify_result:
-                    # LLM confirmed inappropriate
+                    safety_breaker.record_success()
                     logger.warning(f"[SAFETY-QUICK] {filter_name} BLOCKED (LLM confirmed): {found_age_terms[:3]}")
                     return jsonify({
                         'safe': False,
@@ -2071,7 +2098,7 @@ def safety_check_quick():
                         'error_message': f'{filter_name}: {", ".join(found_age_terms[:3])}'
                     })
                 else:
-                    # False positive — LLM says benign context
+                    safety_breaker.record_success()
                     logger.info(f"[SAFETY-QUICK] {filter_name} false positive (LLM rejected): {found_age_terms[:3]}")
             checks_passed.append('age_filter')
 
@@ -2083,9 +2110,17 @@ def safety_check_quick():
             logger.info(f"[SAFETY-QUICK] NER triggered: {found_pii[:3]} — verifying with LLM")
             verify_result = llm_verify_person_name(text, found_pii)
             if verify_result is None:
-                # LLM unavailable — fail-open (TEMPORARY)
-                logger.warning(f"[SAFETY-QUICK] DSGVO LLM unavailable — fail-open (TEMPORARY)")
+                safety_breaker.record_failure()
+                if safety_breaker.is_open():
+                    logger.warning(f"[SAFETY-QUICK] DSGVO: safety verification unavailable (fail-closed)")
+                    return jsonify({
+                        'safe': False,
+                        'checks_passed': checks_passed + ['dsgvo_ner'],
+                        'error_message': 'DSGVO: safety verification unavailable (fail-closed)'
+                    })
+                logger.warning(f"[SAFETY-QUICK] DSGVO LLM unavailable — circuit breaker recording failure")
             elif verify_result:
+                safety_breaker.record_success()
                 logger.warning(f"[SAFETY-QUICK] DSGVO BLOCKED (LLM confirmed): {found_pii[:3]}")
                 return jsonify({
                     'safe': False,
@@ -2093,6 +2128,7 @@ def safety_check_quick():
                     'error_message': f'DSGVO: {", ".join(found_pii[:3])}'
                 })
             else:
+                safety_breaker.record_success()
                 logger.info(f"[SAFETY-QUICK] NER false positive (LLM rejected): {found_pii[:3]}")
         if spacy_ok:
             checks_passed.append('dsgvo_ner')
