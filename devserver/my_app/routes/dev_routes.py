@@ -1,12 +1,14 @@
 """
 Dev Tools API Routes
-Development-only endpoints for pixel template editor and other dev tools.
+Development-only endpoints for pixel template editor, VRAM monitoring, and other dev tools.
 Only available when DEBUG=True or running on localhost.
 """
 from flask import Blueprint, jsonify, request
 import json
 import logging
 from pathlib import Path
+
+from my_app.services.vram_monitor import get_vram_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -101,4 +103,15 @@ def delete_pixel_template(name: str):
 
     except Exception as e:
         logger.error(f"[DEV] Error deleting pixel template '{name}': {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@dev_bp.route('/vram-status', methods=['GET'])
+def vram_status():
+    """Consolidated VRAM usage across Ollama and GPU Service."""
+    try:
+        monitor = get_vram_monitor()
+        return jsonify(monitor.get_combined_status()), 200
+    except Exception as e:
+        logger.error(f"[DEV] VRAM status error: {e}")
         return jsonify({"error": str(e)}), 500
