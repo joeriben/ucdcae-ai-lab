@@ -234,9 +234,10 @@
       <!-- Expert Generation Summary (persists after generation) -->
       <div v-if="uiMode === 'expert' && outputImage && modelMeta" class="expert-generation-summary">
         <span class="summary-model">{{ resolveModelName(modelMeta) }}</span>
-        <span v-if="modelMeta.backend_type" class="summary-detail">{{ modelMeta.backend_type }}</span>
-        <span v-if="modelMeta.gpu_vram_mb" class="summary-detail">~{{ Math.round(modelMeta.gpu_vram_mb / 1024) }} GB</span>
         <span v-if="modelMeta.recommended_resolution" class="summary-detail">{{ modelMeta.recommended_resolution }}</span>
+        <span v-if="modelMeta.seed != null" class="summary-detail">seed:{{ modelMeta.seed }}</span>
+        <span v-if="modelMeta.cfg != null" class="summary-detail">CFG:{{ modelMeta.cfg }}</span>
+        <span v-if="modelMeta.steps != null" class="summary-detail">{{ modelMeta.steps }} steps</span>
       </div>
 
       <!-- Image Analysis Section -->

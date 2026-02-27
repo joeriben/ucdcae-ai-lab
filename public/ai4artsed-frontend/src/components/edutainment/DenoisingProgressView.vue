@@ -72,31 +72,17 @@
         <img :src="previewImage" alt="" class="denoising-preview-large" />
       </div>
 
-      <div class="denoising-stats">
-        <div class="step-progress">
-          <span class="step-text">
-            {{ stepDisplay }}
-          </span>
-          <div class="step-bar-track">
-            <div class="step-bar-fill" :style="{ width: progress + '%' }"></div>
-          </div>
-          <span class="step-percent">{{ Math.round(progress) }}%</span>
+      <div class="denoising-compact">
+        <div class="step-bar-track">
+          <div class="step-bar-fill" :style="{ width: progress + '%' }"></div>
         </div>
-
-        <div class="stats-line">
-          <span class="stats-model">{{ profileName }}</span>
-          <span v-if="gpuStats.available && gpuStats.power_draw_watts" class="stats-gpu">
-            {{ Math.round(gpuStats.power_draw_watts) }}W
-          </span>
-          <span v-if="gpuStats.available && gpuStats.memory_used_mb && gpuStats.memory_total_mb" class="stats-vram">
-            {{ (gpuStats.memory_used_mb / 1024).toFixed(1) }}/{{ (gpuStats.memory_total_mb / 1024).toFixed(0) }} GB VRAM
-          </span>
+        <div class="stats-line-compact">
+          <span v-if="gpuStats.available && gpuStats.power_draw_watts" class="stat-seg">{{ Math.round(gpuStats.power_draw_watts) }}W · {{ totalKwh }} kWh</span>
+          <span class="stat-sep" v-if="gpuStats.available && gpuStats.power_draw_watts">|</span>
+          <span v-if="gpuStats.available" class="stat-seg">GPU {{ gpuStats.utilization_percent ?? 0 }}%<template v-if="gpuStats.memory_used_mb && gpuStats.memory_total_mb"> · {{ (gpuStats.memory_used_mb / 1024).toFixed(1) }}/{{ (gpuStats.memory_total_mb / 1024).toFixed(0) }}GB</template></span>
+          <span class="stat-sep" v-if="gpuStats.available">|</span>
+          <span class="stat-seg"><template v-if="modelMeta?.seed != null">seed:{{ modelMeta.seed }}</template><template v-if="modelMeta?.cfg != null"> · CFG:{{ modelMeta.cfg }}</template><template v-if="stepTotal"> · {{ stepCurrent }}/{{ stepTotal }}</template></span>
         </div>
-      </div>
-
-      <!-- Rotating fact -->
-      <div v-if="currentFact" class="expert-fact">
-        {{ currentFact.text }}
       </div>
     </div>
   </div>
@@ -284,19 +270,23 @@ const resolutionDisplay = computed(() => {
   return props.modelMeta?.recommended_resolution || ''
 })
 
-const stepDisplay = computed(() => {
-  if (props.progress <= 0) return t('edutainment.denoising.denoisingActive')
-  // Progress is 0-100, we don't have explicit step/total from SSE yet
-  return t('edutainment.denoising.denoisingActive')
+// Derive step info from progress + meta.steps
+const stepTotal = computed(() => props.modelMeta?.steps ?? 0)
+const stepCurrent = computed(() => {
+  if (!stepTotal.value || props.progress <= 0) return 0
+  return Math.round(props.progress * stepTotal.value / 100)
 })
 
 // --- Edutainment facts + GPU stats ---
 const {
   gpuStats,
   currentFact,
+  totalEnergyWh,
   startRotation,
   stopRotation,
 } = useEdutainmentFacts('expert')
+
+const totalKwh = computed(() => (totalEnergyWh.value / 1000).toFixed(3))
 
 // Start/stop rotation when component is shown
 startRotation()
@@ -443,71 +433,42 @@ watch(() => props.previewImage, () => {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.denoising-stats {
+.denoising-compact {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
-.step-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.step-text {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
-  white-space: nowrap;
-  min-width: fit-content;
-}
-
-.step-bar-track {
-  flex: 1;
-  height: 4px;
+.denoising-compact .step-bar-track {
+  height: 3px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
   overflow: hidden;
 }
 
-.step-bar-fill {
+.denoising-compact .step-bar-fill {
   height: 100%;
   background: rgba(76, 175, 80, 0.7);
   border-radius: 2px;
   transition: width 0.3s ease;
 }
 
-.step-percent {
-  font-size: 0.78rem;
-  color: rgba(76, 175, 80, 0.8);
-  font-weight: 600;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  min-width: 36px;
-  text-align: right;
-}
-
-.stats-line {
+.stats-line-compact {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.stats-model {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.stats-gpu,
-.stats-vram {
   font-family: 'SF Mono', 'Fira Code', monospace;
+  color: rgba(255, 255, 255, 0.5);
+  flex-wrap: wrap;
 }
 
-.stats-gpu::before,
-.stats-vram::before {
-  content: '\00B7';
-  margin-right: 0.75rem;
-  opacity: 0.4;
+.stat-seg {
+  white-space: nowrap;
+}
+
+.stat-sep {
+  color: rgba(255, 255, 255, 0.2);
 }
 
 /* Expert fact (shared between phases) */

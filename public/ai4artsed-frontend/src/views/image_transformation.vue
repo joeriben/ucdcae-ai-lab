@@ -1560,7 +1560,8 @@ watch(() => favoritesStore.pendingRestoreData, (restoreData) => {
 .config-bubble.selected {
   transform: scale(1.1);
   background: var(--bubble-color);
-  box-shadow: 0 0 30px var(--bubble-color);
+  box-shadow: 0 0 30px var(--bubble-color),
+              0 0 60px var(--bubble-color);
   border-color: #ffffff;
 }
 

@@ -1346,7 +1346,7 @@ export const en = {
       youth_1: '⚡ A GPU uses {watts}W while generating – like a small space heater!',
       youth_2: '🔋 One image uses about 0.01-0.02 kWh – sounds little, but adds up!',
       youth_3: '🌡️ The GPU is getting {temp}°C hot right now – that\'s why it needs cooling!',
-      expert_1: '📊 Current draw: {watts} W | GPU load: {util}% | Accumulated: {kwh} kWh (integrated over time)',
+      expert_1: '⚡ Current draw: {watts} W | GPU load: {util}% | Accumulated: {kwh} kWh (integrated over time)',
       expert_2: '🔥 TDP limit: {tdp}W | Current: {watts}W ({percent}% of limit)',
       expert_3: '💾 VRAM: {used}/{total} GB ({percent}%) – model + activations'
     },
@@ -1369,7 +1369,7 @@ export const en = {
       youth_2: '📚 3 text encoders work together: CLIP-L, CLIP-G, and T5-XXL',
       youth_3: '🔢 The model needs {vram} GB VRAM just to be loaded!',
       expert_1: '🏗️ Architecture: Rectified Flow + MMDiT with 38 transformer blocks',
-      expert_2: '📊 FP16/FP8 quantization: precision vs. VRAM trade-off',
+      expert_2: '🔧 FP16/FP8 quantization: precision vs. VRAM trade-off',
       expert_3: '🔗 LoRA: Low-Rank Adaptation – only 0.1% of parameters retrained'
     },
     ethics: {
@@ -1390,7 +1390,7 @@ export const en = {
       youth_1: '🏭 German power grid: ~400g CO₂ per kWh – that adds up!',
       youth_2: '📈 {co2}g CO₂ for this image – with 1000 images that would be {totalKg} kg!',
       youth_3: '💡 Tip: Generate fewer images, but more thoughtfully – saves energy and CO₂.',
-      expert_1: '📊 Calculation: {watts}W × {seconds}s ÷ 3600 × 400g/kWh = {co2}g CO₂',
+      expert_1: '🌍 Calculation: {watts}W × {seconds}s ÷ 3600 × 400g/kWh = {co2}g CO₂',
       expert_2: '🔬 Scope 2 emissions: data center location is decisive',
       expert_3: '⚡ PUE (Power Usage Effectiveness): Additional energy overhead for cooling'
     },

@@ -10,8 +10,16 @@ each processed work order to **Completed** with a date stamp.
 - **Session**: 220
 - **Scope**: en.ts
 - **Changed keys** (new or modified):
-  - `edutainment.energy.expert_1` (MODIFIED): "Realtime: {watts}W at {util}% utilization = {kwh} kWh so far" -> "Current draw: {watts} W | GPU load: {util}% | Accumulated: {kwh} kWh (integrated over time)"
-- **Context**: The old text used "=" which falsely implied kWh is derived from a single W reading. kWh is actually integrated from sampled power readings over time. Reworded to separate the three independent readings with pipes.
+  - `edutainment.energy.expert_1` (MODIFIED): emoji changed from 📊 to ⚡, text reworded to "Current draw: {watts} W | GPU load: {util}% | Accumulated: {kwh} kWh (integrated over time)"
+- **Context**: The old text used "=" which falsely implied kWh is derived from a single W reading. kWh is actually integrated from sampled power readings over time. Reworded to separate the three independent readings with pipes. Also replaced 📊 emoji.
+
+### WO-2026-02-27-replace-chart-emoji
+- **Session**: 220
+- **Scope**: en.ts
+- **Changed keys** (new or modified):
+  - `edutainment.model.expert_2` (MODIFIED): emoji 📊 -> 🔧 (only emoji changed, text unchanged)
+  - `edutainment.environment.expert_1` (MODIFIED): emoji 📊 -> 🌍 (only emoji changed, text unchanged)
+- **Context**: 📊 (bar chart emoji) was flagged as forbidden. Replaced with contextually fitting alternatives: 🔧 for quantization, 🌍 for CO₂ calculation. Only the leading emoji changed, NOT the text.
 
 ### WO-2026-02-27-denoising-progress-view
 - **Session**: 220
