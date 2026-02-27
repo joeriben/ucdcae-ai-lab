@@ -1513,7 +1513,7 @@ def execute_pipeline_streaming(data: dict):
                     if verify_result is None:
                         safety_breaker.record_failure()
                         if safety_breaker.is_open():
-                            reason = f'{filter_name}: safety verification unavailable (fail-closed)'
+                            reason = f'{filter_name}: Sicherheitsprüfung nicht verfügbar. Bitte Ollama neustarten: sudo systemctl restart ollama'
                             logger.warning(f"[UNIFIED-STREAMING] {reason}")
                             yield generate_sse_event('blocked', {'stage': 'safety', 'reason': reason})
                             yield ''
@@ -1540,7 +1540,7 @@ def execute_pipeline_streaming(data: dict):
                 if verify_result is None:
                     safety_breaker.record_failure()
                     if safety_breaker.is_open():
-                        reason = 'DSGVO: safety verification unavailable (fail-closed)'
+                        reason = 'DSGVO: Sicherheitsprüfung nicht verfügbar. Bitte Ollama neustarten: sudo systemctl restart ollama'
                         logger.warning(f"[UNIFIED-STREAMING] {reason}")
                         yield generate_sse_event('blocked', {'stage': 'safety', 'reason': reason})
                         yield ''
@@ -2082,11 +2082,11 @@ def safety_check_quick():
                 if verify_result is None:
                     safety_breaker.record_failure()
                     if safety_breaker.is_open():
-                        logger.warning(f"[SAFETY-QUICK] {filter_name}: safety verification unavailable (fail-closed)")
+                        logger.warning(f"[SAFETY-QUICK] {filter_name}: Sicherheitsprüfung nicht verfügbar. Bitte Ollama neustarten: sudo systemctl restart ollama")
                         return jsonify({
                             'safe': False,
                             'checks_passed': checks_passed + ['age_filter'],
-                            'error_message': f'{filter_name}: safety verification unavailable (fail-closed)'
+                            'error_message': f'{filter_name}: Sicherheitsprüfung nicht verfügbar. Bitte Ollama neustarten: sudo systemctl restart ollama'
                         })
                     logger.warning(f"[SAFETY-QUICK] {filter_name} LLM unavailable — circuit breaker recording failure")
                 elif verify_result:
@@ -2112,11 +2112,11 @@ def safety_check_quick():
             if verify_result is None:
                 safety_breaker.record_failure()
                 if safety_breaker.is_open():
-                    logger.warning(f"[SAFETY-QUICK] DSGVO: safety verification unavailable (fail-closed)")
+                    logger.warning(f"[SAFETY-QUICK] DSGVO: Sicherheitsprüfung nicht verfügbar. Bitte Ollama neustarten: sudo systemctl restart ollama")
                     return jsonify({
                         'safe': False,
                         'checks_passed': checks_passed + ['dsgvo_ner'],
-                        'error_message': 'DSGVO: safety verification unavailable (fail-closed)'
+                        'error_message': 'DSGVO: Sicherheitsprüfung nicht verfügbar. Bitte Ollama neustarten: sudo systemctl restart ollama'
                     })
                 logger.warning(f"[SAFETY-QUICK] DSGVO LLM unavailable — circuit breaker recording failure")
             elif verify_result:
