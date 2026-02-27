@@ -40,6 +40,69 @@ Safety filter terms were a flat list mixing all 7+ languages. Every prompt was c
 
 ---
 
+## Session 220b - Pedagogical Denoising View (Expert UI Mode)
+**Date:** 2026-02-27
+**Focus:** Replace edutainment games with real-time denoising progress view for `UI_MODE=expert`
+**Commits:** `0b76e23`, `ceb641f`, `3a88d64`, `52b2d57`, `d7e271d`, `52bdf93`, `5bf31e9`, `400c92a`
+
+### Problem
+During image generation (5-90s), the waiting screen shows edutainment mini-games (Forest, Iceberg, Pixel). For expert mode users (educators, researchers), this wastes valuable pedagogical surface — they should see the AI's actual work: model specs, GPU load, denoising steps, energy consumption.
+
+### Solution: Two-Phase Expert View
+
+**Phase A — Model Loading** (model not yet in VRAM):
+Model "Steckbrief" (identity card) showing publisher, architecture, parameters, text encoders, quantization, license, Fair Culture assessment, Safety-by-Design notes. Rotating expert facts about GPU/energy below.
+
+**Phase B — Denoising Active** (inference running):
+Large denoising preview image (ComfyUI only) + compact single-line stats:
+`593W · 0.003 kWh | GPU 95% · 51.9/96GB | seed:12345 · CFG:1 · 12/20`
+
+**Post-Generation Summary Bar:**
+`FLUX.2 [dev] · 23.4s · 0.003 kWh · 1024x1024 · seed:12345 · CFG:1 · 20 steps`
+
+### Key Design Decisions
+- **Backend-aware phase detection**: Diffusers only reports progress during inference (`progress === 0` = loading). ComfyUI reports node-level progress during loading too (`!previewImage` = loading signal).
+- **Energy tracking persistence**: `stats-snapshot` emit on `onBeforeUnmount` captures final kWh/CO₂ before component destruction. Parent stores values for summary bar.
+- **`stage4DurationMs`**: Measured from `stage4_start` SSE to `complete` event in `useGenerationStream`.
+- **Reset stale state**: `generationProgress`, `previewImage`, `modelMeta` reset at start of `executeWithStreaming` to prevent previous run's data leaking.
+- **`useEdutainmentFacts('expert')` reused**: Same GPU stats polling composable, rotating facts filtered by audience level.
+- **UI_MODE Pinia store**: New `src/stores/uiMode.ts` mirrors `safetyLevel.ts` pattern, fetched via `/api/settings/ui-mode`.
+
+### Iterative Refinements (8 commits)
+1. Initial implementation with two-phase layout + model profiles
+2. Persist model summary below generated output + match preview to output dimensions
+3. Fact-check model profiles (corrected FLUX architecture, SD3.5 params, licenses)
+4. Collapse Phase B from multi-section to single compact stats line; fix summary bar (remove backend_type/model_size, add resolution/seed/CFG/steps); strengthen config bubble glow in all 4 views
+5. Fix kWh staying at 0 — `watch(previewImage)` was resetting energy counters on phase transition
+6. Phase switch by progress + add duration/kWh to post-generation summary
+7. Fix missing `totalCo2Grams` destructure (type-check error)
+8. Backend-aware phase detection — ComfyUI vs Diffusers loading heuristics
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `src/components/edutainment/DenoisingProgressView.vue` | **NEW** ~300 lines, two-phase expert view |
+| `src/stores/uiMode.ts` | **NEW** Pinia store for UI_MODE |
+| `devserver/my_app/routes/settings_routes.py` | `/api/settings/ui-mode` endpoint |
+| `devserver/my_app/routes/schema_pipeline_routes.py` | `model_meta` in `stage4_start` SSE + seed/cfg/steps from config_params |
+| `src/composables/useGenerationStream.ts` | `modelMeta`, `stage4DurationMs`, reset at start |
+| `src/components/MediaOutputBox.vue` | Expert view integration + summary bar + stats-snapshot handler |
+| `src/views/text_transformation.vue` | Prop wiring (modelMeta, uiMode, stage4DurationMs) |
+| `src/views/image_transformation.vue` | Prop wiring + config bubble glow |
+| `src/views/multi_image_transformation.vue` | Prop wiring + config bubble glow |
+| `src/views/music_generation.vue` | Config bubble glow |
+| `src/views/text_transformation.css` | Config bubble glow |
+| `src/i18n/en.ts` | 13 new `edutainment.denoising.*` keys + 📊→⚡/🔧/🌍 emoji fix |
+| `src/i18n/de.ts` | Matching 📊 emoji fix |
+| `src/i18n/WORK_ORDERS.md` | 3 work orders for batch translation |
+
+### Known Issues (deferred to Session 221)
+- **Model profiles hardcoded** in `MODEL_PROFILES` dict — should be in output config `meta` fields
+- **ComfyUI (Qwen) shows empty stats** — seed/cfg/steps not available from query params or config_params for ComfyUI configs
+- **3 i18n work orders pending** — need `./6_run_i18n_translator.sh --unattended`
+
+---
+
 ## Session 219 - Real-Time Generation Progress via SSE (ComfyUI + Diffusers)
 **Date:** 2026-02-27
 **Focus:** Replace fake progress simulation with real backend-driven SSE progress events
