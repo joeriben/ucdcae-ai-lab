@@ -1407,6 +1407,77 @@ def get_preset_for_provider(provider):
         return jsonify({"error": str(e)}), 500
 
 
+@settings_bp.route('/apply-preset', methods=['POST'])
+@require_settings_auth
+def apply_preset():
+    """Apply a provider preset to runtime config AND persist to user_settings.json.
+
+    Solves the sync bug where UI preset switches updated runtime config
+    but were lost on restart because user_settings.json was never written.
+    """
+    try:
+        data = request.get_json()
+        if not data or 'provider' not in data:
+            return jsonify({"error": "Request must contain 'provider'"}), 400
+
+        provider = data['provider']
+        vram_tier = data.get('vram_tier')
+
+        if not vram_tier:
+            gpu_info = detect_gpu_vram()
+            vram_tier = gpu_info.get('vram_tier', 'vram_16')
+
+        # Get merged preset
+        preset = get_merged_preset(provider, vram_tier)
+        models = preset.get('models', {})
+
+        # 1. Apply to runtime config
+        applied = []
+        for key, value in models.items():
+            if hasattr(config, key):
+                setattr(config, key, value)
+                applied.append(key)
+
+        # Also apply provider-level settings
+        if preset.get('EXTERNAL_LLM_PROVIDER'):
+            config.EXTERNAL_LLM_PROVIDER = preset['EXTERNAL_LLM_PROVIDER']
+            applied.append('EXTERNAL_LLM_PROVIDER')
+        if 'DSGVO_CONFORMITY' in preset:
+            config.DSGVO_CONFORMITY = preset['DSGVO_CONFORMITY']
+            applied.append('DSGVO_CONFORMITY')
+
+        # 2. Persist to user_settings.json
+        settings = {}
+        if SETTINGS_FILE.exists():
+            with open(SETTINGS_FILE) as f:
+                settings = json.load(f)
+
+        settings.update(models)
+        if preset.get('EXTERNAL_LLM_PROVIDER'):
+            settings['EXTERNAL_LLM_PROVIDER'] = preset['EXTERNAL_LLM_PROVIDER']
+        if 'DSGVO_CONFORMITY' in preset:
+            settings['DSGVO_CONFORMITY'] = preset['DSGVO_CONFORMITY']
+
+        SETTINGS_FILE.parent.mkdir(exist_ok=True)
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(settings, f, indent=2)
+
+        logger.info(
+            f"[SETTINGS] Preset '{provider}' applied ({len(applied)} settings) "
+            f"and persisted to {SETTINGS_FILE.name}"
+        )
+        return jsonify({
+            "success": True,
+            "provider": provider,
+            "vram_tier": vram_tier,
+            "applied": applied,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"[SETTINGS] Error applying preset: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @settings_bp.route('/reload-settings', methods=['POST'])
 @require_settings_auth
 def reload_settings():
