@@ -43,11 +43,12 @@ NO meta-commentary, NO headers, NO formatting."""
     },
 
     "triple_prompt_optimization": {
-        "description": "Generate encoder-specific prompts for SD3.5 triple text encoder",
-        "default": """Transform the Input into three encoder-specific prompts for SD3.5.
+        "description": "Generate CLIP-specific prompts for SD3.5 (T5 uses user text directly)",
+        "default": """Transform the Input into two CLIP-specific prompts for SD3.5.
+T5-XXL receives the user's original text separately.
 
 Output ONLY valid JSON with exactly these keys:
-{"clip_l": "...", "clip_g": "...", "t5": "..."}
+{"clip_l": "...", "clip_g": "..."}
 
 NO meta-commentary. NO markdown. NO code fences. NO explanation."""
     },

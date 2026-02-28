@@ -88,7 +88,7 @@
     </div>
 
 
-    <!-- Content: Triple-Prompt Display (SD3.5 per-encoder) -->
+    <!-- Content: CLIP-Prompt Display (SD3.5 per-encoder, T5 uses interception result) -->
     <div v-else-if="inputType === 'text' && triplePromptData" class="triple-prompt-display">
       <div class="triple-section">
         <div class="triple-label">CLIP-L <span class="triple-tag">Visual</span></div>
@@ -97,10 +97,6 @@
       <div class="triple-section">
         <div class="triple-label">CLIP-G <span class="triple-tag">Semantic</span></div>
         <div class="triple-content">{{ triplePromptData.clip_g }}</div>
-      </div>
-      <div class="triple-section">
-        <div class="triple-label">T5-XXL <span class="triple-tag">Narrative</span></div>
-        <div class="triple-content triple-content-long">{{ triplePromptData.t5 }}</div>
       </div>
     </div>
 
@@ -279,8 +275,8 @@ const triplePromptData = computed(() => {
   if (!trimmed.startsWith('{')) return null
   try {
     const data = JSON.parse(trimmed)
-    if (data && typeof data === 'object' && 'clip_l' in data && 'clip_g' in data && 't5' in data) {
-      return data as { clip_l: string; clip_g: string; t5: string }
+    if (data && typeof data === 'object' && 'clip_l' in data && 'clip_g' in data) {
+      return data as { clip_l: string; clip_g: string }
     }
   } catch {
     // Not valid JSON — fall through to normal textarea
@@ -894,12 +890,6 @@ onUnmounted(() => {
   font-size: clamp(0.8rem, 1.8vw, 0.9rem);
   line-height: 1.4;
   word-break: break-word;
-}
-
-.triple-content-long {
-  font-size: clamp(0.75rem, 1.6vw, 0.85rem);
-  max-height: 120px;
-  overflow-y: auto;
 }
 
 /* Loading Overlay */
