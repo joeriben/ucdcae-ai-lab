@@ -55,7 +55,7 @@
       "1024x768",
       "768x1024"
     ],
-    "notes": "SD3.5 Large uses Dual CLIP (clip_g + t5xxl) for superior text understanding. Best quality at 1024x1024 resolution.",
+    "notes": "SD3.5 Large uses Triple CLIP (clip_l + clip_g + t5xxl). Optimization generates CLIP-L/G only; T5-XXL receives the user's interception text (translated by Stage 3 at kids level, otherwise user must translate manually).",
     "display_name": "Stable Diffusion 3.5 Large",
     "icon": "\uD83C\uDFA8",
     "publisher": "Stability AI (London, UK)",

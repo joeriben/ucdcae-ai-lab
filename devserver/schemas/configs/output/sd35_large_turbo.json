@@ -49,7 +49,7 @@
       "1024x768",
       "768x1024"
     ],
-    "notes": "Adversarial Diffusion Distillation from SD3.5 Large. 4 steps, CFG 0.0. Same MMDiT architecture and text encoders.",
+    "notes": "Adversarial Diffusion Distillation from SD3.5 Large. 4 steps, CFG 0.0. Same triple encoder setup; T5-XXL uses user's interception text (translated by Stage 3 at kids level only).",
     "display_name": "SD 3.5 Large Turbo",
     "icon": "\u26A1",
     "publisher": "Stability AI (London, UK)",
