@@ -1,5 +1,83 @@
 # Development Log
 
+## Session 227 - T5 Interpretability: From SAE to Cultural Drift
+**Date:** 2026-02-28 / 2026-03-01
+**Focus:** Complete T5 interpretability pipeline, validate sonification methods, discover cultural drift in semantic axes
+**Commits:** `bf3a469`, `03fca7d`, `9c741e0`, `f726d72`, `b97572e`, `a99068a`
+
+### What Happened
+
+Executed the full T5 Interpretability Research pipeline (7 phases), then spent most of the session empirically validating whether the results are actionable — leading to unexpected findings about cultural bias encoded in perceptual dimensions.
+
+### Phase 1-7: Pipeline Execution
+
+Ran all scripts from `research/t5_interpretability/`. Corpus: 392K prompts (388K bulk from AudioCaps/MusicCaps/WavCaps + 3.9K structured probing across 15 musical traditions). Encoded through T5-Base → [392K, 768] activations.
+
+**SAE training failure and fix:** TopK sparsity (Anthropic recipe) produced 99.3% dead features — winner-take-all gradient dynamics killed almost all neurons. Neuron resampling didn't help (features died within 5 epochs of stopping). Solution: switched to ReLU + L1 sparsity → 0.0% dead features (6143/6144 alive). Key lesson: L1 > TopK for small domain-specific corpora.
+
+Cultural analysis confirmed: 15 tradition centroids are significantly non-random (permutation test p=0.001), Electronic maximally distant from all acoustic traditions, 265 features needed for 90% discrimination.
+
+### The Critique That Changed Everything
+
+Listening to the SAE sonification outputs, user correctly identified that the feature interpretations were "frei erfunden" — post-hoc correlational labels without causal validation. Activating Feature #1058 (labeled "Balinese gamelan") produced generic percussive clicks, not Balinese music. The sonification failed to validate the SAE feature semantics.
+
+This triggered a systematic investigation of *why* embedding injection doesn't work.
+
+### Four Validation Experiments (1,500 audio samples total)
+
+| Experiment | Method | Samples | Key Result |
+|---|---|---|---|
+| C1: Text prompts | "sound rhythmic" vs "sound sustained" as text | 200 | **d=2.88*** (massive effect) |
+| C2: Injection | T5 difference vector into neutral embedding | 200 | **d=0.83*** (weak, 6% retention) |
+| C3: LERP | Interpolation between two natural T5 outputs | 500 | **d=2.43*** (84% retention) |
+| C4: Multi-axis | 3 axes combined additively | 400 | **d=1.02*** (35% retention) |
+
+**The discovery:** LERP between natural T5 embeddings recovers 84% of text-prompt effect with monotonic gradients (Pearson r=0.63). Vector arithmetic (injection) fails because it creates out-of-distribution embeddings that Stable Audio's cross-attention ignores. LERP succeeds because both endpoints are natural T5 outputs.
+
+Multi-axis additive combination degrades to ~35% per axis — the combined embedding drifts from the T5 manifold. A bridge model could potentially recover this.
+
+### Cultural Drift Analysis
+
+The session's most pedagogically significant finding. Measured how moving along 21 semantic axes (8 perceptual, 7 cultural-contextual, 6 critical) shifts the embedding's proximity to 15 tradition centroids. Key discoveries:
+
+- **"traditional ↔ modern"**: Ukrainian drifts most toward "traditional" (-0.071). African American = near zero. T5 codes "traditional" as geographically non-Western.
+- **"professional ↔ amateur"**: Electronic = most "professional." African American = **only** tradition drifting toward "amateur." A measurable bias.
+- **"music ↔ noise"**: Tuvan and Aboriginal Australian furthest from "music." Confirms default-encoding bias.
+- **"complex ↔ simple"**: No Eurocentrism detected — a notable null finding.
+- **"tonal ↔ noisy"**: Most culturally loaded "perceptual" axis. Moving toward "tonal" pulls toward all traditions, but differentially (Flamenco -0.321, Aboriginal -0.260).
+
+Three axis categories identified for pedagogical design:
+1. **Culturally neutral** (loud↔quiet, complex↔simple): safe for aesthetic exploration
+2. **Culturally biased** (traditional↔modern, professional↔amateur): drift should be shown to learners
+3. **Culturally constitutive** (tonal↔noisy, music↔noise): reproduce boundary definitions of what counts as music
+
+### Files Created
+- `research/t5_interpretability/sonify_binary_contrasts.py` — 10 binary contrast pairs
+- `research/t5_interpretability/statistical_sonification_test.py` — Text-prompt validation (N=100)
+- `research/t5_interpretability/statistical_embedding_injection_test.py` — Injection validation (N=100)
+- `research/t5_interpretability/statistical_lerp_test.py` — LERP gradient test (N=500)
+- `research/t5_interpretability/statistical_multiaxis_test.py` — Multi-axis factorial (N=400)
+- `research/t5_interpretability/cultural_drift_analysis.py` — 21 axes x 15 traditions
+- `research/t5_interpretability/FINDINGS.md` — Comprehensive research summary (9 sections)
+
+### Files Modified
+- `research/t5_interpretability/config.py` — SAE hyperparams (8x expansion, L1 params)
+- `research/t5_interpretability/train_sae.py` — Complete rewrite: TopK → L1+ReLU
+
+### Data Generated (gitignored)
+~2.5 GB in `research/t5_interpretability/data/`: 1,500+ WAV files, SAE weights (37 MB), activations (575 MB), feature atlas, cultural analysis, drift analysis.
+
+### Status
+Research complete. The FINDINGS.md document contains all results with full statistical backing. The cultural drift analysis connects the technical LERP findings with the project's pedagogical mission — making visible how AI models entangle aesthetic and cultural categories.
+
+### Open Questions
+1. Does multi-axis LERP work better with a learned bridge model?
+2. Are the statistical effects perceptually audible at each LERP step?
+3. Which additional text-pole pairs produce the strongest perceptual gradients?
+4. How should the UI communicate cultural drift alongside sound output?
+
+---
+
 ## Session 226 - SD3.5 Per-Encoder CLIP Optimization
 **Date:** 2026-02-28
 **Focus:** Give each of SD3.5's three text encoders the right input instead of the same prompt
