@@ -12,6 +12,7 @@ INSTRUCTION_TYPES = {
     "transformation": {
         "description": "Transform Input according to Context rules (Prompt Interception)",
         "default": """Transform the Input according to the rules in Context.
+ALWAYS reply in the language of the Input.
 
 CULTURAL RESPECT PRINCIPLES:
 - When describing cultural practices, heritages, or non-Western contexts: Use the same neutral, fact-based approach as for Western contexts
@@ -21,6 +22,7 @@ CULTURAL RESPECT PRINCIPLES:
 
 Output ONLY the transformed result.
 NO meta-commentary ("I will...", "This shows...", "wird ausgeführt als...").
+NO headlines, NO titles, NO bulletpoints, NO **formatting**.
 Use the specific vocabulary and techniques defined in Context."""
     },
 

@@ -51,6 +51,7 @@ class PromptInterceptionRequest:
     input_context: str = ""
     style_prompt: str = ""
     task_instruction: str = ""  # NEW: Meta-instruction for HOW to transform
+    prebuilt_prompt: str = ""   # If set, bypass build_full_prompt() and use directly
     model: str = "local/gemma2:9b"
     debug: bool = False
     unload_model: bool = False
@@ -134,13 +135,18 @@ class PromptInterceptionEngine:
     async def process_request(self, request: PromptInterceptionRequest) -> PromptInterceptionResponse:
         """Hauptmethode - Request verarbeiten"""
         try:
-            # Full-Prompt erstellen (Session 134: now includes task_instruction)
-            full_prompt = self.build_full_prompt(
-                request.input_prompt,
-                request.input_context,
-                request.style_prompt,
-                request.task_instruction  # NEW: Meta-instruction for transformation
-            )
+            # Use pre-built prompt if available (bypasses destructive parse/rebuild cycle)
+            # This is the correct architecture: ChunkBuilder builds prompt, engine just routes it
+            if request.prebuilt_prompt:
+                full_prompt = request.prebuilt_prompt
+            else:
+                # Legacy path: build prompt from parts (kept for backward compatibility)
+                full_prompt = self.build_full_prompt(
+                    request.input_prompt,
+                    request.input_context,
+                    request.style_prompt,
+                    request.task_instruction
+                )
             
             # Modellnamen extrahieren
             real_model_name = self.extract_model_name(request.model)
@@ -151,35 +157,35 @@ class PromptInterceptionEngine:
 
             # Route based on provider prefix (explicit routing)
             # Canvas and other components select specific providers via prefix
+            params = request.parameters or {}
             if request.model.startswith("local/") or real_model_name in self.ollama_models:
                 output_text, model_used = await self._call_ollama(
                     full_prompt, real_model_name, request.debug, request.unload_model,
-                    parameters=request.parameters
+                    parameters=params
                 )
             elif request.model.startswith("bedrock/"):
                 output_text, model_used = await self._call_aws_bedrock(
-                    full_prompt, real_model_name, request.debug
+                    full_prompt, real_model_name, request.debug, parameters=params
                 )
             elif request.model.startswith("openrouter/"):
-                # OpenRouter can route any model (anthropic/, mistral/, etc.)
                 output_text, model_used = await self._call_openrouter(
-                    full_prompt, real_model_name, request.debug
+                    full_prompt, real_model_name, request.debug, parameters=params
                 )
             elif request.model.startswith("anthropic/"):
                 output_text, model_used = await self._call_anthropic(
-                    full_prompt, real_model_name, request.debug
+                    full_prompt, real_model_name, request.debug, parameters=params
                 )
             elif request.model.startswith("openai/"):
                 output_text, model_used = await self._call_openai(
-                    full_prompt, real_model_name, request.debug
+                    full_prompt, real_model_name, request.debug, parameters=params
                 )
             elif request.model.startswith("mistral/"):
                 output_text, model_used = await self._call_mistral(
-                    full_prompt, real_model_name, request.debug
+                    full_prompt, real_model_name, request.debug, parameters=params
                 )
             elif real_model_name in self.openrouter_models:
                 output_text, model_used = await self._call_openrouter(
-                    full_prompt, real_model_name, request.debug
+                    full_prompt, real_model_name, request.debug, parameters=params
                 )
             else:
                 return PromptInterceptionResponse(
@@ -206,16 +212,17 @@ class PromptInterceptionEngine:
                 success=False, error=str(e)
             )
     
-    async def _call_openrouter(self, prompt: str, model: str, debug: bool) -> Tuple[str, str]:
+    async def _call_openrouter(self, prompt: str, model: str, debug: bool,
+                               parameters: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
         """OpenRouter API Call mit Fallback"""
         try:
             logger.info(f"[BACKEND] ☁️  OpenRouter Request: {model}")
-            
+
             api_url, api_key = self._get_openrouter_credentials()
-            
+
             if not api_key:
                 raise Exception("OpenRouter API Key not configured")
-            
+
             headers = {
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json"
@@ -225,11 +232,14 @@ class PromptInterceptionEngine:
             messages = [
                 {"role": "user", "content": prompt}
             ]
+            params = parameters or {}
             payload = {
                 "model": model,
                 "messages": messages,
-                "temperature": 0.7
+                "temperature": params.get("temperature", 0.7),
             }
+            if "max_tokens" in params:
+                payload["max_tokens"] = params["max_tokens"]
 
             response = requests.post(api_url, headers=headers, data=json.dumps(payload))
             if response.status_code == 200:
@@ -253,7 +263,7 @@ class PromptInterceptionEngine:
             if fallback_model != model:
                 if debug:
                     logger.info(f"OpenRouter Fallback: {fallback_model}")
-                return await self._call_openrouter(prompt, fallback_model, debug)
+                return await self._call_openrouter(prompt, fallback_model, debug, parameters=parameters)
             else:
                 raise e
     
@@ -306,7 +316,8 @@ class PromptInterceptionEngine:
             else:
                 raise e
 
-    async def _call_anthropic(self, prompt: str, model: str, debug: bool) -> Tuple[str, str]:
+    async def _call_anthropic(self, prompt: str, model: str, debug: bool,
+                              parameters: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
         """Anthropic API Call (direct, DSGVO-compliant with EU region)"""
         try:
             logger.info(f"[BACKEND] ☁️  Anthropic Request: {model}")
@@ -322,13 +333,16 @@ class PromptInterceptionEngine:
                 "Content-Type": "application/json"
             }
 
+            params = parameters or {}
             payload = {
                 "model": model,
-                "max_tokens": 4096,
+                "max_tokens": params.get("max_tokens", 4096),
                 "messages": [
                     {"role": "user", "content": prompt}
                 ]
             }
+            if "temperature" in params:
+                payload["temperature"] = params["temperature"]
 
             response = requests.post(api_url, headers=headers, data=json.dumps(payload))
             if response.status_code == 200:
@@ -347,7 +361,8 @@ class PromptInterceptionEngine:
             logger.error(f"Anthropic API call failed: {e}")
             raise e
 
-    async def _call_openai(self, prompt: str, model: str, debug: bool) -> Tuple[str, str]:
+    async def _call_openai(self, prompt: str, model: str, debug: bool,
+                           parameters: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
         """OpenAI API Call (direct)"""
         try:
             logger.info(f"[BACKEND] ☁️  OpenAI Request: {model}")
@@ -365,11 +380,14 @@ class PromptInterceptionEngine:
             messages = [
                 {"role": "user", "content": prompt}
             ]
+            params = parameters or {}
             payload = {
                 "model": model,
                 "messages": messages,
-                "temperature": 0.7
+                "temperature": params.get("temperature", 0.7),
             }
+            if "max_tokens" in params:
+                payload["max_tokens"] = params["max_tokens"]
 
             response = requests.post(api_url, headers=headers, data=json.dumps(payload))
             if response.status_code == 200:
@@ -388,7 +406,8 @@ class PromptInterceptionEngine:
             logger.error(f"OpenAI API call failed: {e}")
             raise e
 
-    async def _call_mistral(self, prompt: str, model: str, debug: bool) -> Tuple[str, str]:
+    async def _call_mistral(self, prompt: str, model: str, debug: bool,
+                            parameters: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
         """Mistral AI API Call (direct, EU-based, DSGVO-compliant)"""
         try:
             logger.info(f"[BACKEND] ☁️  Mistral Request: {model}")
@@ -411,11 +430,14 @@ class PromptInterceptionEngine:
             # Config uses "mistral/model-name" but API expects just "model-name"
             api_model = model.replace("mistral/", "") if model.startswith("mistral/") else model
 
+            params = parameters or {}
             payload = {
                 "model": api_model,
                 "messages": messages,
-                "temperature": 0.7
+                "temperature": params.get("temperature", 0.7),
             }
+            if "max_tokens" in params:
+                payload["max_tokens"] = params["max_tokens"]
 
             response = requests.post(api_url, headers=headers, data=json.dumps(payload))
             if response.status_code == 200:
@@ -434,7 +456,8 @@ class PromptInterceptionEngine:
             logger.error(f"Mistral API call failed: {e}")
             raise e
 
-    def _call_mistral_stream(self, prompt: str, model: str, debug: bool):
+    def _call_mistral_stream(self, prompt: str, model: str, debug: bool,
+                             parameters: Optional[Dict[str, Any]] = None):
         """
         Mistral AI API Call with streaming support (EU-based, DSGVO-compliant)
         Yields text chunks as they arrive from the API
@@ -446,6 +469,7 @@ class PromptInterceptionEngine:
             prompt: The full prompt to send
             model: Model name (with or without 'mistral/' prefix)
             debug: Enable debug logging
+            parameters: Generation parameters (temperature, max_tokens, etc.)
 
         Yields:
             Text chunks as they arrive from the API
@@ -474,12 +498,15 @@ class PromptInterceptionEngine:
             # Remove 'mistral/' prefix before sending to API
             api_model = model.replace("mistral/", "") if model.startswith("mistral/") else model
 
+            params = parameters or {}
             payload = {
                 "model": api_model,
                 "messages": messages,
-                "temperature": 0.7,
+                "temperature": params.get("temperature", 0.7),
                 "stream": True  # Enable streaming
             }
+            if "max_tokens" in params:
+                payload["max_tokens"] = params["max_tokens"]
 
             response = requests.post(
                 api_url,
@@ -540,7 +567,8 @@ class PromptInterceptionEngine:
                 except Exception as e:
                     logger.warning(f"[BACKEND] Failed to close Mistral connection: {e}")
 
-    async def _call_aws_bedrock(self, prompt: str, model: str, debug: bool) -> Tuple[str, str]:
+    async def _call_aws_bedrock(self, prompt: str, model: str, debug: bool,
+                                parameters: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
         """AWS Bedrock API Call for Anthropic Claude (EU region: eu-central-1)
 
         IMPORTANT:
@@ -572,9 +600,10 @@ class PromptInterceptionEngine:
             bedrock_model_id = model
 
             # Build request body (Anthropic Messages API format)
+            params = parameters or {}
             request_body = {
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 4096,
+                "max_tokens": params.get("max_tokens", 4096),
                 "messages": [
                     {
                         "role": "user",
@@ -582,6 +611,8 @@ class PromptInterceptionEngine:
                     }
                 ]
             }
+            if "temperature" in params:
+                request_body["temperature"] = params["temperature"]
 
             # Call Bedrock
             response = bedrock.invoke_model(

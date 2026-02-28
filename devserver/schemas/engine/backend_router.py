@@ -333,23 +333,25 @@ class BackendRouter:
             return fallback_backend
     
     async def _process_prompt_interception_request(self, request: BackendRequest) -> BackendResponse:
-        """Schema-Pipeline-Request über Prompt Interception Engine"""
+        """Schema-Pipeline-Request über Prompt Interception Engine
+
+        Architecture fix: ChunkBuilder builds the complete prompt via manipulate.json template.
+        We pass it directly to the engine — no destructive parse/rebuild cycle.
+        Previously, _parse_template_to_prompt_format() split the prompt on '\\n\\n' which
+        destroyed the Task/Context/Prompt structure and dropped sections like CULTURAL RESPECT.
+        """
         try:
             from .prompt_interception_engine import PromptInterceptionEngine, PromptInterceptionRequest
-            
-            # Parse Template+Config zu Task+Context+Prompt
-            input_prompt, input_context, style_prompt = self._parse_template_to_prompt_format(request.prompt)
-            
+
             # Model already has prefix from ModelSelector - use as-is!
             model = request.model
             logger.info(f"[BACKEND] Using model: {model}")
-            
-            # Prompt Interception Request
+
+            # Pass pre-built prompt directly — ChunkBuilder already assembled it correctly
             pi_engine = PromptInterceptionEngine()
             pi_request = PromptInterceptionRequest(
-                input_prompt=input_prompt,
-                input_context=input_context,
-                style_prompt=style_prompt,
+                input_prompt="",
+                prebuilt_prompt=request.prompt,
                 model=model,
                 debug=request.parameters.get('debug', False),
                 unload_model=request.parameters.get('unload_model', False),
