@@ -79,9 +79,10 @@ logger.info(f"[OLLAMA-QUEUE] Initialized with max concurrent requests: {OLLAMA_M
 _output_config_defaults = None
 
 # Phase 4: Intelligent Seed Logic - Global State
-# Tracks last prompt and seed for iterative image correction
+# Tracks last prompt, seed, and output config for iterative image correction
 _last_prompt = None
 _last_seed = None
+_last_output_config = None
 
 def generate_sse_event(event_type: str, data: dict) -> str:
     """
@@ -1223,26 +1224,26 @@ def execute_stage3_4():
         # PHASE 4: INTELLIGENT SEED LOGIC
         # ====================================================================
         # Decision happens BEFORE Stage 3 translation, based on Stage 2 result
-        global _last_prompt, _last_seed
+        global _last_prompt, _last_seed, _last_output_config
         import random
 
-        if stage2_result != _last_prompt:
-            # Prompt CHANGED → keep same seed (iterate on same image)
+        if stage2_result != _last_prompt or output_config != _last_output_config:
+            # Prompt OR model changed → keep same seed (compare effect of change)
             if _last_seed is not None:
                 calculated_seed = _last_seed
-                logger.info(f"[PHASE4-SEED] Prompt CHANGED (iteration) → reusing seed {calculated_seed}")
+                logger.info(f"[PHASE4-SEED] Prompt or model CHANGED → reusing seed {calculated_seed}")
             else:
-                # First run ever → use standard seed for comparative research
                 calculated_seed = 123456789
                 logger.info(f"[PHASE4-SEED] First run → using standard seed {calculated_seed}")
         else:
-            # Prompt UNCHANGED → new random seed (different image with same prompt)
+            # Prompt AND model unchanged → new random seed (user wants variation)
             calculated_seed = random.randint(0, 2147483647)
-            logger.info(f"[PHASE4-SEED] Prompt UNCHANGED (re-run) → new random seed {calculated_seed}")
+            logger.info(f"[PHASE4-SEED] Prompt+model UNCHANGED (re-run) → new random seed {calculated_seed}")
 
         # Update global state AFTER decision
         _last_prompt = stage2_result
         _last_seed = calculated_seed
+        _last_output_config = output_config
 
         # Override with user-provided seed if specified
         if seed_override is not None:
@@ -4000,7 +4001,7 @@ def legacy_workflow():
 def interception_pipeline():
     """Stage 1 (Safety) + Stage 2 (Interception) - Lab Architecture atomic service"""
     # Phase 4: Declare global state at function start
-    global _last_prompt, _last_seed
+    global _last_prompt, _last_seed, _last_output_config
     import random
 
     try:
@@ -4551,23 +4552,23 @@ def interception_pipeline():
                 # Decision happens BEFORE Stage 3 translation, based on Stage 2 result
                 stage2_prompt = result.final_output  # Prompt from Stage 2 (before translation)
 
-                if stage2_prompt != _last_prompt:
-                    # Prompt CHANGED → keep same seed (iterate on same image)
+                if stage2_prompt != _last_prompt or output_config_name != _last_output_config:
+                    # Prompt OR model changed → keep same seed (compare effect of change)
                     if _last_seed is not None:
                         calculated_seed = _last_seed
-                        logger.info(f"[PHASE4-SEED] Prompt CHANGED (iteration) → reusing seed {calculated_seed}")
+                        logger.info(f"[PHASE4-SEED] Prompt or model CHANGED → reusing seed {calculated_seed}")
                     else:
-                        # First run ever → use standard seed for comparative research
                         calculated_seed = 123456789
                         logger.info(f"[PHASE4-SEED] First run → using standard seed {calculated_seed}")
                 else:
-                    # Prompt UNCHANGED → new random seed (different image with same prompt)
+                    # Prompt AND model unchanged → new random seed (user wants variation)
                     calculated_seed = random.randint(0, 2147483647)
-                    logger.info(f"[PHASE4-SEED] Prompt UNCHANGED (re-run) → new random seed {calculated_seed}")
+                    logger.info(f"[PHASE4-SEED] Prompt+model UNCHANGED (re-run) → new random seed {calculated_seed}")
 
                 # Update global state AFTER decision
                 _last_prompt = stage2_prompt
                 _last_seed = calculated_seed
+                _last_output_config = output_config_name
 
                 # Override with user-provided seed if specified
                 if seed_override is not None:

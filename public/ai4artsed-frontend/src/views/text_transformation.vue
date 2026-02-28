@@ -548,6 +548,7 @@ const availabilityLoading = ref(true)
 
 // Phase 4: Seed management for iterative correction
 const previousOptimizedPrompt = ref('')  // Track previous prompt for comparison
+const previousSelectedConfig = ref('')  // Track previous model for comparison
 const currentSeed = ref<number | null>(null)  // Current seed (null = first run)
 const currentRunId = ref<string | null>(null)  // Run ID from interception (prompting_process_xxx)
 const currentRunHasOutput = ref(false)  // Session 130: True after media generation (stops logging)
@@ -1538,23 +1539,24 @@ async function executePipeline() {
   wikipediaExpanded.value = false
 
   // Phase 4: Intelligent seed logic
+  // Track both prompt AND model — only randomize seed when NEITHER changed (user wants variation)
   const currentPromptToUse = optimizedPrompt.value || interceptionResult.value || inputText.value
+  const currentConfig = selectedConfig.value || ''
 
-  if (currentPromptToUse === previousOptimizedPrompt.value) {
-    // Prompt UNCHANGED → Generate new random seed (user wants different image with same prompt)
+  if (currentPromptToUse === previousOptimizedPrompt.value && currentConfig === previousSelectedConfig.value) {
+    // Prompt AND model unchanged → Generate new random seed (user wants variation)
     currentSeed.value = Math.floor(Math.random() * 2147483647)
-    console.log('[Phase 4] Prompt unchanged → New random seed:', currentSeed.value)
+    console.log('[Phase 4] Prompt+model unchanged → New random seed:', currentSeed.value)
   } else {
-    // Prompt CHANGED → Keep same seed (user wants to iterate on same image)
+    // Prompt OR model changed → Keep same seed (user wants to compare)
     if (currentSeed.value === null) {
-      // First run → Use default seed
       currentSeed.value = 123456789
       console.log('[Phase 4] First run → Default seed:', currentSeed.value)
     } else {
-      console.log('[Phase 4] Prompt changed → Keeping seed:', currentSeed.value)
+      console.log('[Phase 4] Prompt or model changed → Keeping seed:', currentSeed.value)
     }
-    // Update previous prompt for next comparison
     previousOptimizedPrompt.value = currentPromptToUse
+    previousSelectedConfig.value = currentConfig
   }
 
   try {
