@@ -105,14 +105,13 @@ DEFAULT_LANGUAGE = "de"  # "de" or "en"
 #
 # Provider Prefix Format & DSGVO Compliance:
 #   - "local/model-name" → Ollama (local inference, DSGVO-compliant ✓)
-#   - "bedrock/model-name" → AWS Bedrock with Anthropic (EU region, DSGVO-compliant ✓)
 #   - "mistral/model-name" → Mistral AI API direct (EU-based, DSGVO-compliant ✓)
 #   - "anthropic/model-name" → Anthropic API direct (NOT DSGVO-compliant ✗)
 #   - "openai/model-name" → OpenAI API direct (US-based, NOT DSGVO-compliant ✗)
 #   - "openrouter/provider/model-name" → OpenRouter aggregator (US proxy, NOT DSGVO-compliant ✗)
 #
 # IMPORTANT: OpenRouter routes through US servers even for EU models!
-# For DSGVO compliance with cloud AI, use AWS Bedrock (bedrock/) or Mistral AI (mistral/).
+# For DSGVO compliance with cloud AI, use Mistral AI (mistral/) or local models.
 #
 # Base Models:
 LOCAL_DEFAULT_MODEL = "local/qwen3:4b"                       # Default local text model
@@ -120,9 +119,7 @@ LOCAL_VISION_MODEL = "local/llama3.2-vision:latest"                # Local visio
 REMOTE_MULTIMODAL_MODEL = "openrouter/google/gemini-2.5-flash-lite"     # Input Modalitiestext, image, file, audio, video
 REMOTE_SMALL_MODEL = "openrouter/mistralai/mistral-nemo"       # Fast, cheap cloud model
 REMOTE_LIGHT_MODEL = "openrouter/mistralai/mistral-medium-3.1"       # Fast, cheap cloud model
-REMOTE_FAST_MODEL = "bedrock/eu.anthropic.claude-haiku-4-5-20251001-v1:0"       # Fast, cheap cloud (AWS Bedrock EU, DSGVO ✓, Haiku 4.5)
-REMOTE_ADVANCED_MODEL = "bedrock/eu.anthropic.claude-sonnet-4-5-20250929-v1:0"  # High-quality cloud (AWS Bedrock EU, DSGVO ✓, Sonnet 4.5)
-REMOTE_EXTREME_MODEL = "bedrock/eu.anthropic.claude-opus-4-5-20251101-v2:0"  # Highest-quality cloud, VERY EXPENSIVE!
+REMOTE_ADVANCED_MODEL = "mistral/mistral-large-latest"  # Used by optimization chunks (DSGVO ✓, EU-based)
 
 # Stage-Specific Models (Default to LOCAL for 24GB VRAM systems):
 STAGE1_TEXT_MODEL = LOCAL_DEFAULT_MODEL                   # Stage 1: conditional safety checks (simple task)
