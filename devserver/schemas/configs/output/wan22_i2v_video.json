@@ -22,7 +22,7 @@
     "STEPS": 4,
     "CFG": 1.0,
     "FPS": 16,
-    "SEED": "random",
+    "seed": "random",
     "INPUT_IMAGE": "{{UPLOADED_IMAGE_PATH}}"
   },
 

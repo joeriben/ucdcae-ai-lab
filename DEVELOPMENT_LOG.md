@@ -1,5 +1,64 @@
 # Development Log
 
+## Session 224 - Seed Handling: 5 Bugs Fixed Across Full Pipeline
+**Date:** 2026-02-28
+**Focus:** Fix broken seed randomization (same image on repeat generation) and 4 structural bugs in the seed flow
+
+### Root Cause
+Output configs had uppercase `"SEED": "random"` but the pipeline executor reads/injects lowercase `"seed"`. The uppercase key was dead code — seeds fell back to hardcoded chunk defaults (e.g. `1125488487853216`), producing identical images on every generation.
+
+### Changes
+
+**Bug 1 — 10 output config JSONs** (`devserver/schemas/configs/output/`):
+`"SEED"` → `"seed"` in: qwen, sd35_large, sd35_large_turbo, flux2, stableaudio_open, acenet_t2instrumental, acestep_instrumental, ltx_video, wan22_video, wan22_i2v_video
+
+**Bug 2 — `backend_router.py`** (`_apply_input_mappings`, node-based + template-based):
+`generated_seed` was only set when `value == "random"`. Integer seeds passed through without metadata tracking → `seed: None` in results. Now tracks all seed values.
+
+**Bug 3 — `schema_pipeline_routes.py`** (3 locations):
+- `result_seed = metadata.get('seed') or seed` → `is not None` check (seed=0 is falsy in Python)
+- `if seed_override:` → `if seed_override is not None:`
+
+**Bug 4 — `backend_router.py`** (`_process_legacy_workflow`):
+Missing `'seed': generated_seed` in both return paths (ComfyUI-direct + SwarmUI legacy). Initialized `generated_seed = None` before input_mappings block.
+
+**Bug 5 — `schema_pipeline_routes.py`** (cloud API seed transparency):
+Cloud APIs (openai, openrouter) don't support seeds but the old code returned the frontend seed as if it was used. Now explicitly sets `result_seed = None` for these backends.
+
+### Verification
+- Generate with qwen config → repeat same prompt → different image (new random seed)
+- Expert-mode shows actual seed used (not None, not faked for cloud APIs)
+
+---
+
+## Session 223 - Model Profile Meta for Expert Mode Steckbrief
+**Date:** 2026-02-28
+**Focus:** Populate model identity card (Steckbrief) in expert denoising view for all output configs
+**Commit:** `7ca3ea8`
+
+### Context
+Session 220 built the expert denoising view with a model Steckbrief that reads profile fields directly from `config.meta` (display_name, publisher, architecture, params, etc.). However, 18 of 31 output configs were missing these fields, leaving the model card blank during generation.
+
+### Changes
+
+**18 output config JSONs** — added profile meta fields:
+- **ACE-Step** (3 configs): instrumental, simple, long narrative — Diffusion Transformer, ~3.5B, Apache 2.0
+- **ACE-Net** (1 config): Neural Audio Codec + Transformer, ~1B
+- **FLUX.2 img2img** (1 config): copied from flux2.json, 56B MMDiT
+- **Qwen variants** (2 configs): img2img + 2511 multi — 20B MMDiT, copied from qwen.json
+- **SD 3.5 research tools** (4 configs): attention cartography, concept algebra, denoising archaeology, feature probing
+- **Stable Audio legacy** (2 configs): stableaudio + tellastory — copied from stableaudio_open.json
+- **Legacy ComfyUI** (3 configs): surrealization, partial elimination, split & combine — SD 3.5 profile
+- **Code generation** (2 configs): p5.js + Tone.js — LLM-dependent profile
+
+**DenoisingProgressView.vue** — removed emoji icon from model card header (template `<span class="model-icon">`, `profileIcon` computed, `.model-icon` CSS). The emoji oversimplified model identity and masked real differences between models.
+
+### Verification
+- All 31/31 output configs validated to have `display_name` in meta
+- Vue type-check passes clean
+
+---
+
 ## Session 222 - Firefox/iGPU Performance Fix + Streaming UX
 **Date:** 2026-02-28
 **Focus:** Fix severe Firefox lag on iGPU (128MB VRAM), optimize CSS animations and JS timers, switch streaming display from char-by-char to word-by-word

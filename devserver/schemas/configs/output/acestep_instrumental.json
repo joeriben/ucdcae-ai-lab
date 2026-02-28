@@ -21,7 +21,7 @@
     "SAMPLER": "euler",
     "SCHEDULER": "simple",
     "DENOISE": 0.87,
-    "SEED": -1,
+    "seed": -1,
     "SHIFT": 5.0,
     "TONEMAP_MULTIPLIER": 1.0,
     "LYRICS": "[instrumental]\n[break down]\n[drum fill]\n[chopped samples]\n",

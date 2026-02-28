@@ -22,7 +22,7 @@
     "STEPS": 20,
     "CFG": 5.0,
     "FPS": 24,
-    "SEED": "random"
+    "seed": "random"
   },
 
   "media_preferences": {

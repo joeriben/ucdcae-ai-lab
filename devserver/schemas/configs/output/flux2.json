@@ -22,7 +22,7 @@
     "CFG": 1,
     "SAMPLER": "euler",
     "SCHEDULER": "normal",
-    "SEED": "random"
+    "seed": "random"
   },
 
   "media_preferences": {

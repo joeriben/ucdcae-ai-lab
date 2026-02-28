@@ -1335,7 +1335,7 @@ def execute_stage3_4():
 
                 # Extract seed from output_result metadata (if available)
                 seed = output_result.metadata.get('seed') if output_result.metadata else None
-                if seed_override:
+                if seed_override is not None:
                     seed = seed_override
 
                 # Detect generation backend and save media appropriately
@@ -3029,7 +3029,12 @@ async def execute_stage4_generation_only(
 
         # Process output based on type
         output_value = output_result.final_output
-        result_seed = output_result.metadata.get('seed') or seed
+        _meta_seed = output_result.metadata.get('seed')
+        result_seed = _meta_seed if _meta_seed is not None else seed
+
+        # Cloud APIs don't support seeds — don't pretend they do
+        if backend_type in ('openai', 'openrouter'):
+            result_seed = None
 
         # Handle different output types
         if media_type == 'code':
@@ -3757,8 +3762,8 @@ def legacy_workflow():
 
         # Handle legacy workflow output
         output_value = output_result.final_output
-        # Fix: .get() returns None if key exists with None value, so use 'or' for fallback
-        result_seed = output_result.metadata.get('seed') or seed
+        _meta_seed = output_result.metadata.get('seed')
+        result_seed = _meta_seed if _meta_seed is not None else seed
 
         if output_value == 'workflow_generated':
             # Legacy workflows return binary data directly in metadata

@@ -21,7 +21,7 @@
     "CFG": 4.98,
     "SAMPLER": "dpmpp_3m_sde_gpu",
     "SCHEDULER": "exponential",
-    "SEED": "random"
+    "seed": "random"
   },
 
   "media_preferences": {

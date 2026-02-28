@@ -23,7 +23,7 @@
     "SAMPLER": "dpmpp_2m_sde_gpu",
     "SCHEDULER": "simple",
     "DENOISE": 0.9,
-    "SEED": "random"
+    "seed": "random"
   },
 
   "media_preferences": {

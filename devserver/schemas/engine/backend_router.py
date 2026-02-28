@@ -952,11 +952,12 @@ class BackendRouter:
                     if value is None:
                         value = mapping.get('default', '')
 
-                    if value == "random" and key == "seed":
-                        import random
-                        value = random.randint(0, 2**32 - 1)
+                    if key == "seed":
+                        if value == "random":
+                            import random
+                            value = random.randint(0, 2**32 - 1)
                         generated_seed = value
-                        logger.info(f"Generated random seed: {generated_seed}")
+                        logger.info(f"Generated seed: {generated_seed}")
 
                     placeholder = mapping.get('template', f'{{{{{key.upper()}}}}}')
                     workflow_str = workflow_str.replace(placeholder, str(value))
@@ -1141,12 +1142,13 @@ class BackendRouter:
                 )
 
             # Apply ALL input_mappings (element1, element2, combination_type, seed, etc.)
+            generated_seed = None
             input_mappings = chunk.get('input_mappings', {})
             if input_mappings:
                 input_data = {'prompt': prompt, **parameters}
                 logger.info(f"[LEGACY-WORKFLOW] Applying input_mappings for: {list(input_mappings.keys())}")
                 workflow, generated_seed = self._apply_input_mappings(workflow, input_mappings, input_data)
-                if generated_seed:
+                if generated_seed is not None:
                     logger.info(f"[LEGACY-WORKFLOW] Generated seed: {generated_seed}")
 
             # Handle encoder_type for partial elimination workflow
@@ -1266,6 +1268,7 @@ class BackendRouter:
                              'filename': f.filename, 'subfolder': f.subfolder}
                             for f in result.media_files
                         ],
+                        'seed': generated_seed,
                     }
                 )
 
@@ -1293,7 +1296,8 @@ class BackendRouter:
                     'legacy_workflow': True,
                     'media_files': result['media_files'],
                     'outputs_metadata': result['outputs_metadata'],
-                    'workflow_json': result['workflow_json']
+                    'workflow_json': result['workflow_json'],
+                    'seed': generated_seed,
                 }
             )
 
@@ -2864,11 +2868,12 @@ class BackendRouter:
                     if source == '{{PREVIOUS_OUTPUT}}':
                         value = input_data.get('prompt', '')
 
-            # Special handling for "random" seed
-            if value == "random" and key == "seed":
-                value = random.randint(0, 2**32 - 1)
+            # Special handling for seed
+            if key == "seed":
+                if value == "random":
+                    value = random.randint(0, 2**32 - 1)
                 generated_seed = value
-                logger.info(f"Generated random seed: {generated_seed}")
+                logger.info(f"Generated seed: {generated_seed}")
 
             # Apply value to ALL nodes in the mapping list
             if value is not None:
