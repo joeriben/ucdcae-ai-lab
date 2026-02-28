@@ -24,7 +24,7 @@
     "ar": "تصادم مادي مع الجزء 31 لسافو (~600 ق.م.). مكسور بالفعل من قِبل التاريخ — الرغبة، تفكك الجسد، صوت يتحطم. يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
-    "en": "Trans-Aktion",
+    "en": "Poetry",
     "de": "Trans-Aktion",
     "tr": "Trans-Aktion",
     "ko": "Trans-Aktion",
@@ -35,11 +35,11 @@
     "ar": "Trans-Aktion"
   },
   "properties": [
-    "trans_aktion"
+    "poetry"
   ],
   "context": {
-    "en": "Sappho fragments: phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / gods / sweet voice / laughter / heart / tongue broken / thin fire / skin / eyes see nothing / ears hum / sweat / trembling / greener than grass\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — weave them into your text.",
-    "de": "Sappho-Fragmente: phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / goettergleich / suesse Stimme / Lachen / Herz / Zunge gebrochen / duennes Feuer / Haut / Augen sehen nichts / Ohren summen / Schweiss / Zittern / gruener als Gras\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie in deinen Text einweben."
+    "en": "phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / gods / sweet voice / laughter / heart / tongue broken / thin fire / skin / eyes see nothing / ears hum / sweat / trembling / greener than grass",
+    "de": "phainetai moi / isos theoisin / glossa eage / pur / idros / tromos / chlorotera poias / goettergleich / suesse Stimme / Lachen / Herz / Zunge gebrochen / duennes Feuer / Haut / Augen sehen nichts / Ohren summen / Schweiss / Zittern / gruener als Gras"
   },
   "parameters": {
     "temperature": 0.85,
@@ -58,13 +58,12 @@
   },
   "meta": {
     "stage": "interception",
-    "model_override": "qwen3:1.7b",
     "wikipedia": false
   },
   "display": {
     "icon": "⚡",
     "color": "#FF1744",
-    "category": "trans_aktion",
+    "category": "poetry",
     "difficulty": 3,
     "order": 1,
     "hidden": true

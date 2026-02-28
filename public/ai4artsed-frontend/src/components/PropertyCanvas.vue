@@ -100,7 +100,7 @@ const categoryColorMap: Record<string, string> = {
   attitudes: '#FF6F00',   // 💭 (Orange - emotional, Haltungen)
   freestyle: '#FFC107',   // 🫵
   technical_imaging: '#607D8B',  // 📸
-  trans_aktion: '#FF1744',       // Schreibfeder — Materialkollision
+  poetry: '#FF1744',             // Schreibfeder — Materialkollision
 }
 
 // Positionen in Prozent relativ zur cluster-wrapper

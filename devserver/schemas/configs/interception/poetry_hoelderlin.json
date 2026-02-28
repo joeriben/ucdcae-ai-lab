@@ -24,7 +24,7 @@
     "ar": "تصادم مادي مع قصيدة هولدرلين 'نصف الحياة' (1805). الامتلاء يتحطم في الفراغ — يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
-    "en": "Trans-Aktion",
+    "en": "Poetry",
     "de": "Trans-Aktion",
     "tr": "Trans-Aktion",
     "ko": "Trans-Aktion",
@@ -35,11 +35,11 @@
     "ar": "Trans-Aktion"
   },
   "properties": [
-    "trans_aktion"
+    "poetry"
   ],
   "context": {
-    "en": "Hoelderlin fragments: gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poem — absorb its images into yours.",
-    "de": "Hoelderlin-Fragmente: gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht das Gedicht wiederholen — seine Bilder in deinen Text aufnehmen."
+    "en": "gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen",
+    "de": "gelben Birnen / wilden Rosen / See / Schwaene / trunken / Kuessen / heilignuechterne / Weh mir / Winter / Blumen / Sonnenschein / Schatten / Mauern / sprachlos / kalt / Klirren / Fahnen"
   },
   "parameters": {
     "temperature": 0.85,
@@ -58,13 +58,12 @@
   },
   "meta": {
     "stage": "interception",
-    "model_override": "qwen3:1.7b",
     "wikipedia": false
   },
   "display": {
     "icon": "⚡",
     "color": "#FF1744",
-    "category": "trans_aktion",
+    "category": "poetry",
     "difficulty": 3,
     "order": 2,
     "hidden": true

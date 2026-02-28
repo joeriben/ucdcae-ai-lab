@@ -24,7 +24,7 @@
     "ar": "تصادم مادي مع شعر المديح Yoruba Oriki (التقليد الشفهي لغرب أفريقيا). Oya — العاصفة، التحول، التي تكنس السوق. يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
-    "en": "Trans-Aktion",
+    "en": "Poetry",
     "de": "Trans-Aktion",
     "tr": "Trans-Aktion",
     "ko": "Trans-Aktion",
@@ -35,11 +35,11 @@
     "ar": "Trans-Aktion"
   },
   "properties": [
-    "trans_aktion"
+    "poetry"
   ],
   "context": {
-    "en": "Yoruba Oriki fragments: Oya / iya mesanlogun / wind / marketplace / buffalo woman / fire / river Niger / tornado / warrior / transform / cloth / beads / thunder / sweep / nine / storm / mask / dance / Odo Oya\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — weave them into your text.",
-    "de": "Yoruba-Oriki-Fragmente: Oya / iya mesanlogun / Wind / Marktplatz / Bueffelfrau / Feuer / Fluss Niger / Tornado / Kriegerin / verwandeln / Tuch / Perlen / Donner / fegen / neun / Sturm / Maske / Tanz / Odo Oya\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie in deinen Text einweben."
+    "en": "Oya / iya mesanlogun / wind / marketplace / buffalo woman / fire / river Niger / tornado / warrior / transform / cloth / beads / thunder / sweep / nine / storm / mask / dance / Odo Oya",
+    "de": "Oya / iya mesanlogun / Wind / Marktplatz / Bueffelfrau / Feuer / Fluss Niger / Tornado / Kriegerin / verwandeln / Tuch / Perlen / Donner / fegen / neun / Sturm / Maske / Tanz / Odo Oya"
   },
   "parameters": {
     "temperature": 0.85,
@@ -58,13 +58,12 @@
   },
   "meta": {
     "stage": "interception",
-    "model_override": "qwen3:1.7b",
     "wikipedia": false
   },
   "display": {
     "icon": "⚡",
     "color": "#FF1744",
-    "category": "trans_aktion",
+    "category": "poetry",
     "difficulty": 3,
     "order": 5,
     "hidden": true

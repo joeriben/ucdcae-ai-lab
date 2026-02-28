@@ -24,7 +24,7 @@
     "ar": "تصادم مادي مع أغاني البهجان لميرابائي (~1500). تفانٍ متحمس، سُم يُشرب ضاحكاً، أميرة تركت قصرها من أجل الطريق. يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
-    "en": "Trans-Aktion",
+    "en": "Poetry",
     "de": "Trans-Aktion",
     "tr": "Trans-Aktion",
     "ko": "Trans-Aktion",
@@ -35,11 +35,11 @@
     "ar": "Trans-Aktion"
   },
   "properties": [
-    "trans_aktion"
+    "poetry"
   ],
   "context": {
-    "en": "Mirabai fragments: Dark One / Giridhar / ghunghroo / dance / vish ka pyala / cup of poison / drink laughing / rana / palace / thorns / garden / lotus eyes / separated / ocean / without you / anklets / jasmine / Vrindavan\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — weave them into your text.",
-    "de": "Mirabai-Fragmente: Dark One / Giridhar / ghunghroo / Tanz / vish ka pyala / Giftbecher / lachend trinken / Rana / Palast / Dornen / Garten / Lotusaugen / getrennt / Ozean / ohne dich / Fussschellen / Jasmin / Vrindavan\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie in deinen Text einweben."
+    "en": "Dark One / Giridhar / ghunghroo / dance / vish ka pyala / cup of poison / drink laughing / rana / palace / thorns / garden / lotus eyes / separated / ocean / without you / anklets / jasmine / Vrindavan",
+    "de": "Dark One / Giridhar / ghunghroo / Tanz / vish ka pyala / Giftbecher / lachend trinken / Rana / Palast / Dornen / Garten / Lotusaugen / getrennt / Ozean / ohne dich / Fussschellen / Jasmin / Vrindavan"
   },
   "parameters": {
     "temperature": 0.85,
@@ -58,13 +58,12 @@
   },
   "meta": {
     "stage": "interception",
-    "model_override": "qwen3:1.7b",
     "wikipedia": false
   },
   "display": {
     "icon": "⚡",
     "color": "#FF1744",
-    "category": "trans_aktion",
+    "category": "poetry",
     "difficulty": 3,
     "order": 4,
     "hidden": true

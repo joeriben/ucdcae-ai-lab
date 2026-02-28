@@ -24,7 +24,7 @@
     "ar": "تصادم مادي مع ثلاثة هايكو لماتسو باشو (القرن السابع عشر). ضغط أقصى، الأصول اليابانية جنباً إلى جنب مع الترجمة الألمانية — تتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
-    "en": "Trans-Aktion",
+    "en": "Poetry",
     "de": "Trans-Aktion",
     "tr": "Trans-Aktion",
     "ko": "Trans-Aktion",
@@ -35,11 +35,11 @@
     "ar": "Trans-Aktion"
   },
   "properties": [
-    "trans_aktion"
+    "poetry"
   ],
   "context": {
-    "en": "Basho fragments: furu ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not repeat the poems — absorb their images into yours.",
-    "de": "Basho-Fragmente: furu ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Gedichte wiederholen — ihre Bilder in deinen Text aufnehmen."
+    "en": "furu ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade",
+    "de": "furu ike / kawazu / mizu no oto / natsugusa / tsuwamonodomo / yume no ato / shizukasa / iwa / semi no koe / Teich / Frosch / Sommergras / Stille / Fels / Zikade"
   },
   "parameters": {
     "temperature": 0.85,
@@ -58,13 +58,12 @@
   },
   "meta": {
     "stage": "interception",
-    "model_override": "qwen3:1.7b",
     "wikipedia": false
   },
   "display": {
     "icon": "⚡",
     "color": "#FF1744",
-    "category": "trans_aktion",
+    "category": "poetry",
     "difficulty": 3,
     "order": 3,
     "hidden": true

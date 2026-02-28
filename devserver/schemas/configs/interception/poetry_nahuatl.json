@@ -24,7 +24,7 @@
     "ar": "تصادم مادي مع Nahuatl Xochicuicatl — الزهرة والأغنية (التقليد الشفهي الميزوأمريكي). كل شيء يتلاشى، تبقى الزهرة-والأغنية فقط. يتصادم مع موجّهك من خلال نموذج غير كافٍ عن قصد."
   },
   "category": {
-    "en": "Trans-Aktion",
+    "en": "Poetry",
     "de": "Trans-Aktion",
     "tr": "Trans-Aktion",
     "ko": "Trans-Aktion",
@@ -35,11 +35,11 @@
     "ar": "Trans-Aktion"
   },
   "properties": [
-    "trans_aktion"
+    "poetry"
   ],
   "context": {
-    "en": "Nahuatl fragments: in xochitl / in cuicatl / flower / song / jade / quetzal / plumes / obsidian / butterfly / cacao / earth / dream / vanish / painted book / turquoise / marigold / ollin / movement / Tlaltikpak\n\nFuse these words with the prompt into one text. Never quote more than 3 consecutive words from either source. Do not list the fragments — weave them into your text.",
-    "de": "Nahuatl-Fragmente: in xochitl / in cuicatl / Blume / Gesang / Jade / Quetzal / Federn / Obsidian / Schmetterling / Kakao / Erde / Traum / vergehen / gemaltes Buch / Tuerkis / Ringelblume / ollin / Bewegung / Tlaltikpak\n\nVerschmelze diese Woerter mit dem Prompt zu einem Text. Nie mehr als 3 aufeinanderfolgende Woerter aus einer Quelle. Nicht die Fragmente auflisten — sie in deinen Text einweben."
+    "en": "in xochitl / in cuicatl / flower / song / jade / quetzal / plumes / obsidian / butterfly / cacao / earth / dream / vanish / painted book / turquoise / marigold / ollin / movement / Tlaltikpak",
+    "de": "in xochitl / in cuicatl / Blume / Gesang / Jade / Quetzal / Federn / Obsidian / Schmetterling / Kakao / Erde / Traum / vergehen / gemaltes Buch / Tuerkis / Ringelblume / ollin / Bewegung / Tlaltikpak"
   },
   "parameters": {
     "temperature": 0.85,
@@ -58,13 +58,12 @@
   },
   "meta": {
     "stage": "interception",
-    "model_override": "qwen3:1.7b",
     "wikipedia": false
   },
   "display": {
     "icon": "⚡",
     "color": "#FF1744",
-    "category": "trans_aktion",
+    "category": "poetry",
     "difficulty": 3,
     "order": 6,
     "hidden": true

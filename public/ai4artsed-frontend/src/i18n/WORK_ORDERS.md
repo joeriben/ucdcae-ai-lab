@@ -66,6 +66,19 @@ each processed work order to **Completed** with a date stamp.
   - `legal.privacy.fauReference.content` (NEW)
 - **Context**: Full GDPR-compliant privacy policy for the platform. Legal terminology — use correct GDPR/DSGVO terms per language (e.g. "Betroffenenrechte" in DE, "Droits de la personne concernée" in FR). Keep Art. references (Art. 15, 16, 17, etc.) as-is. FAU address and contact email stay untranslated. The "controller" section is the GDPR "Verantwortlicher". Important: these are legal texts that should be linguistically precise.
 
+### WO-2026-02-28-poetry-rename-context-category
+- **Session**: 223
+- **Scope**: 6 JSON files in `devserver/schemas/configs/interception/`: poetry_sappho, poetry_hoelderlin, poetry_basho, poetry_mirabai, poetry_yoruba_oriki, poetry_nahuatl
+- **Changed keys** (new or modified):
+  - `category` (MODIFIED): "Trans-Aktion" -> "Poetry" (en done, translate to de/tr/ko/uk/fr/es/he/ar)
+  - `context` (NEEDS 7 NEW languages): Currently only en+de. Add tr/ko/uk/fr/es/he/ar.
+- **Context**: The `context` field contains word lists (slash-separated) from literary source texts. Each language version should contain:
+  1. The ORIGINAL-LANGUAGE words (Greek for Sappho, German for Hoelderlin, Japanese for Basho, Hindi for Mirabai, Yoruba for Oriki, Nahuatl for Nahuatl) — these stay unchanged across all languages
+  2. TRANSLATED equivalents of the non-original words in the target language
+  For example, Sappho EN has Greek originals + English translations. Sappho TR should have the same Greek originals + Turkish translations of the English words.
+  For `category`: "Poetry" is the new English label replacing "Trans-Aktion". Translate naturally (e.g. DE "Poesie", TR "Şiir", KO "시", etc.).
+  **Important**: The `context` field is NOT in en.ts — it lives directly in each JSON config file. Edit the JSON files directly to add the missing language keys.
+
 <!-- Add new work orders here. Format:
 
 ### WO-YYYY-MM-DD-short-description
