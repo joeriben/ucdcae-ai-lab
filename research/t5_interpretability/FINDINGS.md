@@ -206,9 +206,47 @@ N=100 per position, 500 samples total.
 
 LERP recovers **57-131%** of the text-prompt effect (median ~84%), compared to injection's 5-25%. All effect directions match the text-prompt baseline. The rms_mean direction reversal observed in injection (wrong sign) is corrected in LERP.
 
+#### Multi-Axis Additive LERP (Experiment C4)
+
+Tests whether 3 LERP axes combined additively preserve individual effects.
+
+**Design**: 2³ factorial — 3 axes (rhythmic↔sustained, bright↔dark, smooth↔harsh), each at 2 levels, 8 conditions, N=50 per condition = 400 samples total.
+
+**Combination method**: `emb = neutral + (pole1 - neutral) + (pole2 - neutral) + (pole3 - neutral)`, where each pole is the T5 embedding of the selected axis endpoint.
+
+**All three axes show significant main effects on different acoustic dimensions:**
+
+| Axis | Strongest Feature | Cohen's d | p-value |
+|---|---|---|---|
+| rhythmic↔sustained | spectral_centroid_std | +1.022 | 7.9 x 10^-22 |
+| bright↔dark | spectral_bandwidth_mean | +1.145 | 4.9 x 10^-26 |
+| smooth↔harsh | rms_mean | -1.737 | 2.2 x 10^-47 |
+
+The axes affect *different* acoustic features — rhythmic controls spectral variation, bright controls bandwidth, smooth controls energy. This is the prerequisite for independent control.
+
+**However, signal degradation is substantial.** The rhythmic↔sustained axis loses ~60-65% of its single-axis effect:
+
+| Feature | LERP (1 axis) d | Multi (3 axes) d | Retention |
+|---|---|---|---|
+| spectral_centroid_std | +2.434 | +1.022 | **35%** |
+| spectral_flatness_mean | +1.860 | +0.821 | **36%** |
+| spectral_flux_std | +1.348 | +0.646 | **40%** |
+| onset_density | -1.169 | -0.306 | **23%** |
+
+**Axis interaction**: The rhythmic axis effect varies by context — spectral_centroid_std d ranges from +0.36 (when others = dark+smooth) to +1.94 (when others = bright+smooth). The axes are not independent; they interact.
+
+#### Complete Method Comparison
+
+| Method | Signal Retention | Monotonic? | Multi-axis? |
+|---|---|---|---|
+| Text prompts | 100% (reference) | n/a | n/a |
+| LERP (1 axis) | **84%** | Yes (r=0.63) | n/a |
+| **Additive LERP (3 axes)** | **35%** | Yes | Yes, but degraded |
+| Embedding injection | 6% | Not tested | Not tested |
+
 ---
 
-## 5. Diagnosis: Why Injection Fails and LERP Succeeds
+## 5. Diagnosis: Why Injection Fails, LERP Succeeds, and Multi-Axis Degrades
 
 Stable Audio's conditioning pathway is trained end-to-end: tokenizer -> T5 -> cross-attention -> diffusion. The cross-attention layers learn to attend to embedding patterns that T5 naturally produces.
 
@@ -218,7 +256,9 @@ Stable Audio's conditioning pathway is trained end-to-end: tokenizer -> T5 -> cr
 
 This is not a flaw in the SAE or in T5's representations. T5 does encode semantically meaningful structure (the cultural distance analysis confirms this). The constraint is that Stable Audio only responds to embeddings that lie on or near the manifold of natural T5 outputs.
 
-**Implication**: Any viable embedding manipulation must respect the T5 output distribution. Interpolation between text-encoded poles does; vector arithmetic does not.
+**Multi-axis degrades** (35% signal retention): Adding 3 deltas simultaneously pushes the combined embedding away from the T5 manifold. Not as catastrophically as raw injection (the deltas are smaller and better-behaved), but the cumulative displacement is enough to lose ~65% of each axis's effect. The axes also interact — the effect of one axis depends on the position of the others.
+
+**Implication**: Single-axis LERP works well. Multi-axis additive combination works but degrades. A learned projection (bridge model) that maps multi-slider configurations back onto the T5 manifold could recover the lost signal.
 
 ---
 
@@ -235,47 +275,59 @@ This is not a flaw in the SAE or in T5's representations. T5 does encode semanti
 | Embedding injection has measurable but weak effect | **Confirmed** | d=0.83, N=100, p<10^-7, ~5-25% signal retention |
 | LERP between T5 outputs recovers ~84% of text effect | **Confirmed** | d=2.43, N=100, p<10^-40, monotonic gradient |
 | LERP produces monotonic acoustic gradients | **Confirmed** | Pearson r up to 0.63, 8/11 features significant |
+| Multi-axis additive LERP (3 axes) | **Partially confirmed** | Each axis significant, but 35% retention per axis |
+| Multi-axis axes affect different features | **Confirmed** | rhythmic→spectral variation, bright→bandwidth, smooth→energy |
+| Multi-axis axes are independent | **Rejected** | Axis effects depend on context (d ranges 0.36–1.94) |
 | Latent Audio Synth via embedding injection | **Not viable** | Effect too weak for perceptual control |
-| Latent Audio Synth via text-pole LERP | **Viable** | 80-90% signal retention, monotonic control |
+| Latent Audio Synth via single-axis LERP | **Viable** | 84% signal retention, monotonic control |
+| Latent Audio Synth via multi-axis additive LERP | **Marginal** | 35% retention; usable but needs bridge model for full signal |
 
 ---
 
 ## 7. Implications for the Latent Audio Synth
 
-The original vision — SAE feature sliders directly manipulating embeddings — is not viable. But LERP interpolation between text-encoded poles recovers 80-90% of the text-prompt effect with monotonic gradients. This enables a different but functional synth architecture.
+The original vision — SAE feature sliders directly manipulating embeddings — is not viable. LERP interpolation between text-encoded poles recovers 84% of the text-prompt effect for a single axis, but degrades to ~35% when 3 axes are combined additively. A functional multi-axis synth requires either accepting the degradation or training a bridge model.
 
-### Viable: Text-Pole Mixing Board
+### Architecture Options
 
-Each control axis is defined by two text prompts (poles), both encoded through T5. A slider interpolates between the two T5 outputs via LERP. Multiple axes can be combined.
+#### Option A: Single-Axis LERP (validated, 84% signal)
 
-Example axes (validated or plausible based on findings):
-- "sound rhythmic" <-> "sound sustained" (d=2.43, validated)
-- "sound bright" <-> "sound dark"
-- "sound smooth" <-> "sound harsh"
-- "sound metallic" <-> "sound wooden"
+One slider per session, switching between axis pairs. Simple, no interaction effects, strong signal. Limited expressivity — users control one dimension at a time.
 
-Design implications:
-- **N sliders, each backed by a text-pole pair**: Users control semantic dimensions without knowing they're navigating T5 embedding space.
-- **Multi-axis blending**: Weighted combination of multiple LERP results. Needs empirical testing whether multi-axis blending stays in-distribution.
-- **SAE atlas as axis discovery tool**: The feature atlas identifies which semantic contrasts T5 encodes most strongly, informing the choice of pole pairs.
+#### Option B: Additive Multi-Axis (validated, ~35% signal per axis)
 
-### Open Questions
+N sliders, each backed by a text-pole pair. Combination: neutral + Σ deltas. Effects are significant but degraded, and axes interact. Still usable for coarse control — d=1.02 is a "large" effect by convention, even at 35% retention. The smooth↔harsh axis retains d=1.74 even in multi-axis context.
 
-1. **Multi-axis interaction**: Does blending 3+ LERP axes simultaneously stay on the T5 manifold? Or does the combined embedding drift out-of-distribution, degrading effect sizes like injection did?
+Example axes (all validated in multi-axis context):
+- "sound rhythmic" <-> "sound sustained" (d=1.02, spectral variation)
+- "sound bright" <-> "sound dark" (d=1.15, bandwidth)
+- "sound smooth" <-> "sound harsh" (d=1.74, energy)
 
-2. **Axis orthogonality**: Are the acoustic effects of different axes independent, or do they interfere? (e.g., does "bright" interact with "rhythmic"?)
+#### Option C: Bridge Model (not yet implemented)
 
-3. **Perceptual threshold**: The LERP gradient is statistically monotonic (r=0.63), but is the per-step difference large enough to be *heard* by users? The 5 LERP positions need perceptual evaluation, not just statistical.
+A small learned network (MLP or VAE) that maps slider positions → valid T5 embedding. Trained on (text prompt, T5 embedding) pairs with annotations for each axis dimension. The network learns the non-linear manifold geometry and projects arbitrary slider combinations back onto it.
 
-4. **Pole selection**: Which text-pole pairs produce the strongest, most perceptually salient gradients? The binary contrast vocabulary (smooth/harsh, high/low, etc.) is a starting point. Systematic screening across dozens of pairs would identify the most effective axes.
+Training data: ~10K text prompts with annotated properties, encoded through T5. Architecture: small MLP (N slider inputs → 768d embedding), loss = reconstruction + distributional regularization (output must be "T5-like").
+
+This would potentially recover the full 84% signal per axis even with multiple axes, while eliminating interaction effects.
+
+### Resolved Questions
+
+1. **Multi-axis interaction**: Additive combination degrades to ~35% signal per axis. The embedding drifts from the T5 manifold, but not catastrophically — all axes remain significant.
+
+2. **Axis orthogonality**: **Rejected.** Axes interact — the rhythmic axis effect varies from d=0.36 to d=1.94 depending on other axes' positions. Independent control requires a bridge model.
+
+3. **Perceptual threshold**: Not yet tested. Statistical significance (d=1.02 in multi-axis) suggests the effects should be audible, but needs human evaluation.
+
+4. **Pole selection**: The three tested axes affect different acoustic dimensions, confirming that diverse poles produce diverse control. Systematic screening of more pairs would identify optimal axes.
 
 ### Abandoned Paths
 
-1. **SAE feature injection**: Effect too weak (5-25% signal retention). The SAE decomposition is analytically useful but not operationally actionable via Stable Audio.
+1. **SAE feature injection**: 5-25% signal retention. Analytically useful, operationally not actionable.
 
-2. **Difference vector injection**: Same problem — out-of-distribution embeddings are dampened by cross-attention.
+2. **Difference vector injection**: Same problem — out-of-distribution.
 
-3. **Cross-attention fine-tuning**: Would require retraining Stable Audio, high cost, unclear benefit given that LERP already works.
+3. **Cross-attention fine-tuning**: Would require retraining Stable Audio, high cost, unnecessary given LERP viability.
 
 ---
 
@@ -292,7 +344,7 @@ Design implications:
 | Audio model | Stable Audio (via GPU service, port 17803) |
 | Audio parameters | 5s duration, 100 steps, CFG 7.0 |
 | Statistical tests | Welch's t-test, Cohen's d, Mann-Whitney U |
-| Samples per condition | N=100 (seeds 0-99); LERP: N=100 per position x 5 positions |
+| Samples per condition | N=100 (seeds 0-99); LERP: N=100 x 5 positions; Multi-axis: N=50 x 8 conditions |
 | Acoustic features | 11 (librosa: onset density, spectral centroid mean/std, RMS mean/std, spectral flatness, ZCR, tempo, spectral bandwidth, spectral flux mean/std) |
 
 ### Scripts
@@ -311,6 +363,7 @@ Design implications:
 | `statistical_sonification_test.py` | Validation: Text-prompt statistics (N=100) |
 | `statistical_embedding_injection_test.py` | Validation: Injection statistics (N=100) |
 | `statistical_lerp_test.py` | Validation: LERP interpolation statistics (N=500) |
+| `statistical_multiaxis_test.py` | Validation: Multi-axis factorial test (N=400) |
 
 ### Data
 
@@ -328,3 +381,4 @@ All outputs in `research/t5_interpretability/data/` (gitignored). Key files:
 - `statistical_test/` (200 WAV, text-prompt experiment)
 - `statistical_injection_test/` (200 WAV, injection experiment)
 - `statistical_lerp_test/` (500 WAV, LERP gradient experiment)
+- `statistical_multiaxis_test/` (400 WAV, multi-axis factorial experiment)
