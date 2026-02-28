@@ -592,20 +592,32 @@ class DiffusersImageGenerator:
                         # SD3.5 triple encoder: CLIP-L (77t), CLIP-G (77t), T5-XXL (512t)
                         if hasattr(pipe, 'tokenizer_3'):
                             gen_kwargs["max_sequence_length"] = 512
-                            # Explicit split: truncate for CLIP, full prompt for T5
-                            clip_tokenizer = pipe.tokenizer
-                            clip_tokens = clip_tokenizer(
-                                prompt, truncation=False, add_special_tokens=False
-                            )["input_ids"]
-                            if len(clip_tokens) > 75:  # 77 minus SOT/EOT
-                                gen_kwargs["prompt_3"] = prompt
-                                gen_kwargs["prompt"] = clip_tokenizer.decode(
-                                    clip_tokens[:75], skip_special_tokens=True
-                                )
+                            # Use explicit per-encoder prompts if provided via kwargs
+                            if kwargs.get('prompt_2') or kwargs.get('prompt_3'):
+                                if kwargs.get('prompt_2'):
+                                    gen_kwargs["prompt_2"] = kwargs['prompt_2']
+                                if kwargs.get('prompt_3'):
+                                    gen_kwargs["prompt_3"] = kwargs['prompt_3']
                                 logger.info(
-                                    f"[DIFFUSERS] Prompt split: CLIP uses 75 of "
-                                    f"{len(clip_tokens)} tokens, T5-XXL uses full prompt"
+                                    f"[DIFFUSERS] Triple-prompt: CLIP-L={len(prompt.split()):.0f}w, "
+                                    f"CLIP-G={len((kwargs.get('prompt_2') or prompt).split()):.0f}w, "
+                                    f"T5={len((kwargs.get('prompt_3') or prompt).split()):.0f}w"
                                 )
+                            else:
+                                # Auto-split: truncate for CLIP, full prompt for T5
+                                clip_tokenizer = pipe.tokenizer
+                                clip_tokens = clip_tokenizer(
+                                    prompt, truncation=False, add_special_tokens=False
+                                )["input_ids"]
+                                if len(clip_tokens) > 75:  # 77 minus SOT/EOT
+                                    gen_kwargs["prompt_3"] = prompt
+                                    gen_kwargs["prompt"] = clip_tokenizer.decode(
+                                        clip_tokens[:75], skip_special_tokens=True
+                                    )
+                                    logger.info(
+                                        f"[DIFFUSERS] Prompt split: CLIP uses 75 of "
+                                        f"{len(clip_tokens)} tokens, T5-XXL uses full prompt"
+                                    )
 
                         gen_kwargs["callback_on_step_end"] = step_callback
                         gen_kwargs["callback_on_step_end_tensor_inputs"] = ["latents"]

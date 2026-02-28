@@ -79,6 +79,12 @@ def generate():
         return jsonify({"success": False, "error": "prompt required"}), 400
 
     backend = _get_backend()
+    # Optional per-encoder prompts for SD3.5 triple-prompt support
+    extra_kwargs = {}
+    if 'prompt_2' in data:
+        extra_kwargs['prompt_2'] = data['prompt_2']
+    if 'prompt_3' in data:
+        extra_kwargs['prompt_3'] = data['prompt_3']
     image_bytes = _run_async(backend.generate_image(
         prompt=data['prompt'],
         model_id=data.get('model_id', 'stabilityai/stable-diffusion-3.5-large'),
@@ -90,6 +96,7 @@ def generate():
         seed=int(data.get('seed', -1)),
         pipeline_class=data.get('pipeline_class', 'StableDiffusion3Pipeline'),
         loras=data.get('loras'),
+        **extra_kwargs,
     ))
 
     if image_bytes is None:
