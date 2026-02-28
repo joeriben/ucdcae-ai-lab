@@ -61,12 +61,14 @@ ENCODING_BATCH_SIZE = 64
 # ── SAE Hyperparameters ──────────────────────────────────────────────────────
 
 SAE_D_MODEL = T5_D_MODEL          # 768
-SAE_N_FEATURES = 12_288           # 16× expansion
-SAE_K = 64                        # TopK sparsity
-SAE_LR = 3e-4
+SAE_N_FEATURES = 6_144            # 8× expansion (16× had 99% dead features)
+SAE_K = 64                        # TopK target sparsity (used as L0 target for L1 mode)
+SAE_LR = 1e-4
 SAE_BATCH_SIZE = 4096
-SAE_EPOCHS = 100
-SAE_WEIGHT_DECAY = 1e-5
+SAE_EPOCHS = 150
+SAE_WEIGHT_DECAY = 0
+SAE_L1_COEFF = 5e-3               # L1 sparsity coefficient (tuned for L0 ≈ 64)
+SAE_L1_WARMUP_EPOCHS = 10         # MSE-only warmup before adding L1
 
 
 # ── Sonification ─────────────────────────────────────────────────────────────
