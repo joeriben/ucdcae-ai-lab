@@ -1,5 +1,38 @@
 # Development Log
 
+## Session 226 - SD3.5 Per-Encoder CLIP Optimization
+**Date:** 2026-02-28
+**Focus:** Give each of SD3.5's three text encoders the right input instead of the same prompt
+**Commits:** `da60d8b`, `0eb93d8`, `cbe58b2`, `a2ac1f5`, `114bba5`
+
+### Problem
+SD3.5 has three encoders with fundamentally different needs: CLIP-L (77 tokens, visual keywords with weight syntax), CLIP-G (77 tokens, semantic scene, no weights), T5-XXL (512 tokens, natural language). Sending the same prompt to all three wastes each encoder's strengths.
+
+### Implementation
+Optimization instruction now produces `{clip_l, clip_g}` JSON. The LLM generates CLIP-specific prompts with token weighting (CLIP-L) and semantic scene descriptions (CLIP-G). T5-XXL receives the user's interception result directly, translated by Stage 3.
+
+**Backend pipeline:** `_parse_triple_prompt()` detects JSON → Stage 3 safety-checks the interception result → CLIP-L becomes primary prompt, CLIP-G → `prompt_2`, translated interception text → `prompt_3` → forwarded through `backend_router.py` → `diffusers_client.py` → GPU service (already supported `prompt_2`/`prompt_3`).
+
+**Frontend:** MediaInputBox detects `{clip_l, clip_g}` JSON and renders two labeled sections instead of raw textarea. Info note "T5-XXL uses your original text directly" shown below. Contextual loading message during optimization explains encoder architecture (SD3.5-specific) and hints at manual translation.
+
+### Key Design Decision
+T5-XXL is NOT optimized by the LLM. The user's own description stays in the richest encoder (4.7B params), preserving creative self-determination. Only the technical CLIP layer gets augmented. This emerged from the discussion: the initial plan generated all three prompts, but T5 doesn't need "optimized" input — it's trained on natural language, which is exactly what the interception result already is.
+
+### Translation Caveat
+Stage 3 auto-translates only at kids safety level. At adult/research, the user must translate manually (translate button). Documented in config notes and shown in loading message.
+
+### Files Modified
+- `sd35_large.json`, `sd35_large_turbo.json` — 2-key optimization instruction
+- `instruction_selector.py` — `triple_prompt_optimization` type
+- `schema_pipeline_routes.py` — `_parse_triple_prompt()`, Stage 3/4 flow, optimize endpoint
+- `backend_router.py` — `prompt_2`/`prompt_3` forwarding
+- `diffusers_client.py` — HTTP payload forwarding
+- `MediaInputBox.vue` — CLIP-prompt display + T5 info note
+- `text_transformation.vue` — contextual loading message
+- `en.ts` + `WORK_ORDERS.md` — i18n keys
+
+---
+
 ## Session 225 - Rename trans_aktion → poetry + Clean Context Fields
 **Date:** 2026-02-28
 **Focus:** Rename 6 interception configs, clean redundant context instructions, drop model_override

@@ -29,6 +29,28 @@
 
 ---
 
+## Session 226: SD3.5 Per-Encoder CLIP Optimization (2026-02-28)
+
+### Decision 1: Only optimize CLIP, T5-XXL gets user text directly
+
+**Problem:** SD3.5 has three text encoders (CLIP-L 77tok, CLIP-G 77tok, T5-XXL 512tok) but received the same prompt for all three. Initial plan generated all three prompts via LLM — but T5-XXL is a general-purpose text encoder trained on natural language. Generating an LLM-rewritten T5 prompt overwrites the user's creative description with a machine paraphrase.
+
+**Decision:** Optimization produces only `{clip_l, clip_g}`. T5-XXL receives the user's interception result directly (translated by Stage 3 at kids level). This preserves user self-determination: the user's own words condition the most powerful encoder (4.7B parameters, 512 token context), while only the technical CLIP layer (77 token hard cutoff, weight syntax) gets augmented.
+
+**Trade-off:** At adult/research safety level, Stage 3 does not auto-translate. If the user writes in German and doesn't use the translate button, T5 receives German text (T5-XXL trained primarily on English). This is a known acceptable limitation — the old single-prompt optimization implicitly translated via LLM rewrite, but that was a side effect, not a feature.
+
+**Files:** `sd35_large.json`, `sd35_large_turbo.json` (optimization_instruction), `schema_pipeline_routes.py` (_parse_triple_prompt, Stage 3/4 flow), `backend_router.py`, `diffusers_client.py` (prompt_2/prompt_3 forwarding), `MediaInputBox.vue` (2-section display + T5 info note)
+
+### Decision 2: Contextual loading text during optimization
+
+**Problem:** Hardcoded German loading message during prompt optimization, no model-specific information, no translation guidance.
+
+**Decision:** Computed loading message based on selected output config. SD3.5 configs get encoder-specific explanation ("CLIP-L and CLIP-G are being optimized — T5-XXL receives your original text"). All configs get a translation hint ("use the translate button if text not in English"). Uses i18n for all strings.
+
+**File:** `text_transformation.vue`, `en.ts`
+
+---
+
 ## Session 222: iGPU Performance + Streaming UX (2026-02-28)
 
 ### Decision 1: Remove `backdrop-filter: blur()` from permanent UI elements
