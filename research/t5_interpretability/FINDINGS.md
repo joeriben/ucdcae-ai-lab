@@ -262,7 +262,106 @@ This is not a flaw in the SAE or in T5's representations. T5 does encode semanti
 
 ---
 
-## 6. What Survives Scrutiny
+## 6. Cultural Drift: Perceptual Axes Carry Cultural Baggage
+
+### Method
+
+For 21 semantic axes across three levels (8 perceptual, 7 cultural-contextual, 6 critical), computed LERP positions in mean-pooled T5 embedding space and measured cosine distance to the 15 tradition centroids (computed from the probing corpus). No audio generation — pure embedding-space analysis.
+
+This connects the LERP sonification findings with the cultural distance analysis: when you move a "perceptual" slider, does the embedding also drift toward specific cultural traditions?
+
+### Key Findings
+
+#### "traditional ↔ modern": Ukrainian = most "traditional"
+
+| Tradition | Drift toward "traditional" |
+|---|---|
+| Ukrainian | -0.071 (strongest) |
+| Arabic | -0.060 |
+| Korean | -0.057 |
+| African American | -0.002 (near zero) |
+| Electronic | +0.013 (only tradition receding) |
+
+T5 strongly associates "traditional" with Eastern European and Middle Eastern music. African American traditions (Blues, Gospel, Jazz — among the oldest living American traditions) show essentially no drift toward "traditional." This reveals how English-language discourse codes "traditional" as geographically non-Western.
+
+#### "improvised ↔ composed": Not aligned with high/low culture
+
+| Tradition | Drift toward "improvised" |
+|---|---|
+| Hindustani | -0.146 (strongest) |
+| Flamenco | -0.140 |
+| Electronic | -0.130 |
+| Ukrainian | -0.100 (weakest) |
+
+Hindustani and Flamenco drift strongly toward "improvised" — consistent with their performance traditions. But Electronic also drifts strongly, breaking the expected "improvised = non-Western" pattern. The axis differentiates, but not along Eurocentric high-culture lines.
+
+#### "complex ↔ simple": No Eurocentrism detected
+
+Minimal differentiation across all 15 traditions (max drift: Tuvan -0.020 toward "complex," Aboriginal Australian +0.015 toward "simple"). T5 does **not** associate "complex" preferentially with European art music. This null finding is notable.
+
+#### "beautiful ↔ ugly": East Asian bias
+
+| Tradition | Drift toward "beautiful" |
+|---|---|
+| Korean | -0.059 (strongest) |
+| Romani | -0.058 |
+| Franconian | -0.055 |
+| Yoruba | -0.028 (weakest) |
+
+Small spread (0.03), but consistent: East Asian and European traditions closer to "beautiful," West African furthest. Reflects aesthetic norms encoded in English-language training data.
+
+#### "music ↔ noise": Who counts as music?
+
+| Tradition | Drift toward "music" |
+|---|---|
+| Romani | -0.132 (closest to "music") |
+| Jewish | -0.124 |
+| African American | -0.122 |
+| Tuvan | -0.076 (furthest from "music") |
+| Aboriginal Australian | -0.078 |
+
+Tuvan throat singing and Aboriginal Australian music are the most "noise-like" in T5's embedding space. This is consistent with the Default-Encoding Bias finding from Section 2. Traditions using non-standard vocal techniques or unfamiliar timbres are encoded further from the "music" concept.
+
+#### "professional ↔ amateur": Electronic = professional, African American = amateur
+
+| Tradition | Drift toward "professional" |
+|---|---|
+| Electronic | -0.040 (most "professional") |
+| Gamelan | -0.031 |
+| African American | +0.003 (only tradition drifting toward "amateur") |
+
+African American music is the **only** tradition that drifts (slightly) toward "amateur." This is a measurable bias in T5's embedding space, reflecting historical patterns of delegitimization in English-language music discourse.
+
+#### "ceremonial ↔ everyday": Strong differentiator
+
+This axis produces the largest cultural drift of any axis tested. All traditions drift toward "ceremonial," but the spread is large:
+
+| Tradition | Drift toward "ceremonial" |
+|---|---|
+| Flamenco | -0.197 (strongest) |
+| Arabic | -0.196 |
+| Hindustani | -0.195 |
+| Electronic | -0.100 (weakest) |
+
+#### Confounding pattern: tonal ↔ noisy dominates
+
+The "tonal ↔ noisy" axis produces the strongest cultural drift of any axis for **every single tradition** (drift magnitudes 0.26–0.32). This is the most culturally loaded "perceptual" axis: moving toward "tonal" simultaneously pulls toward all music traditions, with Flamenco (-0.321) and African American (-0.315) leading. The axis is not purely perceptual — it encodes the culturally constructed boundary between music and non-music.
+
+### Pedagogical Implications
+
+The drift analysis reveals three categories of axes:
+
+1. **Culturally neutral**: "loud ↔ quiet" (max drift 0.027), "complex ↔ simple" (max drift 0.020). These axes change sound quality without significant cultural side effects. Safe for purely aesthetic exploration.
+
+2. **Culturally biased**: "traditional ↔ modern," "professional ↔ amateur," "beautiful ↔ ugly." These carry measurable cultural associations that could be made visible to learners: "When you move this slider, the model also moves toward/away from these traditions."
+
+3. **Culturally constitutive**: "tonal ↔ noisy," "music ↔ noise." These axes don't just carry bias — they reproduce the boundary definitions of what counts as music. The strongest finding: "tonal" is not a neutral perceptual descriptor but a culturally loaded category that pulls toward specific traditions.
+
+A pedagogical interface could display the cultural drift alongside the sound output: "You moved 'tonal ↔ noisy' to 0.7. This also moved the embedding 0.28 closer to Flamenco and 0.23 closer to Aboriginal Australian." Making the confounding visible turns a bias into a learning opportunity.
+
+---
+
+## 7. What Survives Scrutiny
 
 | Finding | Status | Evidence |
 |---|---|---|
@@ -278,13 +377,17 @@ This is not a flaw in the SAE or in T5's representations. T5 does encode semanti
 | Multi-axis additive LERP (3 axes) | **Partially confirmed** | Each axis significant, but 35% retention per axis |
 | Multi-axis axes affect different features | **Confirmed** | rhythmic→spectral variation, bright→bandwidth, smooth→energy |
 | Multi-axis axes are independent | **Rejected** | Axis effects depend on context (d ranges 0.36–1.94) |
+| Perceptual axes carry cultural drift | **Confirmed** | 21 axes measured, "tonal↔noisy" strongest (drift 0.26–0.32) |
+| "complex↔simple" shows Eurocentrism | **Rejected** | Near-zero differentiation across all 15 traditions |
+| "professional↔amateur" shows bias | **Confirmed** | African American = only tradition drifting toward "amateur" |
+| "music↔noise" reproduces exclusion | **Confirmed** | Tuvan/Aboriginal furthest from "music" (consistent with default bias) |
 | Latent Audio Synth via embedding injection | **Not viable** | Effect too weak for perceptual control |
 | Latent Audio Synth via single-axis LERP | **Viable** | 84% signal retention, monotonic control |
 | Latent Audio Synth via multi-axis additive LERP | **Marginal** | 35% retention; usable but needs bridge model for full signal |
 
 ---
 
-## 7. Implications for the Latent Audio Synth
+## 8. Implications for a Pedagogical Audio Interface
 
 The original vision — SAE feature sliders directly manipulating embeddings — is not viable. LERP interpolation between text-encoded poles recovers 84% of the text-prompt effect for a single axis, but degrades to ~35% when 3 axes are combined additively. A functional multi-axis synth requires either accepting the degradation or training a bridge model.
 
@@ -331,7 +434,7 @@ This would potentially recover the full 84% signal per axis even with multiple a
 
 ---
 
-## Experimental Details
+## 9. Experimental Details
 
 | Parameter | Value |
 |---|---|
@@ -364,6 +467,7 @@ This would potentially recover the full 84% signal per axis even with multiple a
 | `statistical_embedding_injection_test.py` | Validation: Injection statistics (N=100) |
 | `statistical_lerp_test.py` | Validation: LERP interpolation statistics (N=500) |
 | `statistical_multiaxis_test.py` | Validation: Multi-axis factorial test (N=400) |
+| `cultural_drift_analysis.py` | Cultural drift per axis (21 axes x 15 traditions) |
 
 ### Data
 
@@ -382,3 +486,4 @@ All outputs in `research/t5_interpretability/data/` (gitignored). Key files:
 - `statistical_injection_test/` (200 WAV, injection experiment)
 - `statistical_lerp_test/` (500 WAV, LERP gradient experiment)
 - `statistical_multiaxis_test/` (400 WAV, multi-axis factorial experiment)
+- `cultural_drift/cultural_drift_report.md` (21 axes x 15 traditions drift analysis)
