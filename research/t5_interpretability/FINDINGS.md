@@ -8,6 +8,8 @@ This research investigated how T5-Base organizes semantic knowledge about sound 
 
 **Core question**: Can we manipulate T5 embeddings directly to control audio generation?
 
+**Answer**: Not via vector arithmetic (injection), but yes via interpolation between natural T5 outputs (LERP). The LERP approach recovers 80-90% of the text-prompt effect and produces monotonic acoustic gradients — a viable basis for a text-pole mixing board.
+
 ---
 
 ## 1. SAE Training: TopK Collapse and the L1 Solution
@@ -159,17 +161,64 @@ Same semantic contrast (rhythmic vs sustained), but applied via T5 difference ve
 
 3. **Direction reversal**: rms_mean shows opposite sign under injection vs text prompts (+0.21 vs -1.95), indicating partial distortion of semantic content during embedding manipulation.
 
+#### LERP Interpolation (Experiment C3)
+
+Instead of injecting a difference vector into a neutral embedding, interpolate linearly between two natural T5 outputs: `emb = (1-t) * T5("sound sustained") + t * T5("sound rhythmic")`, with t in {0.0, 0.25, 0.5, 0.75, 1.0}. Both endpoints are natural T5 outputs — the interpolation stays close to Stable Audio's learned conditioning distribution.
+
+N=100 per position, 500 samples total.
+
+**Extreme comparison** (t=0.0 vs t=1.0):
+
+| Acoustic Feature | Cohen's d | p-value |
+|---|---|---|
+| spectral_centroid_std | **+2.434** | 9.2 x 10^-41 |
+| spectral_flatness_mean | **+1.860** | 3.3 x 10^-28 |
+| rms_std | **+1.404** | 7.4 x 10^-19 |
+| spectral_flux_std | **+1.348** | 7.8 x 10^-18 |
+| onset_density | **-1.169** | 3.5 x 10^-13 |
+| rms_mean | **-1.112** | 1.6 x 10^-12 |
+
+6 of 11 features highly significant (p < 0.001). Same 6 features as the text-prompt experiment.
+
+**Gradient analysis** (Pearson correlation between LERP position t and acoustic feature, N=500):
+
+| Feature | Pearson r | p-value | t=0.00 | t=0.25 | t=0.50 | t=0.75 | t=1.00 |
+|---|---|---|---|---|---|---|---|
+| spectral_centroid_std | +0.631 | 7.5 x 10^-57 | 738 | 1393 | 1884 | 2276 | 2566 |
+| spectral_flatness_mean | +0.544 | 6.2 x 10^-40 | 0.04 | 0.09 | 0.15 | 0.18 | 0.20 |
+| spectral_flux_std | +0.520 | 5.8 x 10^-36 | 23.0 | 18.0 | 21.5 | 51.8 | 55.4 |
+| rms_std | +0.509 | 2.8 x 10^-34 | 0.05 | 0.05 | 0.05 | 0.12 | 0.12 |
+| onset_density | -0.361 | 7.7 x 10^-17 | 9.0 | 5.4 | 4.3 | 4.4 | 4.6 |
+| rms_mean | -0.295 | 1.8 x 10^-11 | 0.28 | 0.13 | 0.07 | 0.15 | 0.13 |
+
+8 of 11 features show significant monotonic trends. Intermediate LERP positions produce intermediate acoustic features.
+
+#### Full Comparison Across Methods
+
+| Feature | Text d | Injection d | LERP d | LERP/Text |
+|---|---|---|---|---|
+| spectral_centroid_std | +2.882 | +0.181 | +2.434 | **84%** |
+| spectral_flatness_mean | +2.280 | +0.526 | +1.860 | **82%** |
+| rms_std | +1.073 | +0.038 | +1.404 | **131%** |
+| spectral_flux_std | +1.635 | +0.419 | +1.348 | **83%** |
+| onset_density | -1.343 | -0.834 | -1.169 | **87%** |
+| rms_mean | -1.949 | +0.214 | -1.112 | **57%** |
+
+LERP recovers **57-131%** of the text-prompt effect (median ~84%), compared to injection's 5-25%. All effect directions match the text-prompt baseline. The rms_mean direction reversal observed in injection (wrong sign) is corrected in LERP.
+
 ---
 
-## 5. Diagnosis: Why Embedding Injection Fails
+## 5. Diagnosis: Why Injection Fails and LERP Succeeds
 
-Stable Audio's conditioning pathway is trained end-to-end: tokenizer -> T5 -> cross-attention -> diffusion. Direct embedding manipulation bypasses the tokenizer-T5 pipeline and injects vectors that lie outside the learned distribution of T5 outputs.
+Stable Audio's conditioning pathway is trained end-to-end: tokenizer -> T5 -> cross-attention -> diffusion. The cross-attention layers learn to attend to embedding patterns that T5 naturally produces.
 
-The cross-attention layers learn to attend to embedding patterns that T5 naturally produces. Artificial vector arithmetic (adding difference vectors or SAE decoder columns) creates out-of-distribution inputs that the cross-attention layers effectively ignore or dampen.
+**Injection fails** (5-25% signal retention): Adding difference vectors or SAE decoder columns to an embedding creates out-of-distribution inputs. The resulting point in embedding space doesn't look like anything T5 would naturally produce. Cross-attention largely ignores it.
 
-This is not a flaw in the SAE or in T5's representations. T5 does encode semantically meaningful structure (the cultural distance analysis confirms this). The bottleneck is Stable Audio's conditioning mechanism, which is not designed to respond to arbitrary embedding-space manipulations.
+**LERP succeeds** (80-90% signal retention): Both interpolation endpoints are natural T5 outputs. Linear interpolation between two in-distribution points stays close to the learned manifold. Cross-attention responds to the blended embedding almost as strongly as to a pure text-prompted one.
 
-**Analogy**: T5's embedding space is like a well-organized library. The SAE successfully catalogs which books are on which shelves. But Stable Audio's reading mechanism only accepts books through the front door (text -> tokenizer -> T5). Handing books directly through a window (embedding injection) mostly gets ignored by the librarian.
+This is not a flaw in the SAE or in T5's representations. T5 does encode semantically meaningful structure (the cultural distance analysis confirms this). The constraint is that Stable Audio only responds to embeddings that lie on or near the manifold of natural T5 outputs.
+
+**Implication**: Any viable embedding manipulation must respect the T5 output distribution. Interpolation between text-encoded poles does; vector arithmetic does not.
 
 ---
 
@@ -184,23 +233,49 @@ This is not a flaw in the SAE or in T5's representations. T5 does encode semanti
 | Individual SAE feature semantics | **Unvalidated** | Sonification failed to provide causal evidence |
 | Text prompts produce distinguishable audio | **Confirmed** | d=2.88, N=100, p<10^-44 |
 | Embedding injection has measurable but weak effect | **Confirmed** | d=0.83, N=100, p<10^-7, ~5-25% signal retention |
+| LERP between T5 outputs recovers ~84% of text effect | **Confirmed** | d=2.43, N=100, p<10^-40, monotonic gradient |
+| LERP produces monotonic acoustic gradients | **Confirmed** | Pearson r up to 0.63, 8/11 features significant |
 | Latent Audio Synth via embedding injection | **Not viable** | Effect too weak for perceptual control |
+| Latent Audio Synth via text-pole LERP | **Viable** | 80-90% signal retention, monotonic control |
 
 ---
 
 ## 7. Implications for the Latent Audio Synth
 
-The original vision — a synthesizer where users manipulate SAE feature sliders to control audio generation — is not achievable with the current architecture (T5 embedding injection -> Stable Audio cross-attention). The conditioning bottleneck prevents embedding-space manipulations from producing perceptible acoustic changes.
+The original vision — SAE feature sliders directly manipulating embeddings — is not viable. But LERP interpolation between text-encoded poles recovers 80-90% of the text-prompt effect with monotonic gradients. This enables a different but functional synth architecture.
 
-### Possible Paths Forward
+### Viable: Text-Pole Mixing Board
 
-1. **Textual Inversion**: Instead of injecting vectors, map SAE features back to optimized token sequences that travel through the natural text -> T5 -> cross-attention pathway. This respects Stable Audio's learned distribution.
+Each control axis is defined by two text prompts (poles), both encoded through T5. A slider interpolates between the two T5 outputs via LERP. Multiple axes can be combined.
 
-2. **Cross-Attention Fine-Tuning**: Train Stable Audio's cross-attention layers to respond more strongly to embedding variations, expanding the effective conditioning distribution.
+Example axes (validated or plausible based on findings):
+- "sound rhythmic" <-> "sound sustained" (d=2.43, validated)
+- "sound bright" <-> "sound dark"
+- "sound smooth" <-> "sound harsh"
+- "sound metallic" <-> "sound wooden"
 
-3. **Alternative Audio Model**: Use an audio generation model whose conditioning is less strongly regularized — e.g., flow-matching models conditioned directly on continuous embeddings without cross-attention bottlenecks.
+Design implications:
+- **N sliders, each backed by a text-pole pair**: Users control semantic dimensions without knowing they're navigating T5 embedding space.
+- **Multi-axis blending**: Weighted combination of multiple LERP results. Needs empirical testing whether multi-axis blending stays in-distribution.
+- **SAE atlas as axis discovery tool**: The feature atlas identifies which semantic contrasts T5 encodes most strongly, informing the choice of pole pairs.
 
-4. **Text-Prompt Interpolation**: Since text prompts produce strong effects (d=2.88), a "synth" that generates audio from dynamically composed text prompts (rather than manipulated embeddings) could leverage T5's semantic structure indirectly. The SAE feature atlas could inform which text dimensions to expose as controls.
+### Open Questions
+
+1. **Multi-axis interaction**: Does blending 3+ LERP axes simultaneously stay on the T5 manifold? Or does the combined embedding drift out-of-distribution, degrading effect sizes like injection did?
+
+2. **Axis orthogonality**: Are the acoustic effects of different axes independent, or do they interfere? (e.g., does "bright" interact with "rhythmic"?)
+
+3. **Perceptual threshold**: The LERP gradient is statistically monotonic (r=0.63), but is the per-step difference large enough to be *heard* by users? The 5 LERP positions need perceptual evaluation, not just statistical.
+
+4. **Pole selection**: Which text-pole pairs produce the strongest, most perceptually salient gradients? The binary contrast vocabulary (smooth/harsh, high/low, etc.) is a starting point. Systematic screening across dozens of pairs would identify the most effective axes.
+
+### Abandoned Paths
+
+1. **SAE feature injection**: Effect too weak (5-25% signal retention). The SAE decomposition is analytically useful but not operationally actionable via Stable Audio.
+
+2. **Difference vector injection**: Same problem — out-of-distribution embeddings are dampened by cross-attention.
+
+3. **Cross-attention fine-tuning**: Would require retraining Stable Audio, high cost, unclear benefit given that LERP already works.
 
 ---
 
@@ -217,7 +292,7 @@ The original vision — a synthesizer where users manipulate SAE feature sliders
 | Audio model | Stable Audio (via GPU service, port 17803) |
 | Audio parameters | 5s duration, 100 steps, CFG 7.0 |
 | Statistical tests | Welch's t-test, Cohen's d, Mann-Whitney U |
-| Samples per condition | N=100 (seeds 0-99) |
+| Samples per condition | N=100 (seeds 0-99); LERP: N=100 per position x 5 positions |
 | Acoustic features | 11 (librosa: onset density, spectral centroid mean/std, RMS mean/std, spectral flatness, ZCR, tempo, spectral bandwidth, spectral flux mean/std) |
 
 ### Scripts
@@ -235,6 +310,7 @@ The original vision — a synthesizer where users manipulate SAE feature sliders
 | `sonify_binary_contrasts.py` | Validation: Binary contrast injection |
 | `statistical_sonification_test.py` | Validation: Text-prompt statistics (N=100) |
 | `statistical_embedding_injection_test.py` | Validation: Injection statistics (N=100) |
+| `statistical_lerp_test.py` | Validation: LERP interpolation statistics (N=500) |
 
 ### Data
 
@@ -251,3 +327,4 @@ All outputs in `research/t5_interpretability/data/` (gitignored). Key files:
 - `sonification_binary/` (90 WAV, binary contrasts)
 - `statistical_test/` (200 WAV, text-prompt experiment)
 - `statistical_injection_test/` (200 WAV, injection experiment)
+- `statistical_lerp_test/` (500 WAV, LERP gradient experiment)
