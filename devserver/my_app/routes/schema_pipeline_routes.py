@@ -3033,6 +3033,9 @@ async def execute_stage4_generation_only(
         result_seed = _meta_seed if _meta_seed is not None else seed
 
         # Cloud APIs don't support seeds — don't pretend they do
+        config_obj = pipeline_executor.config_loader.get_config(output_config)
+        backend_type = (config_obj.meta.get('backend_type', 'comfyui')
+                        if config_obj and config_obj.meta else 'comfyui')
         if backend_type in ('openai', 'openrouter'):
             result_seed = None
 
