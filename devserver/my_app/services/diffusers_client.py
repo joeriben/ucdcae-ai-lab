@@ -124,6 +124,11 @@ class DiffusersClient:
         }
         if loras:
             payload['loras'] = loras
+        # SD3.5 triple-prompt: forward per-encoder prompts
+        if kwargs.get('prompt_2'):
+            payload['prompt_2'] = kwargs['prompt_2']
+        if kwargs.get('prompt_3'):
+            payload['prompt_3'] = kwargs['prompt_3']
         result = await asyncio.to_thread(self._post, '/api/diffusers/generate', payload)
 
         if result is None or not result.get('success'):

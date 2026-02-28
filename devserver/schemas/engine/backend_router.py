@@ -2168,6 +2168,15 @@ class BackendRouter:
                     fusion_strategy=fusion_strategy,
                 )
             else:
+                # SD3.5 triple-prompt: forward per-encoder prompts if present
+                extra_kwargs = {}
+                if parameters.get('prompt_2'):
+                    extra_kwargs['prompt_2'] = parameters['prompt_2']
+                if parameters.get('prompt_3'):
+                    extra_kwargs['prompt_3'] = parameters['prompt_3']
+                if extra_kwargs:
+                    logger.info(f"[DIFFUSERS] Triple-prompt: forwarding {list(extra_kwargs.keys())}")
+
                 image_bytes = await backend.generate_image(
                     prompt=prompt,
                     model_id=model_id,
@@ -2179,6 +2188,7 @@ class BackendRouter:
                     seed=seed,
                     pipeline_class=pipeline_class,
                     loras=loras if loras else None,
+                    **extra_kwargs,
                 )
 
             if not image_bytes:

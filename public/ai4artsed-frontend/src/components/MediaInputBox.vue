@@ -88,6 +88,22 @@
     </div>
 
 
+    <!-- Content: Triple-Prompt Display (SD3.5 per-encoder) -->
+    <div v-else-if="inputType === 'text' && triplePromptData" class="triple-prompt-display">
+      <div class="triple-section">
+        <div class="triple-label">CLIP-L <span class="triple-tag">Visual</span></div>
+        <div class="triple-content">{{ triplePromptData.clip_l }}</div>
+      </div>
+      <div class="triple-section">
+        <div class="triple-label">CLIP-G <span class="triple-tag">Semantic</span></div>
+        <div class="triple-content">{{ triplePromptData.clip_g }}</div>
+      </div>
+      <div class="triple-section">
+        <div class="triple-label">T5-XXL <span class="triple-tag">Narrative</span></div>
+        <div class="triple-content triple-content-long">{{ triplePromptData.t5 }}</div>
+      </div>
+    </div>
+
     <!-- Content: Text Input -->
     <textarea
       v-else-if="inputType === 'text'"
@@ -257,6 +273,21 @@ defineExpose({
 })
 
 // Computed Properties
+const triplePromptData = computed(() => {
+  if (!props.value || props.inputType !== 'text') return null
+  const trimmed = props.value.trim()
+  if (!trimmed.startsWith('{')) return null
+  try {
+    const data = JSON.parse(trimmed)
+    if (data && typeof data === 'object' && 'clip_l' in data && 'clip_g' in data && 't5' in data) {
+      return data as { clip_l: string; clip_g: string; t5: string }
+    }
+  } catch {
+    // Not valid JSON — fall through to normal textarea
+  }
+  return null
+})
+
 const resizeClass = computed(() => {
   switch (props.resizeType) {
     case 'auto': return 'auto-resize-textarea'
@@ -814,6 +845,61 @@ onUnmounted(() => {
 .mode-btn svg {
   width: 16px;
   height: 16px;
+}
+
+/* Triple-Prompt Display (SD3.5 per-encoder) */
+.triple-prompt-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.triple-section {
+  padding: clamp(0.4rem, 1vw, 0.6rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.triple-section + .triple-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.triple-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.triple-tag {
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: rgba(102, 126, 234, 0.8);
+  background: rgba(102, 126, 234, 0.1);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.triple-content {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.triple-content-long {
+  font-size: clamp(0.75rem, 1.6vw, 0.85rem);
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 /* Loading Overlay */

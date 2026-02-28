@@ -42,6 +42,16 @@ Output ONLY the transformed result.
 NO meta-commentary, NO headers, NO formatting."""
     },
 
+    "triple_prompt_optimization": {
+        "description": "Generate encoder-specific prompts for SD3.5 triple text encoder",
+        "default": """Transform the Input into three encoder-specific prompts for SD3.5.
+
+Output ONLY valid JSON with exactly these keys:
+{"clip_l": "...", "clip_g": "...", "t5": "..."}
+
+NO meta-commentary. NO markdown. NO code fences. NO explanation."""
+    },
+
     "passthrough": {
         "description": "No transformation - direct pass-through (for testing/debugging)",
         "default": """Output the input_prompt exactly as provided, with no modification or transformation."""

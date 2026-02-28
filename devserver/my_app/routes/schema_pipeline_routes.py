@@ -253,6 +253,37 @@ def _load_optimization_instruction(output_config_name: str):
     return None
 
 
+def _parse_triple_prompt(text: str) -> dict | None:
+    """Parse triple-prompt JSON from optimization output.
+
+    Expects JSON with exactly clip_l, clip_g, t5 keys.
+    Returns dict with those keys, or None if parsing fails.
+    Strips markdown code fences if present (LLM sometimes wraps in ```json).
+    """
+    import json
+    if not text or not text.strip():
+        return None
+    cleaned = text.strip()
+    # Strip markdown code fences
+    if cleaned.startswith('```'):
+        lines = cleaned.split('\n')
+        # Remove first line (```json or ```) and last line (```)
+        if lines[-1].strip() == '```':
+            lines = lines[1:-1]
+        else:
+            lines = lines[1:]
+        cleaned = '\n'.join(lines).strip()
+    try:
+        data = json.loads(cleaned)
+        if isinstance(data, dict) and 'clip_l' in data and 'clip_g' in data and 't5' in data:
+            logger.info(f"[TRIPLE-PROMPT] Parsed: CLIP-L={len(data['clip_l'].split())}w, "
+                        f"CLIP-G={len(data['clip_g'].split())}w, T5={len(data['t5'].split())}w")
+            return data
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        pass
+    return None
+
+
 def _load_model_from_output_config(output_config_name: str) -> str | None:
     """Load LLM model override for Stage 3 optimization from output config.
 
@@ -1130,13 +1161,20 @@ def optimize_prompt():
         # Load estimated_duration_seconds using same pattern as optimization_instruction
         estimated_duration = _load_estimated_duration(output_config)
 
-        return jsonify({
+        # Check for triple-prompt JSON (SD3.5 per-encoder optimization)
+        triple = _parse_triple_prompt(optimized)
+        response_data = {
             'success': True,
             'optimized_prompt': optimized,
             'optimization_applied': True,
             'estimated_duration_seconds': estimated_duration,
             'execution_time_ms': execution_time
-        })
+        }
+        if triple:
+            response_data['triple_prompt'] = triple
+            logger.info(f"[OPTIMIZE-ENDPOINT] Triple-prompt detected, included in response")
+
+        return jsonify(response_data)
 
     except Exception as e:
         logger.error(f"[OPTIMIZE-ENDPOINT] Error: {e}")
@@ -1267,9 +1305,16 @@ def execute_stage3_4():
         else:
             media_type = 'image'  # Default fallback
 
+        # Triple-prompt detection from stage2_result
+        triple_prompt = _parse_triple_prompt(stage2_result)
+        # Use T5 prompt for safety (richest content) when triple-prompt detected
+        prompt_for_safety = triple_prompt['t5'] if triple_prompt else stage2_result
+        if triple_prompt:
+            logger.info(f"[STAGE3-4-ENDPOINT] Triple-prompt detected, using T5 for safety check")
+
         # Execute Stage 3 safety check
         safety_result = asyncio.run(execute_stage3_safety(
-            stage2_result,
+            prompt_for_safety,
             safety_level,
             media_type,
             pipeline_executor,
@@ -1288,7 +1333,7 @@ def execute_stage3_4():
                 'stage3_time_ms': stage3_time
             }), 403
 
-        translated_prompt = safety_result.get('positive_prompt', stage2_result)
+        translated_prompt = safety_result.get('positive_prompt', prompt_for_safety)
         logger.info(f"[STAGE3-4-ENDPOINT] Stage 3 completed: Translated to '{translated_prompt[:100]}...'")
 
         # ====================================================================
@@ -1303,12 +1348,32 @@ def execute_stage3_4():
             # Use locally-defined NoOpTracker class (defined at top of file)
             tracker = NoOpTracker()
 
+            # Triple-prompt: set up per-encoder prompts for SD3.5
+            context_override = None
+            if triple_prompt:
+                from schemas.engine.pipeline_executor import PipelineContext
+                # CLIP-L as primary prompt, CLIP-G as prompt_2, translated T5 as prompt_3
+                media_prompt = triple_prompt['clip_l']
+                context_override = PipelineContext(
+                    input_text=media_prompt,
+                    user_input=media_prompt
+                )
+                context_override.custom_placeholders = {
+                    'prompt_2': triple_prompt['clip_g'],
+                    'prompt_3': translated_prompt  # Stage 3 translated the T5 prompt
+                }
+                logger.info(f"[STAGE3-4-ENDPOINT] Triple-prompt: CLIP-L={len(media_prompt.split())}w, "
+                            f"CLIP-G={len(triple_prompt['clip_g'].split())}w, T5={len(translated_prompt.split())}w")
+            else:
+                media_prompt = translated_prompt
+
             output_result = asyncio.run(pipeline_executor.execute_pipeline(
                 config_name=output_config,
-                input_text=translated_prompt,
-                user_input=translated_prompt,
+                input_text=media_prompt,
+                user_input=media_prompt,
                 tracker=tracker,
-                seed_override=calculated_seed
+                seed_override=calculated_seed,
+                context_override=context_override
             ))
 
             stage4_time = (time.time() - stage4_start) * 1000  # ms
@@ -4527,6 +4592,11 @@ def interception_pipeline():
         # Execute Stage 3-4 for each output config
         media_outputs = []
 
+        # Triple-prompt detection: parse SD3.5 per-encoder prompts from Stage 2 output
+        triple_prompt_data = _parse_triple_prompt(result.final_output) if isinstance(result.final_output, str) else None
+        if triple_prompt_data:
+            logger.info(f"[4-STAGE] Triple-prompt detected from Stage 2 optimization")
+
         if configs_to_execute and not is_system_pipeline and not is_output_config:
             logger.info(f"[4-STAGE] Stage 3-4 Loop: Processing {len(configs_to_execute)} output configs")
 
@@ -4615,10 +4685,14 @@ def interception_pipeline():
                             safety_result['positive_prompt'] = result.final_output
                     else:
                         # Standard path: Translation + Safety
+                        # Triple-prompt: use T5 prompt for safety (richest content, covers CLIP subsets)
+                        prompt_for_safety = triple_prompt_data['t5'] if triple_prompt_data else result.final_output
+                        if triple_prompt_data:
+                            logger.info(f"[4-STAGE] Stage 3: Using T5 prompt for safety check (triple-prompt mode)")
                         logger.info(f"[4-STAGE] Stage 3: Translation + Safety for {output_config_name} (type: {media_type}, level: {safety_level})")
 
                         safety_result = asyncio.run(execute_stage3_safety(
-                            result.final_output,
+                            prompt_for_safety,
                             safety_level,
                             media_type,
                             pipeline_executor,
@@ -4695,17 +4769,34 @@ def interception_pipeline():
                 # Otherwise, fallback to Stage 2 output (only if stage4_only=True)
                 if not stage_3_blocked and not stage4_only:
                     # Stage 3 ran - use translated English text from positive_prompt
-                    prompt_for_media = safety_result.get('positive_prompt', result.final_output)
+                    translated_prompt = safety_result.get('positive_prompt', result.final_output)
                     logger.info(f"[4-STAGE] Using translated prompt from Stage 3 for media generation")
-                    logger.info(f"[STAGE3-TRANSLATED] Prompt (first 200 chars): {prompt_for_media[:200]}...")
+                    logger.info(f"[STAGE3-TRANSLATED] Prompt (first 200 chars): {translated_prompt[:200]}...")
+
+                    if triple_prompt_data:
+                        # Triple-prompt: CLIP-L as primary, CLIP-G as prompt_2, translated T5 as prompt_3
+                        prompt_for_media = triple_prompt_data['clip_l']
+                        custom_params['prompt_2'] = triple_prompt_data['clip_g']
+                        custom_params['prompt_3'] = translated_prompt  # Stage 3 translated the T5 prompt
+                        logger.info(f"[TRIPLE-PROMPT] Stage 4: CLIP-L={len(prompt_for_media.split())}w, "
+                                    f"CLIP-G={len(triple_prompt_data['clip_g'].split())}w, "
+                                    f"T5={len(translated_prompt.split())}w")
+                    else:
+                        prompt_for_media = translated_prompt
 
                     # Save translation (English prompt for media generation)
-                    if prompt_for_media != result.final_output:
-                        recorder.save_entity('translation_en', prompt_for_media)
+                    if translated_prompt != result.final_output:
+                        recorder.save_entity('translation_en', translated_prompt)
                         logger.info(f"[RECORDER] Saved translation_en entity")
                 else:
                     # Stage 3 skipped - use Stage 2 output directly
-                    prompt_for_media = result.final_output
+                    if triple_prompt_data:
+                        prompt_for_media = triple_prompt_data['clip_l']
+                        custom_params['prompt_2'] = triple_prompt_data['clip_g']
+                        custom_params['prompt_3'] = triple_prompt_data['t5']
+                        logger.info(f"[TRIPLE-PROMPT] Stage 4 (no Stage 3): Using raw triple-prompt data")
+                    else:
+                        prompt_for_media = result.final_output
                     logger.info(f"[4-STAGE] Using Stage 2 output directly (Stage 3 skipped)")
 
         # ====================================================================
