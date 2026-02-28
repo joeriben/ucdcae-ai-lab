@@ -329,6 +329,7 @@ onUnmounted(() => stopRotation())
 .stats-line-compact {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   font-size: 0.72rem;
   font-family: 'SF Mono', 'Fira Code', monospace;

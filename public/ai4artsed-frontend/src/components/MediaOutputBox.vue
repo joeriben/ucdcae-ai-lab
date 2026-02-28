@@ -75,8 +75,8 @@
             @click="$emit('image-click', outputImage)"
           />
 
-          <!-- Action Toolbar (vertical, right side) -->
-          <div class="action-toolbar">
+          <!-- Action Toolbar (vertical, right side — inline style bypasses scoped CSS specificity) -->
+          <div class="action-toolbar" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 10;">
             <button
               class="action-btn"
               :class="{ 'favorited': isFavorited }"
@@ -232,15 +232,21 @@
         </div>
       </div>
 
-      <!-- Expert Generation Summary (persists after generation) -->
+      <!-- Expert Generation Summary (mirrors denoising-compact layout) -->
       <div v-if="uiMode === 'expert' && outputImage && modelMeta" class="expert-generation-summary">
-        <span class="summary-model">{{ resolveModelName(modelMeta) }}</span>
-        <span v-if="stage4DurationMs" class="summary-detail">{{ (stage4DurationMs / 1000).toFixed(1) }}s</span>
-        <span v-if="generationEnergyWh > 0" class="summary-detail">{{ (generationEnergyWh / 1000).toFixed(3) }} kWh</span>
-        <span v-if="modelMeta.recommended_resolution" class="summary-detail">{{ modelMeta.recommended_resolution }}</span>
-        <span v-if="modelMeta.seed != null" class="summary-detail">seed:{{ modelMeta.seed }}</span>
-        <span v-if="modelMeta.cfg != null" class="summary-detail">CFG:{{ modelMeta.cfg }}</span>
-        <span v-if="modelMeta.steps != null" class="summary-detail">{{ modelMeta.steps }} steps</span>
+        <div class="summary-bar-track">
+          <div class="summary-bar-fill"></div>
+        </div>
+        <div class="summary-stats-line">
+          <span class="summary-seg">{{ resolveModelName(modelMeta) }}</span>
+          <span v-if="stage4DurationMs" class="summary-seg">{{ (stage4DurationMs / 1000).toFixed(1) }}s</span>
+          <span v-if="generationEnergyWh > 0" class="summary-seg">{{ (generationEnergyWh / 1000).toFixed(3) }} kWh</span>
+          <span v-if="modelMeta.recommended_resolution" class="summary-seg">{{ modelMeta.recommended_resolution }}</span>
+          <span class="summary-sep" v-if="modelMeta.seed != null || modelMeta.cfg != null">|</span>
+          <span v-if="modelMeta.seed != null" class="summary-seg">seed:{{ modelMeta.seed }}</span>
+          <span v-if="modelMeta.cfg != null" class="summary-seg">CFG:{{ modelMeta.cfg }}</span>
+          <span v-if="modelMeta.steps != null" class="summary-seg">{{ modelMeta.steps }} steps</span>
+        </div>
       </div>
 
       <!-- Image Analysis Section -->
@@ -444,11 +450,11 @@ defineExpose({
 
 .output-image {
   max-width: 100%;
-  max-height: clamp(300px, 44vh, 560px);
+  max-height: clamp(300px, 40vh, 500px);
+  object-fit: contain;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: transform 0.3s ease;
 }
 
 .output-image:hover {
@@ -515,15 +521,6 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-}
-
-/* Action Toolbar (vertical, overlaid on image right side) */
-.image-with-actions .action-toolbar {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
 }
 
 .action-toolbar {
@@ -619,30 +616,46 @@ defineExpose({
    Expert Generation Summary (persists below final output)
    ============================================================================ */
 
+/* Expert summary mirrors .denoising-compact layout exactly */
 .expert-generation-summary {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.summary-bar-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.summary-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: rgba(76, 175, 80, 0.4);
+  border-radius: 2px;
+}
+
+.summary-stats-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  margin-top: 0.35rem;
   font-size: 0.72rem;
   font-family: 'SF Mono', 'Fira Code', monospace;
   color: rgba(255, 255, 255, 0.5);
   flex-wrap: wrap;
 }
 
-.summary-model {
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
+.summary-seg {
+  white-space: nowrap;
 }
 
-.summary-detail {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-}
-
-.summary-detail::before {
-  content: '\00B7';
-  margin-right: 0.75rem;
-  opacity: 0.4;
+.summary-sep {
+  color: rgba(255, 255, 255, 0.2);
 }
 
 /* ============================================================================
@@ -730,8 +743,11 @@ defineExpose({
 /* Responsive: Stack toolbar below on mobile */
 @media (max-width: 768px) {
   .image-with-actions .action-toolbar {
-    position: static;
-    transform: none;
+    position: static !important;
+    transform: none !important;
+    right: auto !important;
+    top: auto !important;
+    z-index: auto !important;
     flex-direction: row;
     margin-top: 0.5rem;
   }
