@@ -1,5 +1,32 @@
 # Development Log
 
+## Session 225 - Rename trans_aktion → poetry + Clean Context Fields
+**Date:** 2026-02-28
+**Focus:** Rename 6 interception configs, clean redundant context instructions, drop model_override
+**Commit:** `c6fc4ca`
+
+### Changes
+
+**6 interception configs renamed** (`devserver/schemas/configs/interception/`):
+`trans_aktion_*` → `poetry_*` (sappho, hoelderlin, basho, mirabai, yoruba_oriki, nahuatl)
+
+**Internal identifiers updated** in each config:
+- `properties`: `["trans_aktion"]` → `["poetry"]`
+- `display.category`: `"trans_aktion"` → `"poetry"`
+- `category` EN: `"Trans-Aktion"` → `"Poetry"` (other langs via i18n agent)
+- `meta.model_override: "qwen3:1.7b"` removed — uses default STAGE2_INTERCEPTION_MODEL
+
+**Context fields cleaned**: Stripped prefix labels ("Sappho fragments: " / "Sappho-Fragmente: ") and instruction suffixes ("Fuse these words..." / "Verschmelze diese Woerter..."). The TASK_INSTRUCTION from instruction_selector.py already says "Use the specific vocabulary and techniques defined in Context" — the embedded instructions were redundant. Only the word lists remain.
+
+**Vue references**: PropertyBubble.vue + PropertyCanvas.vue updated (`trans_aktion` → `poetry`).
+
+**i18n work order**: WO-2026-02-28 for context translations (7 missing languages) + category translation.
+
+### Hypothesis — Lyric Fragments as Atmospheric Conditioning
+Similar to Youth Slang and Pig Latin: poetry can presumably generate specific atmospheric effect patterns due to its semantic structure (which appears here only in excerpts). The word lists — even as fragments, without syntactic context — may function as semantic attractors that bias the generation toward specific tonal registers. This is a hypothesis worth testing systematically.
+
+---
+
 ## Session 224 - Seed Handling: 5 Bugs Fixed Across Full Pipeline
 **Date:** 2026-02-28
 **Focus:** Fix broken seed randomization (same image on repeat generation) and 4 structural bugs in the seed flow
