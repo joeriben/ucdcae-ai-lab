@@ -6,6 +6,13 @@ each processed work order to **Completed** with a date stamp.
 
 ## Pending
 
+### WO-2026-02-28-t5-uses-your-text
+- **Session**: 226
+- **Scope**: en.ts
+- **Changed keys** (new):
+  - `mediaInput.t5UsesYourText` (NEW): "T5-XXL uses your original text directly"
+- **Context**: SD3.5 triple-prompt optimization now only generates CLIP-L/G prompts. T5-XXL receives the user's interception text unmodified (user self-determination). This note appears below the CLIP sections to inform the user.
+
 ### WO-2026-02-27-expert-energy-fact-reword
 - **Session**: 220
 - **Scope**: en.ts

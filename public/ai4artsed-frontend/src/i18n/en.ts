@@ -366,7 +366,8 @@ export const en = {
     paste: 'Paste',
     delete: 'Delete',
     loading: 'Loading...',
-    contentBlocked: 'Content blocked'
+    contentBlocked: 'Content blocked',
+    t5UsesYourText: 'T5-XXL uses your original text directly'
   },
   nav: {
     about: 'About',
