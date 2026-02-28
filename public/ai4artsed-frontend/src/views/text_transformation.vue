@@ -270,7 +270,7 @@
             :is-empty="!optimizedPrompt"
             :is-loading="isOptimizationLoading"
             :disabled="!selectedConfig"
-            loading-message="Der Prompt wird jetzt für das gewählte Modell angepasst. Jedes Modell versteht Beschreibungen etwas anders – die KI optimiert den Text für die beste Ausgabe."
+            :loading-message="optimizationLoadingMessage"
             :enable-streaming="true"
             :stream-url="optimizationStreamingUrl"
             :stream-params="optimizationStreamingParams"
@@ -541,6 +541,14 @@ const optimizedPrompt = ref('')
 const isOptimizationLoading = ref(false)
 const hasOptimization = ref(false)  // Track if optimization was applied
 const optimizationInstruction = ref('')  // Loaded from backend before streaming
+
+// Contextual loading message for optimization (model-specific + translation hint)
+const optimizationLoadingMessage = computed(() => {
+  const cfg = selectedConfig.value || ''
+  const isSd35 = cfg.startsWith('sd35')
+  const base = isSd35 ? t('textTransform.loadingSd35') : t('textTransform.loadingDefault')
+  return base + ' ' + t('textTransform.loadingTranslateHint')
+})
 
 // Model availability (Session 91+)
 const modelAvailability = ref<ModelAvailability>({})

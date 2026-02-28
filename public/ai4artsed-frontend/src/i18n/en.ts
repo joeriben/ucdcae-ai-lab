@@ -648,7 +648,10 @@ export const en = {
     resultLabel: 'Idea + Rules = Prompt',
     resultPlaceholder: 'Prompt will appear after clicking start (or enter your own text)',
     optimizedLabel: 'Model-Optimized Prompt',
-    optimizedPlaceholder: 'The optimized prompt will appear after model selection.'
+    optimizedPlaceholder: 'The optimized prompt will appear after model selection.',
+    loadingDefault: 'Your prompt is being adapted for the selected model. Each model understands descriptions differently — the AI optimizes the text for best results.',
+    loadingSd35: 'SD3.5 has three text encoders. CLIP-L and CLIP-G are being optimized for visual precision — T5-XXL receives your original text directly, preserving your creative intent.',
+    loadingTranslateHint: 'If your text is not in English, use the translate button first — the model works best with English input.'
   },
   training: {
     info: {

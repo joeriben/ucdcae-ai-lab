@@ -6,6 +6,15 @@ each processed work order to **Completed** with a date stamp.
 
 ## Pending
 
+### WO-2026-02-28-optimization-loading-messages
+- **Session**: 226
+- **Scope**: en.ts
+- **Changed keys** (new):
+  - `textTransform.loadingDefault` (NEW): Generic optimization loading message
+  - `textTransform.loadingSd35` (NEW): SD3.5-specific message explaining CLIP-L/G optimization + T5 preserves user text
+  - `textTransform.loadingTranslateHint` (NEW): Hint to translate before generation if text not in English
+- **Context**: Shown during optimization loading phase. SD3.5 gets model-specific text explaining the triple-encoder architecture. Translation hint appended for all models since Stage 3 only auto-translates at kids level. Replaces hardcoded German string.
+
 ### WO-2026-02-28-t5-uses-your-text
 - **Session**: 226
 - **Scope**: en.ts
