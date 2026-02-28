@@ -375,12 +375,20 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: clamp(1.5rem, 3vh, 2rem);
-  /* Stable height: image max-height (40vh) + 2×padding (6vh), clamped */
-  min-height: clamp(350px, 46vh, 570px);
+  /* FIXED height — identical across all states (empty, loading, output) */
+  height: clamp(400px, 54vh, 680px);
+  overflow: hidden;
   background: rgba(30, 30, 30, 0.9);
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: clamp(12px, 2vw, 20px);
   transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* When analysis section is visible, allow frame to grow beyond fixed height */
+.output-frame:has(.image-analysis-section) {
+  height: auto;
+  min-height: clamp(400px, 54vh, 680px);
+  overflow: visible;
 }
 
 .output-frame.empty {
@@ -397,9 +405,13 @@ defineExpose({
 /* Generation Animation Container */
 .generation-animation-container {
   width: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   justify-content: center;
+  align-items: center;
   position: relative;
+  overflow: hidden;
 }
 
 .denoising-preview {
@@ -432,9 +444,9 @@ defineExpose({
 
 .output-image {
   max-width: 100%;
-  max-height: clamp(300px, 40vh, 500px);
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  max-height: clamp(300px, 44vh, 560px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: transform 0.3s ease;
 }
@@ -474,9 +486,8 @@ defineExpose({
 .image-with-actions {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
   justify-content: center;
+  width: 100%;
 }
 
 /* Universal Media with Actions Containers */
@@ -506,7 +517,15 @@ defineExpose({
   gap: 1rem;
 }
 
-/* Action Toolbar (vertical, right side) */
+/* Action Toolbar (vertical, overlaid on image right side) */
+.image-with-actions .action-toolbar {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
 .action-toolbar {
   display: flex;
   flex-direction: column;
@@ -603,14 +622,12 @@ defineExpose({
 .expert-generation-summary {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  border-left: 2px solid rgba(76, 175, 80, 0.3);
+  gap: 0.5rem;
+  margin-top: 0.35rem;
   font-size: 0.72rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
   color: rgba(255, 255, 255, 0.5);
+  flex-wrap: wrap;
 }
 
 .summary-model {
@@ -712,7 +729,13 @@ defineExpose({
 
 /* Responsive: Stack toolbar below on mobile */
 @media (max-width: 768px) {
-  .image-with-actions,
+  .image-with-actions .action-toolbar {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    margin-top: 0.5rem;
+  }
+
   .video-with-actions,
   .audio-with-actions {
     flex-direction: column;

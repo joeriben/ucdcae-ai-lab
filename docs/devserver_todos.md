@@ -201,6 +201,25 @@ Nightly `2.11.0.dev20260203+cu130` → Stable `2.11.0` (sollte seit Feb 16 relea
 **Datum:** 2025-11-02
 Template-System für Educational Error Messages (hardcoded German → konfigurierbar). Nicht blocking für aktuelles Deployment.
 
+### Frontend bleibt im Loading-State bei Backend-Fehler (Expert Mode)
+
+**Datum:** 2026-02-28
+**Status:** Offen — nächste Session
+
+Wenn Stage 4 fehlschlägt (z.B. ComfyUI-Timeout), bleibt das Frontend in der Model-Card ("Modell wird geladen") hängen. Der `stage4_error` SSE-Event kommt nicht durch oder wird nicht behandelt. `isExecuting` wird nie auf `false` gesetzt. Zusätzlich: Model-Card-Höhe stimmt nicht mit MediaOutputBox-Höhe überein.
+
+Zu untersuchen:
+- Wie propagiert `schema_pipeline_routes.py` den Fehler via SSE?
+- Wie reagiert die View (text_transformation.vue etc.) auf Error-Events?
+- Wird `isExecuting` bei Fehler zurückgesetzt?
+
+### Quick-Toggle UI Mode (Expert/Youth/Kids)
+
+**Datum:** 2026-02-28
+**Status:** Aufgeschoben — kein Blocker, nice-to-have
+
+Idee: Schneller Schalter im Interface zum Wechseln zwischen UI-Modes (kids/youth/expert), ohne in die Settings zu müssen. Settings definiert den Default, User können spontan umschalten. Offene Frage: Wo elegant platzieren? Kandidaten wären MediaOutputBox-Header (kontextbezogen, nur während Generierung) oder App-Header (permanent sichtbar, aber 95% der Zeit irrelevant). Risiko: Workshop-Teilnehmer landen versehentlich in Expert-Mode.
+
 ### Debug-Stufen-System
 
 **Plan:** `~/.claude/plans/dynamic-sprouting-stonebraker.md`

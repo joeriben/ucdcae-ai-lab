@@ -175,10 +175,12 @@ onUnmounted(() => stopRotation())
 <style scoped>
 .denoising-progress-view {
   width: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: 0.5rem;
+  overflow-y: auto;
 }
 
 /* Phase A: Model Loading */
@@ -194,6 +196,9 @@ onUnmounted(() => stopRotation())
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 1.25rem;
+  overflow-y: auto;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .model-card-header {
